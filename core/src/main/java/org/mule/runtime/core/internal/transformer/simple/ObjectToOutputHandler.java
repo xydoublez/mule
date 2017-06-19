@@ -9,23 +9,20 @@ package org.mule.runtime.core.internal.transformer.simple;
 import org.mule.runtime.api.i18n.I18nMessageFactory;
 import org.mule.runtime.api.metadata.DataType;
 import org.mule.runtime.api.streaming.bytes.CursorStreamProvider;
-import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
 import org.mule.runtime.core.api.transformer.TransformerException;
-import org.mule.runtime.core.message.OutputHandler;
-import org.mule.runtime.core.transformer.AbstractTransformer;
 import org.mule.runtime.core.api.util.IOUtils;
+import org.mule.runtime.core.message.OutputHandler;
+import org.mule.runtime.core.transformer.AbstractDiscoverableTransformer;
 
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 
 /** <code>ObjectToOutputHandler</code> converts a byte array into a String. */
-public class ObjectToOutputHandler extends AbstractTransformer implements DiscoverableTransformer {
-
-  /** Give core transformers a slighty higher priority */
-  private int priorityWeighting = DiscoverableTransformer.DEFAULT_PRIORITY_WEIGHTING + 1;
+public class ObjectToOutputHandler extends AbstractDiscoverableTransformer {
 
   public ObjectToOutputHandler() {
+    setPriorityWeighting(DEFAULT_PRIORITY_WEIGHTING + 1);
     registerSourceType(DataType.BYTE_ARRAY);
     registerSourceType(DataType.STRING);
     registerSourceType(DataType.INPUT_STREAM);
@@ -60,15 +57,5 @@ public class ObjectToOutputHandler extends AbstractTransformer implements Discov
         is.close();
       }
     };
-  }
-
-  @Override
-  public int getPriorityWeighting() {
-    return priorityWeighting;
-  }
-
-  @Override
-  public void setPriorityWeighting(int priorityWeighting) {
-    this.priorityWeighting = priorityWeighting;
   }
 }

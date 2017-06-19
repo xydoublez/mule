@@ -7,9 +7,8 @@
 package org.mule.runtime.core.transformer.simple;
 
 import org.mule.runtime.api.metadata.DataType;
-import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
 import org.mule.runtime.core.api.transformer.TransformerException;
-import org.mule.runtime.core.transformer.AbstractTransformer;
+import org.mule.runtime.core.transformer.AbstractDiscoverableTransformer;
 
 import java.beans.PropertyEditor;
 import java.nio.charset.Charset;
@@ -18,16 +17,12 @@ import java.nio.charset.Charset;
  * <code>PropertyEditorValueToTextTransformer</code> adapts a {@link PropertyEditor} instance allowing it to be used to transform
  * from a specific type to a String.
  */
-public class PropertyEditorValueToTextTransformer extends AbstractTransformer implements DiscoverableTransformer {
+public class PropertyEditorValueToTextTransformer extends AbstractDiscoverableTransformer {
 
   private PropertyEditor propertyEditor;
 
-  /**
-   * Give core transformers a slighty higher priority
-   */
-  private int priorityWeighting = DiscoverableTransformer.DEFAULT_PRIORITY_WEIGHTING + 1;
-
   public PropertyEditorValueToTextTransformer(PropertyEditor propertyEditor, Class<?> clazz) {
+    setPriorityWeighting(DEFAULT_PRIORITY_WEIGHTING + 1);
     registerSourceType(DataType.fromType(clazz));
     setReturnDataType(DataType.STRING);
     this.propertyEditor = propertyEditor;
@@ -40,15 +35,4 @@ public class PropertyEditorValueToTextTransformer extends AbstractTransformer im
       return propertyEditor.getAsText();
     }
   }
-
-  @Override
-  public int getPriorityWeighting() {
-    return priorityWeighting;
-  }
-
-  @Override
-  public void setPriorityWeighting(int priorityWeighting) {
-    this.priorityWeighting = priorityWeighting;
-  }
-
 }

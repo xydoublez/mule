@@ -7,9 +7,8 @@
 package org.mule.runtime.core.internal.transformer.simple;
 
 import org.mule.runtime.api.metadata.DataType;
-import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
 import org.mule.runtime.core.api.transformer.TransformerException;
-import org.mule.runtime.core.transformer.AbstractTransformer;
+import org.mule.runtime.core.transformer.AbstractDiscoverableTransformer;
 
 import java.nio.charset.Charset;
 import java.text.NumberFormat;
@@ -17,16 +16,12 @@ import java.text.NumberFormat;
 /**
  * <code>NumberToString</code> converts a Number to a String. A NumberFormat is used if one is provided.
  */
-public class NumberToString extends AbstractTransformer implements DiscoverableTransformer {
+public class NumberToString extends AbstractDiscoverableTransformer {
 
   private NumberFormat numberFormat;
 
-  /**
-   * Give core transformers a slighty higher priority
-   */
-  private int priorityWeighting = DiscoverableTransformer.DEFAULT_PRIORITY_WEIGHTING + 1;
-
   public NumberToString() {
+    setPriorityWeighting(DEFAULT_PRIORITY_WEIGHTING + 1);
     registerSourceType(DataType.NUMBER);
     setReturnDataType(DataType.STRING);
   }
@@ -48,15 +43,4 @@ public class NumberToString extends AbstractTransformer implements DiscoverableT
       return src.toString();
     }
   }
-
-  @Override
-  public int getPriorityWeighting() {
-    return priorityWeighting;
-  }
-
-  @Override
-  public void setPriorityWeighting(int priorityWeighting) {
-    this.priorityWeighting = priorityWeighting;
-  }
-
 }

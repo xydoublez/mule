@@ -11,9 +11,8 @@ import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import org.mule.runtime.api.metadata.DataType;
-import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
 import org.mule.runtime.core.api.transformer.TransformerException;
-import org.mule.runtime.core.transformer.AbstractTransformer;
+import org.mule.runtime.core.transformer.AbstractDiscoverableTransformer;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -24,17 +23,13 @@ import java.util.Map;
 /**
  * <code>ByteArrayToSerializable</code> converts a serialized object to its object representation
  */
-public class StringToBoolean extends AbstractTransformer implements DiscoverableTransformer {
+public class StringToBoolean extends AbstractDiscoverableTransformer {
 
   private static Map<String, Boolean> MAPPING = ImmutableMap.<String, Boolean>builder().put("true", TRUE).put("false", FALSE)
       .put("yes", TRUE).put("no", FALSE).put("1", TRUE).put("0", FALSE).build();
 
-  /**
-   * Give core transformers a slightly higher priority
-   */
-  private int priorityWeighting = DiscoverableTransformer.DEFAULT_PRIORITY_WEIGHTING + 1;
-
   public StringToBoolean() {
+    setPriorityWeighting(DEFAULT_PRIORITY_WEIGHTING + 1);
     registerSourceType(DataType.STRING);
     setReturnDataType(DataType.BOOLEAN);
   }
@@ -67,15 +62,4 @@ public class StringToBoolean extends AbstractTransformer implements Discoverable
       super.setReturnDataType(type);
     }
   }
-
-  @Override
-  public int getPriorityWeighting() {
-    return priorityWeighting;
-  }
-
-  @Override
-  public void setPriorityWeighting(int priorityWeighting) {
-    this.priorityWeighting = priorityWeighting;
-  }
-
 }

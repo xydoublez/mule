@@ -7,16 +7,14 @@
 package org.mule.runtime.core.internal.transformer.simple;
 
 import static org.mule.runtime.core.api.Event.getCurrentEvent;
-import static org.mule.runtime.core.config.i18n.CoreMessages.errorReadingStream;
 import static org.mule.runtime.core.api.util.IOUtils.copyLarge;
-
+import static org.mule.runtime.core.config.i18n.CoreMessages.errorReadingStream;
 import org.mule.runtime.api.metadata.DataType;
 import org.mule.runtime.api.streaming.bytes.CursorStreamProvider;
-import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
 import org.mule.runtime.core.api.transformer.TransformerException;
-import org.mule.runtime.core.message.OutputHandler;
-import org.mule.runtime.core.transformer.AbstractTransformer;
 import org.mule.runtime.core.api.util.StringMessageUtils;
+import org.mule.runtime.core.message.OutputHandler;
+import org.mule.runtime.core.transformer.AbstractDiscoverableTransformer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -27,12 +25,10 @@ import java.nio.charset.Charset;
  * <code>ObjectToString</code> transformer is useful for debugging. It will return human-readable output for various kinds of
  * objects. Right now, it is just coded to handle Map and Collection objects. Others will be added.
  */
-public class ObjectToString extends AbstractTransformer implements DiscoverableTransformer {
-
-  /** Give core transformers a slighty higher priority */
-  private int priorityWeighting = DiscoverableTransformer.DEFAULT_PRIORITY_WEIGHTING + 1;
+public class ObjectToString extends AbstractDiscoverableTransformer {
 
   public ObjectToString() {
+    setPriorityWeighting(DEFAULT_PRIORITY_WEIGHTING + 1);
     registerSourceType(DataType.OBJECT);
     registerSourceType(DataType.BYTE_ARRAY);
     registerSourceType(DataType.INPUT_STREAM);
@@ -91,15 +87,5 @@ public class ObjectToString extends AbstractTransformer implements DiscoverableT
   protected String createStringFromByteArray(byte[] bytes, Charset outputEncoding)
       throws TransformerException {
     return new String(bytes, outputEncoding);
-  }
-
-  @Override
-  public int getPriorityWeighting() {
-    return priorityWeighting;
-  }
-
-  @Override
-  public void setPriorityWeighting(int priorityWeighting) {
-    this.priorityWeighting = priorityWeighting;
   }
 }

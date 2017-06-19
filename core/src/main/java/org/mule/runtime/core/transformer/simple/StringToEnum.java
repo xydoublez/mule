@@ -9,11 +9,9 @@ package org.mule.runtime.core.transformer.simple;
 import static java.lang.String.format;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
-
 import org.mule.runtime.api.metadata.DataType;
-import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
 import org.mule.runtime.core.api.transformer.TransformerException;
-import org.mule.runtime.core.transformer.AbstractTransformer;
+import org.mule.runtime.core.transformer.AbstractDiscoverableTransformer;
 
 import java.nio.charset.Charset;
 
@@ -22,11 +20,9 @@ import java.nio.charset.Charset;
  *
  * @since 4.0
  */
-public class StringToEnum extends AbstractTransformer implements DiscoverableTransformer {
+public class StringToEnum extends AbstractDiscoverableTransformer {
 
   private final Class<? extends Enum> enumClass;
-  private int weighting = DiscoverableTransformer.DEFAULT_PRIORITY_WEIGHTING;
-
 
   /**
    * Creates a new instance
@@ -51,15 +47,5 @@ public class StringToEnum extends AbstractTransformer implements DiscoverableTra
                                                                 enumClass.getName())),
                                      e);
     }
-  }
-
-  @Override
-  public int getPriorityWeighting() {
-    return weighting;
-  }
-
-  @Override
-  public void setPriorityWeighting(int weighting) {
-    this.weighting = weighting;
   }
 }

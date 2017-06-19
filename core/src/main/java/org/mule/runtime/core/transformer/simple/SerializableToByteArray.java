@@ -8,9 +8,8 @@ package org.mule.runtime.core.transformer.simple;
 
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.metadata.DataType;
-import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
 import org.mule.runtime.core.api.transformer.TransformerException;
-import org.mule.runtime.core.transformer.AbstractTransformer;
+import org.mule.runtime.core.transformer.AbstractDiscoverableTransformer;
 
 import java.io.Serializable;
 import java.nio.charset.Charset;
@@ -20,14 +19,10 @@ import java.nio.charset.Charset;
  * configured as a source type on this transformer by calling {@link #setAcceptMuleMessage(boolean)} then the {@link Message} will
  * be serialised. This is useful for transports such as TCP where the message headers would normally be lost.
  */
-public class SerializableToByteArray extends AbstractTransformer implements DiscoverableTransformer {
-
-  /**
-   * Give core transformers a slightly higher priority
-   */
-  private int priorityWeighting = DiscoverableTransformer.DEFAULT_PRIORITY_WEIGHTING + 1;
+public class SerializableToByteArray extends AbstractDiscoverableTransformer {
 
   public SerializableToByteArray() {
+    setPriorityWeighting(DEFAULT_PRIORITY_WEIGHTING + 1);
     this.registerSourceType(DataType.fromType(Serializable.class));
     this.setReturnDataType(DataType.BYTE_ARRAY);
   }
@@ -57,15 +52,5 @@ public class SerializableToByteArray extends AbstractTransformer implements Disc
     } catch (Exception e) {
       throw new TransformerException(this, e);
     }
-  }
-
-  @Override
-  public int getPriorityWeighting() {
-    return priorityWeighting;
-  }
-
-  @Override
-  public void setPriorityWeighting(int priorityWeighting) {
-    this.priorityWeighting = priorityWeighting;
   }
 }

@@ -9,6 +9,7 @@ package org.mule.runtime.module.extension.internal.resources;
 import static org.mule.runtime.core.api.util.ClassUtils.withContextClassLoader;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.core.api.util.IOUtils;
+import org.mule.runtime.core.config.MuleManifest;
 import org.mule.runtime.extension.api.declaration.type.annotation.ExtensionTypeAnnotationsRegistry;
 import org.mule.runtime.extension.api.persistence.ExtensionModelJsonSerializer;
 
@@ -19,7 +20,7 @@ import org.mule.runtime.extension.api.persistence.ExtensionModelJsonSerializer;
  */
 public class MuleExtensionModelProvider {
 
-  public static final String MULE_VERSION = "4.0.0-SNAPSHOT";
+  public static final String MULE_VERSION = MuleManifest.getProductVersion();
   private static final String MODEL_JSON = "META-INF/mule-extension-model.json";
   private static final ExtensionModel EXTENSION_MODEL =
       withContextClassLoader(ExtensionTypeAnnotationsRegistry.class.getClassLoader(),

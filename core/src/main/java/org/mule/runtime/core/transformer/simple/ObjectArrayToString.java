@@ -8,9 +8,8 @@ package org.mule.runtime.core.transformer.simple;
 
 import static org.apache.commons.lang3.StringUtils.join;
 import org.mule.runtime.api.metadata.DataType;
-import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
 import org.mule.runtime.core.api.transformer.TransformerException;
-import org.mule.runtime.core.transformer.AbstractTransformer;
+import org.mule.runtime.core.transformer.AbstractDiscoverableTransformer;
 
 import java.nio.charset.Charset;
 
@@ -19,16 +18,14 @@ import java.nio.charset.Charset;
  * in which each element is separated by a configurable delimiter (default is a space).
  */
 
-public class ObjectArrayToString extends AbstractTransformer implements DiscoverableTransformer {
-
-  /** Give core transformers a slighty higher priority */
-  private int priorityWeighting = DiscoverableTransformer.DEFAULT_PRIORITY_WEIGHTING + 1;
+public class ObjectArrayToString extends AbstractDiscoverableTransformer {
 
   private static final String DEFAULT_DELIMITER = " ";
 
   private String delimiter = null;
 
   public ObjectArrayToString() {
+    setPriorityWeighting(DEFAULT_PRIORITY_WEIGHTING + 1);
     registerSourceType(DataType.fromType(Object[].class));
     setReturnDataType(DataType.STRING);
   }
@@ -59,15 +56,5 @@ public class ObjectArrayToString extends AbstractTransformer implements Discover
 
   public void setDelimiter(String delimiter) {
     this.delimiter = delimiter;
-  }
-
-  @Override
-  public int getPriorityWeighting() {
-    return priorityWeighting;
-  }
-
-  @Override
-  public void setPriorityWeighting(int priorityWeighting) {
-    this.priorityWeighting = priorityWeighting;
   }
 }
