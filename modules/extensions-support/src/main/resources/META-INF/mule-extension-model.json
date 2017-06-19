@@ -34,6 +34,7 @@
   "externalLibraries": [],
   "importedTypes": [],
   "configurations": [],
+  "transformers": [],
   "operations": [
     {
       "name": "collectionAggregator",
