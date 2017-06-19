@@ -11,10 +11,12 @@ import static java.util.stream.Collectors.toList;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getOperationMethods;
 import org.mule.runtime.extension.api.annotation.Configurations;
 import org.mule.runtime.extension.api.annotation.Operations;
+import org.mule.runtime.extension.api.annotation.Transformers;
 import org.mule.runtime.module.extension.internal.loader.java.type.ConfigurationElement;
 import org.mule.runtime.module.extension.internal.loader.java.type.ExtensionElement;
 import org.mule.runtime.module.extension.internal.loader.java.type.MethodElement;
 import org.mule.runtime.module.extension.internal.loader.java.type.ParameterizableTypeElement;
+import org.mule.runtime.module.extension.internal.loader.java.type.TransformerElement;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +36,7 @@ public class ExtensionTypeWrapper<T> extends ComponentWrapper implements Extensi
   /**
    * {@inheritDoc}
    */
+  @Override
   public List<ConfigurationElement> getConfigurations() {
     final Optional<Configurations> optionalConfigurations = this.getAnnotation(Configurations.class);
     if (optionalConfigurations.isPresent()) {
@@ -54,5 +57,16 @@ public class ExtensionTypeWrapper<T> extends ComponentWrapper implements Extensi
             .map(clazz -> (MethodElement) new MethodWrapper(clazz))
             .collect(toList()))
         .orElse(emptyList());
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public List<TransformerElement> getTransformers() {
+    return getAnnotation(Transformers.class).map(classes -> Stream.of(classes.value())
+        .map(c -> (TransformerElement) new TransformerElementWrapper(c))
+        .collect(toList())
+    ).orElse(emptyList());
   }
 }

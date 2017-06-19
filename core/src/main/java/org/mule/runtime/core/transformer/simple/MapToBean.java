@@ -6,14 +6,13 @@
  */
 package org.mule.runtime.core.transformer.simple;
 
-import org.mule.runtime.api.metadata.DataType;
 import org.mule.runtime.api.lifecycle.InitialisationException;
-import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
+import org.mule.runtime.api.metadata.DataType;
 import org.mule.runtime.core.api.transformer.TransformerException;
-import org.mule.runtime.core.config.i18n.CoreMessages;
-import org.mule.runtime.core.transformer.AbstractTransformer;
 import org.mule.runtime.core.api.util.BeanUtils;
 import org.mule.runtime.core.api.util.ClassUtils;
+import org.mule.runtime.core.config.i18n.CoreMessages;
+import org.mule.runtime.core.transformer.AbstractDiscoverableTransformer;
 
 import java.nio.charset.Charset;
 import java.util.Map;
@@ -23,14 +22,12 @@ import java.util.Map;
  * properties on the object. The bean class name can also be passed in as a property on the Map (which gets removed once read).
  * The {@link MapToBean#CLASS_PROPERTY} should be set as a fully qualified class name string.
  */
-public class MapToBean extends AbstractTransformer implements DiscoverableTransformer {
+public class MapToBean extends AbstractDiscoverableTransformer {
 
   /**
    * {@value}
    */
   public static final String CLASS_PROPERTY = "className";
-
-  private int priorityWeighting = DiscoverableTransformer.DEFAULT_PRIORITY_WEIGHTING;
 
   public MapToBean() {
     registerSourceType(DataType.fromType(Map.class));
@@ -64,15 +61,5 @@ public class MapToBean extends AbstractTransformer implements DiscoverableTransf
     } catch (Exception e) {
       throw new TransformerException(this, e);
     }
-  }
-
-  @Override
-  public int getPriorityWeighting() {
-    return priorityWeighting;
-  }
-
-  @Override
-  public void setPriorityWeighting(int weighting) {
-    priorityWeighting = weighting;
   }
 }

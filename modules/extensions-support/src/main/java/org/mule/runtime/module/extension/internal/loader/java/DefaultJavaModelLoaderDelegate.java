@@ -69,6 +69,7 @@ public class DefaultJavaModelLoaderDelegate implements ModelLoaderDelegate {
   private final SourceModelLoaderDelegate sourceModelLoaderDelegate = new SourceModelLoaderDelegate(this);
   private final ConnectionProviderModelLoaderDelegate connectionProviderModelLoaderDelegate =
       new ConnectionProviderModelLoaderDelegate(this);
+  private final TransformerModelLoaderDelegate transformerModelLoaderDelegate = new TransformerModelLoaderDelegate(this);
 
   private final ParameterModelsLoaderDelegate fieldParametersLoader;
   private final ParameterModelsLoaderDelegate methodParametersLoader;
@@ -126,6 +127,8 @@ public class DefaultJavaModelLoaderDelegate implements ModelLoaderDelegate {
       extensionElement.getSources()
           .forEach(source -> sourceModelLoaderDelegate.declareMessageSource(declarer, declarer, source, false));
     }
+
+    transformerModelLoaderDelegate.declareTransformers(declarer, extensionElement);
 
     return declarer;
   }

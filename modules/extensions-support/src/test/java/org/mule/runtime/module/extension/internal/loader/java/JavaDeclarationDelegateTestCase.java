@@ -19,6 +19,7 @@ import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
+import static org.mule.metadata.api.model.MetadataFormat.JSON;
 import static org.mule.metadata.java.api.utils.JavaTypeUtils.getType;
 import static org.mule.runtime.api.dsl.DslResolvingContext.getDefault;
 import static org.mule.runtime.api.meta.Category.COMMUNITY;
@@ -35,6 +36,7 @@ import static org.mule.test.heisenberg.extension.HeisenbergConnectionProvider.SA
 import static org.mule.test.heisenberg.extension.HeisenbergExtension.AGE;
 import static org.mule.test.heisenberg.extension.HeisenbergExtension.EXTENSION_DESCRIPTION;
 import static org.mule.test.heisenberg.extension.HeisenbergExtension.HEISENBERG;
+import static org.mule.test.heisenberg.extension.JsonToMethylamine.NAME;
 import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.TYPE_BUILDER;
 import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.TYPE_LOADER;
 import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.arrayOf;
@@ -46,6 +48,7 @@ import static org.mule.test.vegan.extension.VeganExtension.BANANA;
 import org.mule.metadata.api.model.AnyType;
 import org.mule.metadata.api.model.ArrayType;
 import org.mule.metadata.api.model.MetadataType;
+import org.mule.metadata.api.model.StringType;
 import org.mule.metadata.api.model.VoidType;
 import org.mule.metadata.java.api.annotation.ClassInformationAnnotation;
 import org.mule.runtime.api.message.Attributes;
@@ -61,6 +64,7 @@ import org.mule.runtime.api.meta.model.declaration.fluent.OperationDeclaration;
 import org.mule.runtime.api.meta.model.declaration.fluent.OutputDeclaration;
 import org.mule.runtime.api.meta.model.declaration.fluent.ParameterDeclaration;
 import org.mule.runtime.api.meta.model.declaration.fluent.SourceDeclaration;
+import org.mule.runtime.api.meta.model.declaration.fluent.TransformerDeclaration;
 import org.mule.runtime.api.meta.model.declaration.fluent.WithOperationsDeclaration;
 import org.mule.runtime.api.tls.TlsContextFactory;
 import org.mule.runtime.extension.api.annotation.Configuration;
@@ -189,6 +193,7 @@ public class JavaDeclarationDelegateTestCase extends AbstractJavaExtensionDeclar
     assertTestModuleOperations(extensionDeclaration);
     assertTestModuleConnectionProviders(extensionDeclaration);
     assertTestModuleMessageSource(extensionDeclaration);
+    assertTestModuleTransformers(extensionDeclaration);
     assertModelProperties(extensionDeclaration);
   }
 
@@ -721,6 +726,19 @@ public class JavaDeclarationDelegateTestCase extends AbstractJavaExtensionDeclar
     ImplementingTypeModelProperty typeModelProperty =
         connectionProvider.getModelProperty(ImplementingTypeModelProperty.class).get();
     assertThat(typeModelProperty.getType(), equalTo(HeisenbergConnectionProvider.class));
+  }
+
+  private void assertTestModuleTransformers(ExtensionDeclaration extensionDeclaration) throws Exception {
+    assertThat(extensionDeclaration.getTransformers(), hasSize(1));
+    TransformerDeclaration transformer = extensionDeclaration.getTransformers().get(0);
+    assertThat(transformer.getName(), is(NAME));
+    assertThat(transformer.getSourceTypes(), hasSize(1));
+
+    MetadataType sourceType = transformer.getSourceTypes().get(0);
+    assertThat(sourceType, is(instanceOf(StringType.class)));
+    assertThat(sourceType.getMetadataFormat(), is(JSON));
+
+    assertThat(getType(transformer.getOutputType()), equalTo(Methylamine.class));
   }
 
   private void assertTestModuleMessageSource(ExtensionDeclaration extensionDeclaration) throws Exception {

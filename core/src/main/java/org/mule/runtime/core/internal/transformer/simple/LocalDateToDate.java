@@ -8,9 +8,8 @@ package org.mule.runtime.core.internal.transformer.simple;
 
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.metadata.DataType.fromType;
-import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
 import org.mule.runtime.core.api.transformer.TransformerException;
-import org.mule.runtime.core.transformer.AbstractTransformer;
+import org.mule.runtime.core.transformer.AbstractDiscoverableTransformer;
 
 import java.nio.charset.Charset;
 import java.time.LocalDate;
@@ -24,14 +23,10 @@ import java.util.Date;
  *
  * @since 4.0
  */
-public class LocalDateToDate extends AbstractTransformer implements DiscoverableTransformer {
-
-  /**
-   * Give core transformers a slightly higher priority
-   */
-  private int priorityWeighting = DEFAULT_PRIORITY_WEIGHTING + 1;
+public class LocalDateToDate extends AbstractDiscoverableTransformer {
 
   public LocalDateToDate() {
+    setPriorityWeighting(DEFAULT_PRIORITY_WEIGHTING + 1);
     registerSourceType(fromType(LocalDate.class));
     registerSourceType(fromType(LocalDateTime.class));
     setReturnDataType(fromType(Date.class));
@@ -46,15 +41,5 @@ public class LocalDateToDate extends AbstractTransformer implements Discoverable
     }
 
     throw new TransformerException(createStaticMessage("Unexpected input type: " + src.getClass().getName()));
-  }
-
-  @Override
-  public int getPriorityWeighting() {
-    return priorityWeighting;
-  }
-
-  @Override
-  public void setPriorityWeighting(int weighting) {
-    priorityWeighting = weighting;
   }
 }

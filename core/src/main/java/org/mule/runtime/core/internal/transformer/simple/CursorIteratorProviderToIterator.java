@@ -9,9 +9,8 @@ package org.mule.runtime.core.internal.transformer.simple;
 import static org.mule.runtime.api.metadata.DataType.CURSOR_ITERATOR_PROVIDER;
 import static org.mule.runtime.api.metadata.DataType.ITERATOR;
 import org.mule.runtime.api.streaming.object.CursorIteratorProvider;
-import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
 import org.mule.runtime.core.api.transformer.TransformerException;
-import org.mule.runtime.core.transformer.AbstractTransformer;
+import org.mule.runtime.core.transformer.AbstractDiscoverableTransformer;
 
 import java.nio.charset.Charset;
 import java.util.Iterator;
@@ -21,9 +20,7 @@ import java.util.Iterator;
  *
  * @since 4.0
  */
-public class CursorIteratorProviderToIterator extends AbstractTransformer implements DiscoverableTransformer {
-
-  private int priorityWeighting = DEFAULT_PRIORITY_WEIGHTING;
+public class CursorIteratorProviderToIterator extends AbstractDiscoverableTransformer {
 
   public CursorIteratorProviderToIterator() {
     registerSourceType(CURSOR_ITERATOR_PROVIDER);
@@ -33,21 +30,5 @@ public class CursorIteratorProviderToIterator extends AbstractTransformer implem
   @Override
   protected Object doTransform(Object src, Charset enc) throws TransformerException {
     return ((CursorIteratorProvider) src).openCursor();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public int getPriorityWeighting() {
-    return priorityWeighting;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void setPriorityWeighting(int weighting) {
-    priorityWeighting = weighting;
   }
 }

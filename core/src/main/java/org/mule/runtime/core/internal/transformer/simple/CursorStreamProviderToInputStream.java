@@ -9,9 +9,8 @@ package org.mule.runtime.core.internal.transformer.simple;
 import static org.mule.runtime.api.metadata.DataType.CURSOR_STREAM_PROVIDER;
 import static org.mule.runtime.api.metadata.DataType.INPUT_STREAM;
 import org.mule.runtime.api.streaming.bytes.CursorStreamProvider;
-import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
 import org.mule.runtime.core.api.transformer.TransformerException;
-import org.mule.runtime.core.transformer.AbstractTransformer;
+import org.mule.runtime.core.transformer.AbstractDiscoverableTransformer;
 
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -21,9 +20,7 @@ import java.nio.charset.Charset;
  *
  * @since 4.0
  */
-public class CursorStreamProviderToInputStream extends AbstractTransformer implements DiscoverableTransformer {
-
-  private int priorityWeighting = DEFAULT_PRIORITY_WEIGHTING;
+public class CursorStreamProviderToInputStream extends AbstractDiscoverableTransformer {
 
   public CursorStreamProviderToInputStream() {
     registerSourceType(CURSOR_STREAM_PROVIDER);
@@ -34,21 +31,4 @@ public class CursorStreamProviderToInputStream extends AbstractTransformer imple
   protected Object doTransform(Object src, Charset enc) throws TransformerException {
     return ((CursorStreamProvider) src).openCursor();
   }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public int getPriorityWeighting() {
-    return priorityWeighting;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void setPriorityWeighting(int weighting) {
-    priorityWeighting = weighting;
-  }
-
 }

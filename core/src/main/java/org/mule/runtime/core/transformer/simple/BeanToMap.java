@@ -7,10 +7,9 @@
 package org.mule.runtime.core.transformer.simple;
 
 import org.mule.runtime.api.metadata.DataType;
-import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
 import org.mule.runtime.core.api.transformer.TransformerException;
-import org.mule.runtime.core.transformer.AbstractTransformer;
 import org.mule.runtime.core.api.util.BeanUtils;
+import org.mule.runtime.core.transformer.AbstractDiscoverableTransformer;
 
 import java.nio.charset.Charset;
 import java.util.Map;
@@ -19,9 +18,7 @@ import java.util.Map;
  * Conversts a simple bean object to a Map. every property on the bean will become an entry in the result {@link java.util.Map}.
  * Note that only exposed bean properties with getter and setter methods will be added to the map.
  */
-public class BeanToMap extends AbstractTransformer implements DiscoverableTransformer {
-
-  private int priorityWeighting = DiscoverableTransformer.DEFAULT_PRIORITY_WEIGHTING;
+public class BeanToMap extends AbstractDiscoverableTransformer {
 
   public BeanToMap() {
     registerSourceType(DataType.OBJECT);
@@ -33,16 +30,4 @@ public class BeanToMap extends AbstractTransformer implements DiscoverableTransf
     Map result = BeanUtils.describeBean(src);
     return result;
   }
-
-  @Override
-  public int getPriorityWeighting() {
-    return priorityWeighting;
-  }
-
-  @Override
-  public void setPriorityWeighting(int weighting) {
-    priorityWeighting = weighting;
-  }
-
-
 }

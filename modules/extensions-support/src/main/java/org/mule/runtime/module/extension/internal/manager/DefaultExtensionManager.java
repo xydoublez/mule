@@ -78,13 +78,17 @@ public final class DefaultExtensionManager implements ExtensionManager, MuleCont
   private MuleContext muleContext;
   private ExtensionRegistry extensionRegistry;
   private ConfigurationExpirationMonitor configurationExpirationMonitor;
-  private ExtensionErrorsRegistrant extensionErrorsRegistrant;
+
+  private ExtensionActivator extensionActivator;
 
   @Override
   public void initialise() throws InitialisationException {
     extensionRegistry = new ExtensionRegistry(muleContext.getRegistry());
-    extensionErrorsRegistrant =
+    ExtensionErrorsRegistrant extensionErrorsRegistrant =
         new ExtensionErrorsRegistrant(muleContext.getErrorTypeRepository(), muleContext.getErrorTypeLocator());
+
+    
+    extensionActivator = new ExtensionActivator(extensionErrorsRegistrant, muleContext.getRegistry());
   }
 
   /**
@@ -127,7 +131,7 @@ public final class DefaultExtensionManager implements ExtensionManager, MuleCont
     } else {
       withContextClassLoader(getClassLoader(extensionModel), () -> {
         extensionRegistry.registerExtension(extensionName, extensionModel);
-        extensionErrorsRegistrant.registerErrors(extensionModel);
+        extensionActivator.activateExtension(extensionModel);
       });
     }
   }

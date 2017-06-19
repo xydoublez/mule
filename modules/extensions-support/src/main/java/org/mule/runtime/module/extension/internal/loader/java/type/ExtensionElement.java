@@ -19,4 +19,6 @@ public interface ExtensionElement extends ParameterizableTypeElement, ComponentE
    * @return A list {@link ConfigurationElement} of declared configurations
    */
   List<ConfigurationElement> getConfigurations();
+
+  List<TransformerElement> getTransformers();
 }

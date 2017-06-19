@@ -10,15 +10,11 @@ import static java.lang.String.format;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import static org.mule.runtime.core.api.util.collection.Collectors.toImmutableList;
-import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getParameterClasses;
-import static org.mule.runtime.module.extension.internal.util.MuleExtensionUtils.getClassLoader;
-import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.config.ConfigurationModel;
 import org.mule.runtime.core.api.registry.MuleRegistry;
 import org.mule.runtime.core.api.registry.RegistrationException;
-import org.mule.runtime.core.transformer.simple.StringToEnum;
 import org.mule.runtime.extension.api.runtime.ConfigurationInstance;
 import org.mule.runtime.extension.api.runtime.ConfigurationProvider;
 import org.mule.runtime.extension.api.runtime.ExpirableConfigurationProvider;
@@ -34,7 +30,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,7 +61,6 @@ final class ExtensionRegistry {
       });
 
   private final Map<ExtensionEntityKey, ExtensionModel> extensions = new ConcurrentHashMap<>();
-  private final Set<Class<? extends Enum>> enumClasses = new HashSet<>();
   private final MuleRegistry registry;
 
   /**
@@ -80,25 +74,12 @@ final class ExtensionRegistry {
 
   /**
    * Registers the given {@code extension}
-   *
+   *g
    * @param name           the registration name you want for the {@code extension}
    * @param extensionModel a {@link ExtensionModel}
    */
   void registerExtension(String name, ExtensionModel extensionModel) {
     extensions.put(new ExtensionEntityKey(name), extensionModel);
-    getParameterClasses(extensionModel, getClassLoader(extensionModel)).stream()
-        .filter(type -> Enum.class.isAssignableFrom(type))
-        .forEach(type -> {
-          final Class<Enum> enumClass = (Class<Enum>) type;
-          if (enumClasses.add(enumClass)) {
-            try {
-              registry.registerTransformer(new StringToEnum(enumClass));
-            } catch (MuleException e) {
-              throw new MuleRuntimeException(createStaticMessage("Could not register transformer for enum "
-                  + enumClass.getName()), e);
-            }
-          }
-        });
   }
 
   /**

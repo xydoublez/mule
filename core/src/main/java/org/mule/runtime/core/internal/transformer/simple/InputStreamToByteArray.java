@@ -10,9 +10,8 @@ import static org.mule.runtime.api.metadata.DataType.BYTE_ARRAY;
 import static org.mule.runtime.api.metadata.DataType.CURSOR_STREAM_PROVIDER;
 import static org.mule.runtime.api.metadata.DataType.INPUT_STREAM;
 import org.mule.runtime.api.streaming.bytes.CursorStreamProvider;
-import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
 import org.mule.runtime.core.api.transformer.TransformerException;
-import org.mule.runtime.core.transformer.AbstractTransformer;
+import org.mule.runtime.core.transformer.AbstractDiscoverableTransformer;
 
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -23,12 +22,12 @@ import java.nio.charset.Charset;
  *
  * @since 4.0
  */
-public class InputStreamToByteArray extends AbstractTransformer implements DiscoverableTransformer {
+public class InputStreamToByteArray extends AbstractDiscoverableTransformer {
 
-  private int priorityWeighting = MAX_PRIORITY_WEIGHTING;
   private ObjectToByteArray delegate = new ObjectToByteArray();
 
   public InputStreamToByteArray() {
+    setPriorityWeighting(MAX_PRIORITY_WEIGHTING);
     registerSourceType(CURSOR_STREAM_PROVIDER);
     registerSourceType(INPUT_STREAM);
     setReturnDataType(BYTE_ARRAY);
@@ -37,21 +36,5 @@ public class InputStreamToByteArray extends AbstractTransformer implements Disco
   @Override
   protected Object doTransform(Object src, Charset enc) throws TransformerException {
     return delegate.doTransform(src, enc);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public int getPriorityWeighting() {
-    return priorityWeighting;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void setPriorityWeighting(int weighting) {
-    priorityWeighting = weighting;
   }
 }
