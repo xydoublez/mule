@@ -1,7 +1,7 @@
 {
   "name": "vegan",
   "description": "",
-  "version": "4.0.0-SNAPSHOT",
+  "version": "4.0",
   "vendor": "Mulesoft",
   "category": "COMMUNITY",
   "minMuleVersion": "4.0.0",
@@ -9,7 +9,7 @@
     "prefix": "vegan",
     "namespace": "http://www.mulesoft.org/schema/mule/vegan",
     "schemaLocation": "http://www.mulesoft.org/schema/mule/vegan/current/mule-vegan.xsd",
-    "schemaVersion": "4.0.0-SNAPSHOT",
+    "schemaVersion": "4.0",
     "xsdFileName": "mule-vegan.xsd"
   },
   "resources": [],
@@ -6228,6 +6228,7 @@
   ],
   "connectionProviders": [],
   "messageSources": [],
+  "transformers": [],
   "errors": [
     {
       "type": "RETRY_EXHAUSTED",

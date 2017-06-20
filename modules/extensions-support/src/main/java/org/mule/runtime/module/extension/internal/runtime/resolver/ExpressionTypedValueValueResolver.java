@@ -13,6 +13,7 @@ import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.metadata.DataType;
 import org.mule.runtime.api.metadata.TypedValue;
 import org.mule.runtime.core.api.TransformationService;
+import org.mule.runtime.core.api.transformer.TransformationServiceAware;
 
 import javax.inject.Inject;
 
@@ -25,7 +26,8 @@ import javax.inject.Inject;
  * @param <T>
  * @since 4.0
  */
-public class ExpressionTypedValueValueResolver<T> extends ExpressionValueResolver<TypedValue<T>> implements Initialisable {
+public class ExpressionTypedValueValueResolver<T> extends ExpressionValueResolver<TypedValue<T>> implements Initialisable,
+    TransformationServiceAware {
 
   private final Class<T> expectedClass;
   private TypeSafeTransformer typeSafeTransformer;
@@ -55,6 +57,7 @@ public class ExpressionTypedValueValueResolver<T> extends ExpressionValueResolve
     return typedValue;
   }
 
+  @Override
   public void setTransformationService(TransformationService transformationService) {
     this.transformationService = transformationService;
   }

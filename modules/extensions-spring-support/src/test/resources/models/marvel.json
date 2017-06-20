@@ -1,7 +1,7 @@
 {
   "name": "Marvel",
   "description": "",
-  "version": "4.0.0-SNAPSHOT",
+  "version": "4.0",
   "vendor": "Mulesoft",
   "category": "COMMUNITY",
   "minMuleVersion": "4.0.0",
@@ -9,7 +9,7 @@
     "prefix": "marvel",
     "namespace": "http://www.mulesoft.org/schema/mule/marvel",
     "schemaLocation": "http://www.mulesoft.org/schema/mule/marvel/current/mule-marvel.xsd",
-    "schemaVersion": "4.0.0-SNAPSHOT",
+    "schemaVersion": "4.0",
     "xsdFileName": "mule-marvel.xsd"
   },
   "resources": [],
@@ -2429,6 +2429,7 @@
   ],
   "connectionProviders": [],
   "messageSources": [],
+  "transformers": [],
   "errors": [
     {
       "type": "CONNECTIVITY",

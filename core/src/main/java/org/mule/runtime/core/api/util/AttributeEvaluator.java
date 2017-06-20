@@ -16,6 +16,7 @@ import static org.mule.runtime.core.api.el.ExpressionManager.DEFAULT_EXPRESSION_
 
 import org.mule.runtime.api.el.BindingContext;
 import org.mule.runtime.api.metadata.DataType;
+import org.mule.runtime.api.metadata.MediaType;
 import org.mule.runtime.api.metadata.TypedValue;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.el.ExtendedExpressionManager;
@@ -65,12 +66,19 @@ public class AttributeEvaluator {
 
     switch (resolveAttributeType()) {
       case EXPRESSION:
-        if (!(expectedDataType == null || BLACK_LIST_TYPES.contains(expectedDataType.getType()))) {
+        //if (!(expectedDataType == null || BLACK_LIST_TYPES.contains(expectedDataType.getType()))) {
+        //  expressionResolver =
+        //      event -> expressionManager.evaluate(this.attributeValue, expectedDataType, NULL_BINDING_CONTEXT, event);
+        //} else {
+        if (expectedDataType == null
+            || BLACK_LIST_TYPES.contains(expectedDataType.getType())
+            || expectedDataType.getMediaType() == MediaType.APPLICATION_JAVA) {
+          expressionResolver = event -> expressionManager.evaluate(this.attributeValue, event);
+        } else {
           expressionResolver =
               event -> expressionManager.evaluate(this.attributeValue, expectedDataType, NULL_BINDING_CONTEXT, event);
-        } else {
-          expressionResolver = event -> expressionManager.evaluate(this.attributeValue, event);
         }
+        //}
         break;
       case PARSE_EXPRESSION:
         expressionResolver = event -> new TypedValue<>(expressionManager.parse(this.attributeValue, event, null), STRING);

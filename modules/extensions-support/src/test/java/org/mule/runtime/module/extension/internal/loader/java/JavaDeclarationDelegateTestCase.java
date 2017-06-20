@@ -16,10 +16,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
-import static org.mule.metadata.api.model.MetadataFormat.JSON;
 import static org.mule.metadata.java.api.utils.JavaTypeUtils.getType;
 import static org.mule.runtime.api.dsl.DslResolvingContext.getDefault;
 import static org.mule.runtime.api.meta.Category.COMMUNITY;
@@ -27,6 +27,8 @@ import static org.mule.runtime.api.meta.Category.SELECT;
 import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
 import static org.mule.runtime.api.meta.ExpressionSupport.REQUIRED;
 import static org.mule.runtime.api.meta.ExpressionSupport.SUPPORTED;
+import static org.mule.runtime.api.metadata.MediaType.APPLICATION_JSON;
+import static org.mule.runtime.api.metadata.MediaType.APPLICATION_XML;
 import static org.mule.runtime.extension.api.ExtensionConstants.TLS_PARAMETER_NAME;
 import static org.mule.runtime.extension.api.annotation.Extension.DEFAULT_CONFIG_NAME;
 import static org.mule.runtime.extension.api.annotation.param.Optional.PAYLOAD;
@@ -36,7 +38,6 @@ import static org.mule.test.heisenberg.extension.HeisenbergConnectionProvider.SA
 import static org.mule.test.heisenberg.extension.HeisenbergExtension.AGE;
 import static org.mule.test.heisenberg.extension.HeisenbergExtension.EXTENSION_DESCRIPTION;
 import static org.mule.test.heisenberg.extension.HeisenbergExtension.HEISENBERG;
-import static org.mule.test.heisenberg.extension.JsonToMethylamine.NAME;
 import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.TYPE_BUILDER;
 import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.TYPE_LOADER;
 import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.arrayOf;
@@ -66,6 +67,7 @@ import org.mule.runtime.api.meta.model.declaration.fluent.ParameterDeclaration;
 import org.mule.runtime.api.meta.model.declaration.fluent.SourceDeclaration;
 import org.mule.runtime.api.meta.model.declaration.fluent.TransformerDeclaration;
 import org.mule.runtime.api.meta.model.declaration.fluent.WithOperationsDeclaration;
+import org.mule.runtime.api.metadata.MediaType;
 import org.mule.runtime.api.tls.TlsContextFactory;
 import org.mule.runtime.extension.api.annotation.Configuration;
 import org.mule.runtime.extension.api.annotation.Configurations;
@@ -94,7 +96,9 @@ import org.mule.test.heisenberg.extension.HeisenbergConnectionProvider;
 import org.mule.test.heisenberg.extension.HeisenbergExtension;
 import org.mule.test.heisenberg.extension.HeisenbergOperations;
 import org.mule.test.heisenberg.extension.HeisenbergSource;
+import org.mule.test.heisenberg.extension.JsonToMethylamine;
 import org.mule.test.heisenberg.extension.MoneyLaunderingOperation;
+import org.mule.test.heisenberg.extension.XmlToMethylamine;
 import org.mule.test.heisenberg.extension.exception.CureCancerExceptionEnricher;
 import org.mule.test.heisenberg.extension.model.HealthStatus;
 import org.mule.test.heisenberg.extension.model.Investment;
@@ -462,7 +466,7 @@ public class JavaDeclarationDelegateTestCase extends AbstractJavaExtensionDeclar
   }
 
   private void assertTestModuleOperations(ExtensionDeclaration extensionDeclaration) throws Exception {
-    assertThat(extensionDeclaration.getOperations(), hasSize(35));
+    assertThat(extensionDeclaration.getOperations(), hasSize(36));
 
     WithOperationsDeclaration withOperationsDeclaration = extensionDeclaration.getConfigurations().get(0);
     assertThat(withOperationsDeclaration.getOperations().size(), is(8));
@@ -729,16 +733,26 @@ public class JavaDeclarationDelegateTestCase extends AbstractJavaExtensionDeclar
   }
 
   private void assertTestModuleTransformers(ExtensionDeclaration extensionDeclaration) throws Exception {
-    assertThat(extensionDeclaration.getTransformers(), hasSize(1));
-    TransformerDeclaration transformer = extensionDeclaration.getTransformers().get(0);
-    assertThat(transformer.getName(), is(NAME));
+    assertThat(extensionDeclaration.getTransformers(), hasSize(2));
+    assertTransformer(extensionDeclaration.getTransformers().get(0), JsonToMethylamine.NAME, StringType.class, APPLICATION_JSON,
+                      Methylamine.class);
+    assertTransformer(extensionDeclaration.getTransformers().get(1), XmlToMethylamine.NAME, StringType.class, APPLICATION_XML,
+                      Methylamine.class);
+  }
+
+  private void assertTransformer(TransformerDeclaration transformer,
+                                 String name,
+                                 Class<? extends MetadataType> sourceTypeClass,
+                                 MediaType sourceMediaType,
+                                 Class expectedOutputType) {
+    assertThat(transformer.getName(), is(name));
     assertThat(transformer.getSourceTypes(), hasSize(1));
 
     MetadataType sourceType = transformer.getSourceTypes().get(0);
-    assertThat(sourceType, is(instanceOf(StringType.class)));
-    assertThat(sourceType.getMetadataFormat(), is(JSON));
+    assertThat(sourceType, is(instanceOf(sourceTypeClass)));
+    assertThat(sourceType.getMetadataFormat().getValidMimeTypes(), contains(sourceMediaType.toString()));
 
-    assertThat(getType(transformer.getOutputType()), equalTo(Methylamine.class));
+    assertThat(getType(transformer.getOutputType()), equalTo(expectedOutputType));
   }
 
   private void assertTestModuleMessageSource(ExtensionDeclaration extensionDeclaration) throws Exception {

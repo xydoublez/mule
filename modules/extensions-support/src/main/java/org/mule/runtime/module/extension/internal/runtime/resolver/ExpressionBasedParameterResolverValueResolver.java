@@ -10,6 +10,7 @@ import org.mule.metadata.api.model.MetadataType;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.core.api.TransformationService;
 import org.mule.runtime.core.api.el.ExtendedExpressionManager;
+import org.mule.runtime.core.api.transformer.TransformationServiceAware;
 import org.mule.runtime.extension.api.runtime.parameter.ParameterResolver;
 
 import javax.inject.Inject;
@@ -19,7 +20,8 @@ import javax.inject.Inject;
  *
  * @since 4.0
  */
-public class ExpressionBasedParameterResolverValueResolver<T> implements ValueResolver<ParameterResolver<T>> {
+public class ExpressionBasedParameterResolverValueResolver<T> implements ValueResolver<ParameterResolver<T>>,
+    TransformationServiceAware {
 
   private final String exp;
   private final MetadataType metadataType;
@@ -54,6 +56,7 @@ public class ExpressionBasedParameterResolverValueResolver<T> implements ValueRe
     return true;
   }
 
+  @Override
   public void setTransformationService(TransformationService transformationService) {
     this.transformationService = transformationService;
   }

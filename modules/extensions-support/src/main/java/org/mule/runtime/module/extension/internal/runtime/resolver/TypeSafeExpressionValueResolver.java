@@ -8,13 +8,13 @@ package org.mule.runtime.module.extension.internal.runtime.resolver;
 
 import static org.mule.metadata.java.api.utils.JavaTypeUtils.getType;
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
-import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.toDataType;
 import org.mule.metadata.api.model.MetadataType;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.core.api.TransformationService;
 import org.mule.runtime.core.api.el.ExtendedExpressionManager;
+import org.mule.runtime.core.api.transformer.TransformationServiceAware;
 import org.mule.runtime.core.api.transformer.Transformer;
 import org.mule.runtime.core.api.util.AttributeEvaluator;
 
@@ -32,7 +32,7 @@ import javax.inject.Inject;
  * @param <T>
  * @since 3.7.0
  */
-public class TypeSafeExpressionValueResolver<T> implements ValueResolver<T>, Initialisable {
+public class TypeSafeExpressionValueResolver<T> implements ValueResolver<T>, Initialisable, TransformationServiceAware {
 
   private final MetadataType expectedMetadataType;
   private final Class<T> expectedType;
@@ -67,13 +67,15 @@ public class TypeSafeExpressionValueResolver<T> implements ValueResolver<T>, Ini
 
   @Override
   public void initialise() throws InitialisationException {
-    ExpressionValueResolver resolver = new ExpressionValueResolver(expression, toDataType(expectedMetadataType));
+    ExpressionTypedValueValueResolver resolver = new ExpressionTypedValueValueResolver(expression, Object.class);
+    //ExpressionValueResolver resolver = new ExpressionValueResolver(expression, toDataType(expectedMetadataType));
     resolver.setExtendedExpressionManager(extendedExpressionManager);
     delegate = new TypeSafeValueResolverWrapper<>(resolver, expectedType);
     delegate.setTransformationService(transformationService);
     delegate.initialise();
   }
 
+  @Override
   public void setTransformationService(TransformationService transformationService) {
     this.transformationService = transformationService;
   }

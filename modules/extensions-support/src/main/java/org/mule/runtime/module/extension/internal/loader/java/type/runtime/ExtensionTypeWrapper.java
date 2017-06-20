@@ -66,7 +66,6 @@ public class ExtensionTypeWrapper<T> extends ComponentWrapper implements Extensi
   public List<TransformerElement> getTransformers() {
     return getAnnotation(Transformers.class).map(classes -> Stream.of(classes.value())
         .map(c -> (TransformerElement) new TransformerElementWrapper(c))
-        .collect(toList())
-    ).orElse(emptyList());
+        .collect(toList())).orElse(emptyList());
   }
 }

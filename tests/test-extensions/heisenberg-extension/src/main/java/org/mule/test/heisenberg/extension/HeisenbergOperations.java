@@ -24,6 +24,7 @@ import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.execution.Execution;
 import org.mule.runtime.extension.api.annotation.param.Config;
 import org.mule.runtime.extension.api.annotation.param.Connection;
+import org.mule.runtime.extension.api.annotation.param.Content;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
@@ -41,6 +42,7 @@ import org.mule.test.heisenberg.extension.model.HealthStatus;
 import org.mule.test.heisenberg.extension.model.Investment;
 import org.mule.test.heisenberg.extension.model.KillParameters;
 import org.mule.test.heisenberg.extension.model.KnockeableDoor;
+import org.mule.test.heisenberg.extension.model.Methylamine;
 import org.mule.test.heisenberg.extension.model.PersonalInfo;
 import org.mule.test.heisenberg.extension.model.RecursiveChainA;
 import org.mule.test.heisenberg.extension.model.RecursiveChainB;
@@ -140,6 +142,10 @@ public class HeisenbergOperations implements Disposable {
 
   public List<String> killWithMultipleWildCardWeapons(List<? extends Weapon> wildCardWeapons) {
     return wildCardWeapons.stream().map(Weapon::kill).collect(Collectors.toList());
+  }
+
+  public Methylamine asMethylamine(@Content Methylamine methylamine) {
+    return methylamine;
   }
 
   @Throws(HeisenbergErrorTyperProvider.class)

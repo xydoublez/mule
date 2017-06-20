@@ -24,8 +24,9 @@ public class TransformerElementWrapper implements TransformerElement {
     this.declaringClass = declaringClass;
     if (!isInstantiable(declaringClass)) {
       throw new IllegalTransformerModelDefinitionException(String.format(
-          "Implicit transformer of type '%s' is not instantiable. Implicit transformers are required to be of a "
-              + "concrete type and have a default public transformer", declaringClass.getName()));
+                                                                         "Implicit transformer of type '%s' is not instantiable. Implicit transformers are required to be of a "
+                                                                             + "concrete type and have a default public transformer",
+                                                                         declaringClass.getName()));
     }
   }
 

@@ -6,12 +6,15 @@
  */
 package org.mule.runtime.module.extension.internal.runtime.resolver;
 
+import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
 import static org.mule.runtime.core.api.util.ClassUtils.isInstance;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.metadata.DataType;
+import org.mule.runtime.api.metadata.TypedValue;
 import org.mule.runtime.core.api.TransformationService;
+import org.mule.runtime.core.api.transformer.TransformationServiceAware;
 import org.mule.runtime.core.api.transformer.Transformer;
 
 import javax.inject.Inject;
@@ -26,7 +29,7 @@ import javax.inject.Inject;
  * @param <T>
  * @since 4.0
  */
-public class TypeSafeValueResolverWrapper<T> implements ValueResolver<T>, Initialisable {
+public class TypeSafeValueResolverWrapper<T> implements ValueResolver<T>, Initialisable, TransformationServiceAware {
 
   private final Class<T> expectedType;
   private ValueResolver valueResolverDelegate;
@@ -52,12 +55,21 @@ public class TypeSafeValueResolverWrapper<T> implements ValueResolver<T>, Initia
 
   @Override
   public void initialise() throws InitialisationException {
+    initialiseIfNeeded(valueResolverDelegate);
     TypeSafeTransformer typeSafeTransformer = new TypeSafeTransformer(transformationService);
     resolver = context -> {
       Object resolvedValue = valueResolverDelegate.resolve(context);
+      DataType resolvedType;
+      if (resolvedValue instanceof TypedValue) {
+        final TypedValue typedValue = (TypedValue) resolvedValue;
+        resolvedType = typedValue.getDataType();
+        resolvedValue = typedValue.getValue();
+      } else {
+        resolvedType = DataType.fromObject(resolvedValue);
+      }
       return isInstance(expectedType, resolvedValue)
           ? (T) resolvedValue
-          : typeSafeTransformer.transform(resolvedValue, DataType.fromObject(resolvedValue), DataType.fromType(expectedType));
+          : typeSafeTransformer.transform(resolvedValue, resolvedType, DataType.fromType(expectedType));
     };
 
     if (!valueResolverDelegate.isDynamic()) {
@@ -65,8 +77,13 @@ public class TypeSafeValueResolverWrapper<T> implements ValueResolver<T>, Initia
     }
   }
 
+  @Override
   public void setTransformationService(TransformationService transformationService) {
     this.transformationService = transformationService;
+    if (valueResolverDelegate instanceof TransformationServiceAware) {
+      ((TransformationServiceAware) valueResolverDelegate).setTransformationService(transformationService);
+    }
+
   }
 
   @FunctionalInterface

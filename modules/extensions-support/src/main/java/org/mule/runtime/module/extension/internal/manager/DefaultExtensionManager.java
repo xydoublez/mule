@@ -87,7 +87,7 @@ public final class DefaultExtensionManager implements ExtensionManager, MuleCont
     ExtensionErrorsRegistrant extensionErrorsRegistrant =
         new ExtensionErrorsRegistrant(muleContext.getErrorTypeRepository(), muleContext.getErrorTypeLocator());
 
-    
+
     extensionActivator = new ExtensionActivator(extensionErrorsRegistrant, muleContext.getRegistry());
   }
 

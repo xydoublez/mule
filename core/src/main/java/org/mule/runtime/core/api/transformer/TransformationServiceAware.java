@@ -4,8 +4,11 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.module.extension.internal.loader.java.type;
+package org.mule.runtime.core.api.transformer;
 
-public interface TransformerElement extends WithName, WithAlias, WithDeclaringClass {
+import org.mule.runtime.core.api.TransformationService;
 
+public interface TransformationServiceAware {
+
+  void setTransformationService(TransformationService transformationService);
 }

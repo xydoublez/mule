@@ -6,6 +6,7 @@
  */
 package org.mule.runtime.module.extension.internal.manager;
 
+import static java.lang.String.format;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getParameterClasses;
 import static org.mule.runtime.module.extension.internal.util.MuleExtensionUtils.getClassLoader;
@@ -14,8 +15,8 @@ import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.core.api.registry.MuleRegistry;
 import org.mule.runtime.core.transformer.simple.StringToEnum;
-import org.mule.runtime.extension.api.runtime.transformer.ImplicitTransformer;
 import org.mule.runtime.module.extension.internal.loader.java.property.ImplicitTransformerFactoryModelProperty;
+import org.mule.runtime.module.extension.internal.runtime.transformer.ExtensionDiscoverableTransformer;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -34,16 +35,23 @@ final class ExtensionActivator {
 
   void activateExtension(ExtensionModel extensionModel) {
     extensionErrorsRegistrant.registerErrors(extensionModel);
+    registerImplicitTransformers(extensionModel);
     registerEnumTransformers(extensionModel);
   }
 
   private void registerImplicitTransformers(ExtensionModel extensionModel) {
-    extensionModel.getModelProperty(ImplicitTransformerFactoryModelProperty.class).ifPresent(mp -> {
-      mp.getImplicitTransformerFactory().forEach(factory -> {
-        ImplicitTransformer transformer = factory.create();
-        registry
-      });
-    });
+    extensionModel.getTransformerModels()
+        .forEach(transformer -> transformer.getModelProperty(ImplicitTransformerFactoryModelProperty.class)
+            .map(ImplicitTransformerFactoryModelProperty::getImplicitTransformerFactory)
+            .ifPresent(factory -> {
+              try {
+                registry.registerTransformer(new ExtensionDiscoverableTransformer(extensionModel, transformer, factory.create()));
+              } catch (Exception e) {
+                throw new MuleRuntimeException(createStaticMessage(format("Could not register transformer '%s' for extension '%s'",
+                                                                          transformer.getName(), extensionModel.getName())),
+                                               e);
+              }
+            }));
   }
 
   private void registerEnumTransformers(ExtensionModel extensionModel) {
@@ -56,7 +64,7 @@ final class ExtensionActivator {
               registry.registerTransformer(new StringToEnum(enumClass));
             } catch (MuleException e) {
               throw new MuleRuntimeException(createStaticMessage("Could not register transformer for enum "
-                                                                     + enumClass.getName()), e);
+                  + enumClass.getName()), e);
             }
           }
         });

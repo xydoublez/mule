@@ -1,7 +1,7 @@
 {
   "name": "List",
   "description": "List Test connector",
-  "version": "4.0.0-SNAPSHOT",
+  "version": "4.0",
   "vendor": "Mulesoft",
   "category": "COMMUNITY",
   "minMuleVersion": "4.0.0",
@@ -9,7 +9,7 @@
     "prefix": "list",
     "namespace": "http://www.mulesoft.org/schema/mule/list",
     "schemaLocation": "http://www.mulesoft.org/schema/mule/list/current/mule-list.xsd",
-    "schemaVersion": "4.0.0-SNAPSHOT",
+    "schemaVersion": "4.0",
     "xsdFileName": "mule-list.xsd"
   },
   "resources": [],
@@ -1418,6 +1418,7 @@
   ],
   "connectionProviders": [],
   "messageSources": [],
+  "transformers": [],
   "errors": [
     {
       "type": "CONNECTIVITY",

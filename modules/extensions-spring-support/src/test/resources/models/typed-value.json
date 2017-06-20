@@ -1,7 +1,7 @@
 {
   "name": "TypedValue",
   "description": "",
-  "version": "4.0.0-SNAPSHOT",
+  "version": "4.0",
   "vendor": "Mulesoft",
   "category": "COMMUNITY",
   "minMuleVersion": "4.0.0",
@@ -9,7 +9,7 @@
     "prefix": "typed-value",
     "namespace": "http://www.mulesoft.org/schema/mule/typed-value",
     "schemaLocation": "http://www.mulesoft.org/schema/mule/typed-value/current/mule-typed-value.xsd",
-    "schemaVersion": "4.0.0-SNAPSHOT",
+    "schemaVersion": "4.0",
     "xsdFileName": "mule-typed-value.xsd"
   },
   "resources": [],
@@ -2770,6 +2770,7 @@
       "kind": "source"
     }
   ],
+  "transformers": [],
   "errors": [
     {
       "type": "CONNECTIVITY",

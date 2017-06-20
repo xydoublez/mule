@@ -1,7 +1,7 @@
 {
   "name": "StringList",
   "description": "List Test connector",
-  "version": "4.0.0-SNAPSHOT",
+  "version": "4.0",
   "vendor": "Mulesoft",
   "category": "COMMUNITY",
   "minMuleVersion": "4.0.0",
@@ -9,7 +9,7 @@
     "prefix": "string-list",
     "namespace": "http://www.mulesoft.org/schema/mule/string-list",
     "schemaLocation": "http://www.mulesoft.org/schema/mule/string-list/current/mule-string-list.xsd",
-    "schemaVersion": "4.0.0-SNAPSHOT",
+    "schemaVersion": "4.0",
     "xsdFileName": "mule-string-list.xsd"
   },
   "resources": [],
@@ -346,6 +346,7 @@
   ],
   "connectionProviders": [],
   "messageSources": [],
+  "transformers": [],
   "errors": [
     {
       "type": "CONNECTIVITY",

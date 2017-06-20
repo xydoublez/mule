@@ -1,7 +1,7 @@
 {
   "name": "soap",
   "description": "Soap Connect Test Extension",
-  "version": "4.0.0-SNAPSHOT",
+  "version": "4.0",
   "vendor": "Mulesoft",
   "category": "COMMUNITY",
   "minMuleVersion": "4.0.0",
@@ -9,7 +9,7 @@
     "prefix": "soap",
     "namespace": "http://www.mulesoft.org/schema/mule/soap",
     "schemaLocation": "http://www.mulesoft.org/schema/mule/soap/current/mule-soap.xsd",
-    "schemaVersion": "4.0.0-SNAPSHOT",
+    "schemaVersion": "4.0",
     "xsdFileName": "mule-soap.xsd"
   },
   "resources": [],
@@ -2713,6 +2713,7 @@
   ],
   "connectionProviders": [],
   "messageSources": [],
+  "transformers": [],
   "errors": [
     {
       "type": "CONNECTIVITY",

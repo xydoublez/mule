@@ -25,7 +25,8 @@ public class DefaultImplicitTransformerFactory implements ImplicitTransformerFac
       return instantiateClass(transformerType);
     } catch (Exception e) {
       throw new MuleRuntimeException(createStaticMessage(
-          "Could not instantiate ImplicitTransformer of type " + transformerType), e);
+                                                         "Could not instantiate ImplicitTransformer of type " + transformerType),
+                                     e);
     }
   }
 }

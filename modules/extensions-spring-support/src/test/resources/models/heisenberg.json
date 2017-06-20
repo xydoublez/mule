@@ -1,7 +1,7 @@
 {
   "name": "Heisenberg",
   "description": "My Test Extension just to unit test",
-  "version": "4.0.0-SNAPSHOT",
+  "version": "4.0",
   "vendor": "Mulesoft",
   "category": "SELECT",
   "minMuleVersion": "4.1.0",
@@ -9,7 +9,7 @@
     "prefix": "heisenberg",
     "namespace": "http://www.mulesoft.org/schema/mule/heisenberg",
     "schemaLocation": "http://www.mulesoft.org/schema/mule/heisenberg/current/mule-heisenberg.xsd",
-    "schemaVersion": "4.0.0-SNAPSHOT",
+    "schemaVersion": "4.0",
     "xsdFileName": "mule-heisenberg.xsd"
   },
   "resources": [],
@@ -6410,6 +6410,114 @@
       "output": {
         "type": {
           "format": "java",
+          "type": "@ref:org.mule.test.heisenberg.extension.model.Methylamine"
+        },
+        "hasDynamicType": false,
+        "description": "",
+        "modelProperties": {}
+      },
+      "outputAttributes": {
+        "type": {
+          "format": "java",
+          "type": "Void"
+        },
+        "hasDynamicType": false,
+        "description": "",
+        "modelProperties": {}
+      },
+      "transactional": false,
+      "requiresConnection": false,
+      "supportsStreaming": false,
+      "stereotypes": [],
+      "parameterGroupModels": [
+        {
+          "parameters": [
+            {
+              "type": {
+                "format": "java",
+                "type": "@ref:org.mule.test.heisenberg.extension.model.Methylamine"
+              },
+              "hasDynamicType": false,
+              "required": false,
+              "isConfigOverride": false,
+              "expressionSupport": "SUPPORTED",
+              "defaultValue": "#[payload]",
+              "role": "PRIMARY_CONTENT",
+              "dslConfiguration": {
+                "allowsInlineDefinition": true,
+                "allowsReferences": false,
+                "allowTopLevelDefinition": false
+              },
+              "layoutModel": {
+                "password": false,
+                "text": false,
+                "query": false,
+                "order": 1
+              },
+              "name": "methylamine",
+              "description": "",
+              "modelProperties": {}
+            }
+          ],
+          "exclusiveParametersModels": [],
+          "showInDsl": false,
+          "name": "General",
+          "description": "",
+          "modelProperties": {}
+        },
+        {
+          "parameters": [
+            {
+              "type": {
+                "format": "java",
+                "type": "String",
+                "annotations": {
+                  "typeId": "java.lang.String"
+                }
+              },
+              "hasDynamicType": false,
+              "required": false,
+              "isConfigOverride": false,
+              "expressionSupport": "NOT_SUPPORTED",
+              "role": "BEHAVIOUR",
+              "dslConfiguration": {
+                "allowsInlineDefinition": true,
+                "allowsReferences": true,
+                "allowTopLevelDefinition": false
+              },
+              "layoutModel": {
+                "password": false,
+                "text": false,
+                "query": false,
+                "tabName": "Advanced"
+              },
+              "name": "target",
+              "displayModel": {
+                "displayName": "Target Variable"
+              },
+              "description": "The name of a variable on which the operation\u0027s output will be placed",
+              "modelProperties": {}
+            }
+          ],
+          "exclusiveParametersModels": [],
+          "showInDsl": false,
+          "name": "Output",
+          "description": "",
+          "modelProperties": {}
+        }
+      ],
+      "name": "asMethylamine",
+      "description": "",
+      "modelProperties": {},
+      "kind": "operation"
+    },
+    {
+      "blocking": true,
+      "executionType": "CPU_LITE",
+      "errors": [],
+      "output": {
+        "type": {
+          "format": "java",
           "type": "String",
           "annotations": {
             "typeId": "java.lang.String"
@@ -12232,6 +12340,44 @@
       "kind": "source"
     }
   ],
+  "transformers": [
+    {
+      "name": "jsonToMethylamine",
+      "sourceTypes": [
+        {
+          "format": "json",
+          "type": "String",
+          "annotations": {
+            "typeId": "java.lang.String"
+          }
+        }
+      ],
+      "outputType": {
+        "format": "java",
+        "type": "@ref:org.mule.test.heisenberg.extension.model.Methylamine"
+      },
+      "description": "",
+      "modelProperties": {}
+    },
+    {
+      "name": "xmlToMethylamine",
+      "sourceTypes": [
+        {
+          "format": "xml",
+          "type": "String",
+          "annotations": {
+            "typeId": "java.lang.String"
+          }
+        }
+      ],
+      "outputType": {
+        "format": "java",
+        "type": "@ref:org.mule.test.heisenberg.extension.model.Methylamine"
+      },
+      "description": "",
+      "modelProperties": {}
+    }
+  ],
   "errors": [
     {
       "type": "CONNECTIVITY",
@@ -16229,7 +16375,7 @@
         },
         {
           "key": {
-            "name": "isStolen"
+            "name": "stolen"
           },
           "model": {
             "type": "Boolean",

@@ -90,7 +90,7 @@ public class TypeBasedTransformerResolver implements TransformerResolver, MuleCo
     Transformer compositeTransformer = graphTransformerResolver.resolve(source, result);
     if (compositeTransformer != null) {
       // Needs to create a new list because the lookup returns a cached instance
-      trans = new LinkedList<Transformer>(trans);
+      trans = new LinkedList<>(trans);
       trans.add(compositeTransformer);
     }
 

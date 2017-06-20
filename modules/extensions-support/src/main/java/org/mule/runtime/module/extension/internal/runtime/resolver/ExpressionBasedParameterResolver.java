@@ -13,6 +13,7 @@ import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.core.api.TransformationService;
 import org.mule.runtime.core.api.el.ExtendedExpressionManager;
+import org.mule.runtime.core.api.transformer.TransformationServiceAware;
 import org.mule.runtime.extension.api.runtime.parameter.ParameterResolver;
 
 import java.util.Optional;
@@ -25,7 +26,7 @@ import javax.inject.Inject;
  * @param <T> Concrete parameter type to be resolved
  * @since 4.0
  */
-class ExpressionBasedParameterResolver<T> implements ParameterResolver<T>, Initialisable {
+class ExpressionBasedParameterResolver<T> implements ParameterResolver<T>, Initialisable, TransformationServiceAware {
 
   private final String expression;
   private final ValueResolvingContext context;
@@ -71,6 +72,7 @@ class ExpressionBasedParameterResolver<T> implements ParameterResolver<T>, Initi
     valueResolver.initialise();
   }
 
+  @Override
   public void setTransformationService(TransformationService transformationService) {
     this.transformationService = transformationService;
   }

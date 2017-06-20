@@ -6,7 +6,6 @@
  */
 package org.mule.runtime.module.extension.internal.runtime.transformer;
 
-import static org.mule.metadata.java.api.utils.JavaTypeUtils.getType;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.disposeIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.startIfNeeded;
@@ -19,7 +18,6 @@ import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.lifecycle.Lifecycle;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.transformer.TransformerModel;
-import org.mule.runtime.api.metadata.DataType;
 import org.mule.runtime.core.api.transformer.TransformerException;
 import org.mule.runtime.core.transformer.AbstractDiscoverableTransformer;
 import org.mule.runtime.extension.api.runtime.transformer.ImplicitTransformer;
@@ -32,42 +30,25 @@ import org.slf4j.LoggerFactory;
 public class ExtensionDiscoverableTransformer extends AbstractDiscoverableTransformer implements Lifecycle {
 
   private final static Logger LOGGER = LoggerFactory.getLogger(ExtensionDiscoverableTransformer.class);
-  
+
   private final ExtensionModel extensionModel;
   private final TransformerModel transformerModel;
   private final ClassLoader extensionClassLoader;
   private final ImplicitTransformer delegate;
 
-  public ExtensionDiscoverableTransformer(ExtensionModel extensionModel, TransformerModel transformerModel, ImplicitTransformer delegate) {
+  public ExtensionDiscoverableTransformer(ExtensionModel extensionModel, TransformerModel transformerModel,
+                                          ImplicitTransformer delegate) {
     this.extensionModel = extensionModel;
     this.transformerModel = transformerModel;
     this.delegate = delegate;
     extensionClassLoader = getClassLoader(extensionModel);
-    registerSourceTypes();
-    registerOutputType();
+    delegate.getSourceTypes().forEach(this::registerSourceType);
+    setReturnDataType(delegate.getOutputType());
   }
 
   @Override
   protected Object doTransform(Object src, Charset enc) throws TransformerException {
     return withContextClassLoader(extensionClassLoader, () -> delegate.transform(src));
-  }
-
-  private void registerSourceTypes() {
-    withContextClassLoader(extensionClassLoader, () ->
-        transformerModel.getSourceTypes().forEach(sourceType -> {
-          Class<?> type = getType(sourceType);
-          sourceType.getMetadataFormat().getValidMimeTypes()
-              .forEach(mimeType -> registerSourceType(DataType.builder().type(type).mediaType(mimeType).build())
-              );
-        }));
-  }
-
-  private void registerOutputType() {
-    MetadataType outputType = transformerModel.getOutputType();
-    setReturnDataType(DataType.builder()
-                          .type(getType(outputType))
-                          .mediaType(getFirstMediaType(outputType))
-                          .build());
   }
 
   @Override
