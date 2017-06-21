@@ -6,15 +6,15 @@
  */
 package org.mule.runtime.module.extension.internal.runtime.resolver;
 
-import static org.mule.metadata.java.api.utils.JavaTypeUtils.getType;
+import static org.mule.runtime.api.metadata.MediaType.APPLICATION_JAVA;
 import static org.mule.runtime.core.api.util.ClassUtils.isInstance;
+import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.toDataType;
 import org.mule.metadata.api.model.MetadataType;
 import org.mule.runtime.api.el.BindingContext;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.metadata.DataType;
-import org.mule.runtime.api.metadata.MediaType;
 import org.mule.runtime.api.metadata.TypedValue;
 import org.mule.runtime.core.api.TransformationService;
 import org.mule.runtime.core.api.transformer.TransformationServiceAware;
@@ -44,7 +44,7 @@ public class TypeSafeExpressionValueResolver<T> extends ExpressionValueResolver 
   private TransformationService transformationService;
 
   public TypeSafeExpressionValueResolver(String expression, MetadataType expectedMetadataType) {
-    super(expression, DataType.builder().type(getType(expectedMetadataType)).mediaType(MediaType.APPLICATION_JAVA).build());
+    super(expression, DataType.builder(toDataType(expectedMetadataType)).mediaType(APPLICATION_JAVA).build());
   }
 
   @Override

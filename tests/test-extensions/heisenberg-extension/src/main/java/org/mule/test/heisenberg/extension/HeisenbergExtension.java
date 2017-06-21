@@ -68,7 +68,7 @@ import javax.inject.Inject;
 @ExternalLib(name = HeisenbergExtension.HEISENBERG_LIB_NAME, description = HeisenbergExtension.HEISENBERG_LIB_DESCRIPTION,
     fileName = HeisenbergExtension.HEISENBERG_LIB_FILE_NAME, requiredClassName = HeisenbergExtension.HEISENBERG_LIB_CLASS_NAME)
 @ErrorTypes(HeisenbergErrors.class)
-@Transformers({JsonToMethylamine.class, XmlToMethylamine.class})
+@Transformers({JsonToMethylamine.class, XmlToMethylamine.class, GlassToMethylamine.class})
 public class HeisenbergExtension implements Lifecycle, MuleContextAware {
 
   public static final String HEISENBERG = "Heisenberg";

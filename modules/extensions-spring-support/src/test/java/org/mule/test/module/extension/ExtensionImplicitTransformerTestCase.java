@@ -13,6 +13,7 @@ import static org.junit.Assert.assertThat;
 import static org.mule.runtime.api.metadata.MediaType.APPLICATION_JSON;
 import static org.mule.runtime.api.metadata.MediaType.APPLICATION_XML;
 import org.mule.runtime.api.metadata.MediaType;
+import org.mule.test.heisenberg.extension.model.Glass;
 import org.mule.test.heisenberg.extension.model.Methylamine;
 
 import org.junit.Rule;
@@ -48,7 +49,14 @@ public class ExtensionImplicitTransformerTestCase extends AbstractExtensionFunct
                       APPLICATION_XML);
   }
 
-  private void assertMethylamine(String payload, MediaType mediaType) throws Exception {
+  @Test
+  public void transformGlass() throws Exception {
+    Glass glass = new Glass();
+    glass.setBrand(IMPORTER);
+    assertMethylamine(glass, MediaType.ANY);
+  }
+
+  private void assertMethylamine(Object payload, MediaType mediaType) throws Exception {
     Object result = flowRunner("implicitTransformer")
         .withPayload(payload)
         .withMediaType(mediaType)
