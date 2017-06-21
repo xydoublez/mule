@@ -7,15 +7,19 @@
 package org.mule.runtime.module.extension.internal.runtime.resolver;
 
 import static org.mule.metadata.java.api.utils.JavaTypeUtils.getType;
-import static org.mule.runtime.api.util.Preconditions.checkArgument;
+import static org.mule.runtime.core.api.util.ClassUtils.isInstance;
 import org.mule.metadata.api.model.MetadataType;
+import org.mule.runtime.api.el.BindingContext;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
+import org.mule.runtime.api.metadata.DataType;
+import org.mule.runtime.api.metadata.MediaType;
+import org.mule.runtime.api.metadata.TypedValue;
 import org.mule.runtime.core.api.TransformationService;
-import org.mule.runtime.core.api.el.ExtendedExpressionManager;
 import org.mule.runtime.core.api.transformer.TransformationServiceAware;
 import org.mule.runtime.core.api.transformer.Transformer;
+import org.mule.runtime.core.api.transformer.TransformerException;
 import org.mule.runtime.core.api.util.AttributeEvaluator;
 
 import javax.inject.Inject;
@@ -32,55 +36,44 @@ import javax.inject.Inject;
  * @param <T>
  * @since 3.7.0
  */
-public class TypeSafeExpressionValueResolver<T> implements ValueResolver<T>, Initialisable, TransformationServiceAware {
+public class TypeSafeExpressionValueResolver<T> extends ExpressionValueResolver implements Initialisable, TransformationServiceAware {
 
-  private final MetadataType expectedMetadataType;
-  private final Class<T> expectedType;
-  private final String expression;
-  private TypeSafeValueResolverWrapper<T> delegate;
+  private TypeSafeTransformer typeSafeTransformer;
 
   @Inject
   private TransformationService transformationService;
 
-  @Inject
-  private ExtendedExpressionManager extendedExpressionManager;
-
   public TypeSafeExpressionValueResolver(String expression, MetadataType expectedMetadataType) {
-    checkArgument(expectedMetadataType != null, "expected type cannot be null");
-    this.expression = expression;
-    this.expectedType = getType(expectedMetadataType);
-    this.expectedMetadataType = expectedMetadataType;
+    super(expression, DataType.builder().type(getType(expectedMetadataType)).mediaType(MediaType.APPLICATION_JAVA).build());
   }
 
   @Override
   public T resolve(ValueResolvingContext context) throws MuleException {
-    return delegate.resolve(context);
-  }
+    TypedValue typedValue = resolveTypedValue(context);
 
-  /**
-   * @return {@code true}
-   */
-  @Override
-  public boolean isDynamic() {
-    return true;
+    Object value = typedValue.getValue();
+
+    if (!isInstance(expectedDataType.getType(), value)) {
+      try {
+        value = typeSafeTransformer.transform(value, typedValue.getDataType(), expectedDataType);
+      } catch (TransformerException e) {
+        value = extendedExpressionManager.evaluate("v", expectedDataType,
+                                           BindingContext.builder()
+                                               .addBinding("v", typedValue)
+                    .build(), context.getEvent()).getValue();
+      }
+    }
+
+    return (T) value;
   }
 
   @Override
   public void initialise() throws InitialisationException {
-    ExpressionTypedValueValueResolver resolver = new ExpressionTypedValueValueResolver(expression, Object.class);
-    //ExpressionValueResolver resolver = new ExpressionValueResolver(expression, toDataType(expectedMetadataType));
-    resolver.setExtendedExpressionManager(extendedExpressionManager);
-    delegate = new TypeSafeValueResolverWrapper<>(resolver, expectedType);
-    delegate.setTransformationService(transformationService);
-    delegate.initialise();
+    typeSafeTransformer = new TypeSafeTransformer(transformationService);
   }
 
   @Override
   public void setTransformationService(TransformationService transformationService) {
     this.transformationService = transformationService;
-  }
-
-  public void setExtendedExpressionManager(ExtendedExpressionManager extendedExpressionManager) {
-    this.extendedExpressionManager = extendedExpressionManager;
   }
 }

@@ -32,9 +32,12 @@ import org.apache.commons.lang3.StringUtils;
 public class ExpressionValueResolver<T> implements ValueResolver<T> {
 
   @Inject
-  private ExtendedExpressionManager extendedExpressionManager;
-  final AttributeEvaluator evaluator;
+  protected ExtendedExpressionManager extendedExpressionManager;
+
+  protected final AttributeEvaluator evaluator;
+  protected final DataType expectedDataType;
   private boolean evaluatorInitialized = false;
+
   private BiConsumer<AttributeEvaluator, ExtendedExpressionManager> evaluatorInitialiser =
       (evaluator, extendedExpressionManager) -> {
         synchronized (extendedExpressionManager) {
@@ -50,6 +53,7 @@ public class ExpressionValueResolver<T> implements ValueResolver<T> {
   ExpressionValueResolver(String expression, DataType expectedDataType) {
     checkArgument(!StringUtils.isBlank(expression), "Expression cannot be blank or null");
 
+    this.expectedDataType = expectedDataType;
     this.evaluator = new AttributeEvaluator(expression, expectedDataType);
   }
 
@@ -57,6 +61,7 @@ public class ExpressionValueResolver<T> implements ValueResolver<T> {
     checkArgument(!StringUtils.isBlank(expression), "Expression cannot be blank or null");
 
     this.evaluator = new AttributeEvaluator(expression);
+    expectedDataType = DataType.OBJECT;
   }
 
   void setExtendedExpressionManager(ExtendedExpressionManager extendedExpressionManager) {
@@ -65,16 +70,26 @@ public class ExpressionValueResolver<T> implements ValueResolver<T> {
 
   @Override
   public T resolve(ValueResolvingContext context) throws MuleException {
+    return resolveTypedValue(context).getValue();
+  }
+
+  protected TypedValue<T> resolveTypedValue(ValueResolvingContext context) throws MuleException {
     initEvaluator();
-    TypedValue typedValue = evaluator.resolveTypedValue(context.getEvent());
+    TypedValue<T> typedValue = evaluator.resolveTypedValue(context.getEvent());
 
     Object value = typedValue.getValue();
 
-    if (isInstance(ValueResolver.class, value)) {
+    while (isInstance(ValueResolver.class, value)) {
       value = ((ValueResolver) value).resolve(context);
+      if (value instanceof TypedValue) {
+        typedValue = (TypedValue) value;
+        value = typedValue.getValue();
+      } else {
+        typedValue = new TypedValue<>((T) value, DataType.fromObject(value));
+      }
     }
 
-    return (T) value;
+    return typedValue;
   }
 
   void initEvaluator() {

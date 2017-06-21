@@ -13,7 +13,6 @@ import static org.mule.runtime.api.metadata.DataType.OBJECT;
 import static org.mule.runtime.api.metadata.DataType.STRING;
 import static org.mule.runtime.core.api.el.ExpressionManager.DEFAULT_EXPRESSION_POSTFIX;
 import static org.mule.runtime.core.api.el.ExpressionManager.DEFAULT_EXPRESSION_PREFIX;
-
 import org.mule.runtime.api.el.BindingContext;
 import org.mule.runtime.api.metadata.DataType;
 import org.mule.runtime.api.metadata.MediaType;
@@ -70,6 +69,9 @@ public class AttributeEvaluator {
         //  expressionResolver =
         //      event -> expressionManager.evaluate(this.attributeValue, expectedDataType, NULL_BINDING_CONTEXT, event);
         //} else {
+        //  expressionResolver = event -> expressionManager.evaluate(this.attributeValue, event);
+        //}
+
         if (expectedDataType == null
             || BLACK_LIST_TYPES.contains(expectedDataType.getType())
             || expectedDataType.getMediaType() == MediaType.APPLICATION_JAVA) {
@@ -78,7 +80,6 @@ public class AttributeEvaluator {
           expressionResolver =
               event -> expressionManager.evaluate(this.attributeValue, expectedDataType, NULL_BINDING_CONTEXT, event);
         }
-        //}
         break;
       case PARSE_EXPRESSION:
         expressionResolver = event -> new TypedValue<>(expressionManager.parse(this.attributeValue, event, null), STRING);

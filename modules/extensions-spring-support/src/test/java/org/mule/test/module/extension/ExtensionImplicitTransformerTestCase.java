@@ -19,7 +19,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class ImplicitTransformerTestCase extends AbstractExtensionFunctionalTestCase {
+public class ExtensionImplicitTransformerTestCase extends AbstractExtensionFunctionalTestCase {
 
   private static final String IMPORTER = "Pollos Hermanos";
   private static final boolean STOLEN = true;
