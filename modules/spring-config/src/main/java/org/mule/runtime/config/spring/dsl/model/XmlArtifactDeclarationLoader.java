@@ -9,7 +9,7 @@ package org.mule.runtime.config.spring.dsl.model;
 import org.mule.runtime.api.app.declaration.ArtifactDeclaration;
 import org.mule.runtime.api.dsl.DslResolvingContext;
 import org.mule.runtime.api.meta.model.ExtensionModel;
-import org.mule.runtime.config.spring.dsl.declaration.DefaultXmlArtifactDeclarationLoader;
+import org.mule.runtime.config.spring.dsl.model.internal.DefaultXmlArtifactDeclarationLoader;
 
 import java.io.InputStream;
 

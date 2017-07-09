@@ -12,7 +12,7 @@ import static java.util.stream.Stream.of;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mule.runtime.api.component.ComponentIdentifier.buildFromStringRepresentation;
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
-import static org.mule.runtime.config.spring.dsl.declaration.DefaultXmlArtifactDeclarationLoader.TRANSFORM_IDENTIFIER;
+import static org.mule.runtime.config.spring.dsl.model.internal.DefaultXmlArtifactDeclarationLoader.TRANSFORM_IDENTIFIER;
 import static org.mule.runtime.config.spring.dsl.processor.xml.XmlCustomAttributeHandler.DECLARED_PREFIX;
 import static org.mule.runtime.config.spring.dsl.processor.xml.XmlCustomAttributeHandler.IS_CDATA;
 import static org.mule.runtime.extension.api.ExtensionConstants.POOLING_PROFILE_PARAMETER_NAME;
@@ -74,9 +74,17 @@ public class DefaultXmlDslElementModelConverter implements XmlDslElementModelCon
   private static final String XMLNS = "xmlns:";
 
   private final Document doc;
+  private final String defaultNamespace;
+  private final String defaultPrefix;
 
   public DefaultXmlDslElementModelConverter(Document owner) {
+    this(owner, CORE_NAMESPACE, CORE_PREFIX);
+  }
+
+  public DefaultXmlDslElementModelConverter(Document owner, String defaultNamespace, String defaultPrefix) {
     this.doc = owner;
+    this.defaultNamespace = defaultNamespace;
+    this.defaultPrefix = defaultPrefix;
   }
 
   /**
@@ -195,14 +203,14 @@ public class DefaultXmlDslElementModelConverter implements XmlDslElementModelCon
   }
 
   private Element createElement(String name, String prefix, String namespace) {
-    if (!prefix.equals(CORE_PREFIX)) {
+    if (!prefix.equals(defaultPrefix)) {
       addNamespaceDeclarationIfNeeded(prefix, namespace, buildSchemaLocation(prefix, namespace));
       return doc.createElementNS(namespace, prefix + ":" + name);
     } else {
       // core schema location will always be included
       doc.getDocumentElement().setAttributeNS("http://www.w3.org/2000/xmlns/",
-                                              "xmlns", CORE_NAMESPACE);
-      return doc.createElementNS(CORE_NAMESPACE, name);
+                                              "xmlns", defaultNamespace);
+      return doc.createElementNS(defaultNamespace, name);
     }
   }
 

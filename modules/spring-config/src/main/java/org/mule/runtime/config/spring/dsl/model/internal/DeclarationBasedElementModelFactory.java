@@ -185,12 +185,14 @@ class DeclarationBasedElementModelFactory {
         .withIdentifier(asIdentifier(configDsl))
         .withParameter(NAME_ATTRIBUTE_NAME, configDeclaration.getRefName());
 
-    DslElementModel.Builder<ConfigurationModel> element =
-        createParameterizedElementModel(model, configDsl, configDeclaration, configuration);
+    DslElementModel.Builder<ConfigurationModel> element = DslElementModel.<ConfigurationModel>builder()
+        .withModel(model)
+        .withDsl(configDsl);
 
     configDeclaration.getConnection()
         .ifPresent(connection -> addConnectionProvider(connection, model, configuration, element));
 
+    createParameterizedElementModel(model, configDsl, element, configDeclaration, configuration);
     return element.withConfig(configuration.build()).build();
   }
 
@@ -335,6 +337,14 @@ class DeclarationBasedElementModelFactory {
         .withModel(model)
         .withDsl(elementDsl);
 
+    return createParameterizedElementModel(model, elementDsl, parentElement, declaration, parentConfig);
+  }
+
+  private <T extends ParameterizedModel> DslElementModel.Builder<T> createParameterizedElementModel(T model,
+                                                                                                    DslElementSyntax elementDsl,
+                                                                                                    DslElementModel.Builder<T> parentElement,
+                                                                                                    ParameterizedElementDeclaration declaration,
+                                                                                                    ComponentConfiguration.Builder parentConfig) {
     addAllDeclaredParameters(model.getParameterGroupModels(), declaration, elementDsl, parentConfig, parentElement);
 
     if (model instanceof SourceModel) {

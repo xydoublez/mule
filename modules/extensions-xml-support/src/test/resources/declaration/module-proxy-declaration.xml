@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module name="module-simple-proxy"
+        minMuleVersion="4.0.0"
+
+        xmlns="http://www.mulesoft.org/schema/mule/module"
+        xmlns:simple-prefix="http://www.mulesoft.org/schema/a/different/path/mule/module-simple"
+        xmlns:module-global-element="http://www.mulesoft.org/schema/mule/module-global-element"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.mulesoft.org/schema/mule/module http://www.mulesoft.org/schema/mule/module/current/mule-module.xsd http://www.mulesoft.org/schema/mule/module-global-element http://www.mulesoft.org/schema/mule/module-global-element/current/mule-module-global-element.xsd http://www.mulesoft.org/schema/a/different/path/mule/module-simple http://www.mulesoft.org/schema/a/different/path/mule/module-simple/current/mule-simple-prefix.xsd">
+
+    <property name="someUserConfig" type="string" defaultValue="some-username"/>
+    <property name="somePassConfig" type="string" defaultValue="some-password"/>
+    <property name="port" type="string"/>
+
+    <module-global-element:config name="proxy-config" someUserConfig="#[properties.someUserConfig]" somePassConfig="#[properties.somePassConfig]" port="#[properties.port]"/>
+
+    <operation name="do-login">
+        <parameters>
+            <parameter name="someUser" type="string" defaultValue="usernameX"/>
+            <parameter name="somePass" type="string" defaultValue="passwordX"/>
+        </parameters>
+        <body>
+            <module-global-element:do-login config-ref="proxy-config" someUser="#[parameters.someUser]" somePass="#[parameters.somePass]" />
+        </body>
+        <output type="string"/>
+    </operation>
+
+    <operation name="set-payload-hardcoded-value">
+        <body>
+            <simple-prefix:set-payload-hardcoded-value />
+        </body>
+        <output type="string"/>
+    </operation>
+
+    <operation name="set-payload-param-default-value">
+        <parameters>
+            <parameter name="value" type="string" defaultValue="15"/>
+        </parameters>
+        <body>
+            <simple-prefix:set-payload-param-default-value/>
+        </body>
+        <output type="string"/>
+    </operation>
+
+    <operation name="set-payload-concat-params-values">
+        <parameters>
+            <parameter name="value1" type="string"/>
+            <parameter name="value2" type="string"/>
+        </parameters>
+        <body>
+            <simple-prefix:set-payload-concat-params-values value1="#[parameters.value1]" value2="#[parameters.value2]"/>
+        </body>
+        <output type="string"/>
+    </operation>
+
+</module>

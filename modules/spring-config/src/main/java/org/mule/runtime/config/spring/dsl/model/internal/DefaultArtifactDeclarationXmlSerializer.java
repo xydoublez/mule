@@ -6,12 +6,11 @@
  */
 package org.mule.runtime.config.spring.dsl.model.internal;
 
-import static java.lang.String.format;
-import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.StringUtils.join;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import static org.mule.runtime.config.spring.dsl.api.xml.SchemaConstants.MULE_SCHEMA_LOCATION;
+import static org.mule.runtime.config.spring.dsl.model.internal.DeclarationXmlSerializerUtils.appendChildFromDeclaration;
+import static org.mule.runtime.config.spring.dsl.model.internal.DeclarationXmlSerializerUtils.writeToString;
 import static org.mule.runtime.core.api.util.StringUtils.isBlank;
 import static org.mule.runtime.internal.dsl.DslConstants.CORE_NAMESPACE;
 import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
@@ -19,7 +18,6 @@ import static org.mule.runtime.internal.dsl.DslConstants.FLOW_ELEMENT_IDENTIFIER
 import static org.mule.runtime.internal.dsl.DslConstants.NAME_ATTRIBUTE_NAME;
 import org.mule.runtime.api.app.declaration.ArtifactDeclaration;
 import org.mule.runtime.api.app.declaration.ConfigurationElementDeclaration;
-import org.mule.runtime.api.app.declaration.ElementDeclaration;
 import org.mule.runtime.api.app.declaration.FlowElementDeclaration;
 import org.mule.runtime.api.app.declaration.GlobalElementDeclarationVisitor;
 import org.mule.runtime.api.app.declaration.TopLevelParameterDeclaration;
@@ -30,27 +28,15 @@ import org.mule.runtime.config.spring.dsl.api.ArtifactDeclarationXmlSerializer;
 import org.mule.runtime.config.spring.dsl.model.DslElementModelFactory;
 import org.mule.runtime.config.spring.dsl.model.XmlArtifactDeclarationLoader;
 import org.mule.runtime.config.spring.dsl.model.XmlDslElementModelConverter;
-import org.mule.runtime.core.api.util.xmlsecurity.XMLSecureFactories;
 
 import java.io.InputStream;
-import java.io.StringWriter;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.IntStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  * Default implementation of {@link ArtifactDeclarationXmlSerializer}
@@ -95,50 +81,15 @@ public class DefaultArtifactDeclarationXmlSerializer implements ArtifactDeclarat
       XmlDslElementModelConverter toXmlConverter = XmlDslElementModelConverter.getDefault(doc);
       DslElementModelFactory modelResolver = DslElementModelFactory.getDefault(context);
 
-      final GlobalElementDeclarationVisitor declarationVisitor = new GlobalElementDeclarationVisitor() {
+      doc.getDocumentElement().appendChild(doc.createTextNode("\n\n"));
 
-        @Override
-        public void visit(ConfigurationElementDeclaration declaration) {
-          appendChildElement(toXmlConverter, doc.getDocumentElement(), modelResolver, declaration);
-        }
-
-        @Override
-        public void visit(TopLevelParameterDeclaration declaration) {
-          appendChildElement(toXmlConverter, doc.getDocumentElement(), modelResolver, declaration);
-        }
-
-        @Override
-        public void visit(FlowElementDeclaration flowDeclaration) {
-          Element flow = doc.createElement(FLOW_ELEMENT_IDENTIFIER);
-          flow.setAttribute(NAME_ATTRIBUTE_NAME, flowDeclaration.getRefName());
-
-          flowDeclaration.getParameterGroups()
-              .forEach(g -> g.getParameters().stream().filter(p -> p.getValue() instanceof ParameterSimpleValue)
-                  .forEach(p -> flow.setAttribute(p.getName(), ((ParameterSimpleValue) p.getValue()).getValue())));
-
-          flowDeclaration.getComponents()
-              .forEach(declaration -> appendChildElement(toXmlConverter, flow, modelResolver, declaration));
-
-          doc.getDocumentElement().appendChild(flow);
-        }
-      };
-
+      final GlobalElementDeclarationVisitor declarationVisitor =
+          new GlobalElementSerializingVisitor(doc, toXmlConverter, modelResolver);
       artifact.getGlobalElements().forEach(declaration -> declaration.accept(declarationVisitor));
 
-      List<String> cDataElements = getCDataElements(doc.getDocumentElement());
+      doc.getDocumentElement().appendChild(doc.createTextNode("\n\n"));
 
-      // write the content into xml file
-      TransformerFactory transformerFactory = XMLSecureFactories.createDefault().getTransformerFactory();
-
-      Transformer transformer = transformerFactory.newTransformer();
-      transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-      transformer.setOutputProperty(OutputKeys.CDATA_SECTION_ELEMENTS, join(cDataElements, " "));
-      transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-
-      DOMSource source = new DOMSource(doc);
-      StringWriter writer = new StringWriter();
-      transformer.transform(source, new StreamResult(writer));
-      return writer.getBuffer().toString();
+      return writeToString(doc);
 
     } catch (Exception e) {
       throw new MuleRuntimeException(createStaticMessage("Failed to serialize the declaration for the artifact ["
@@ -163,22 +114,44 @@ public class DefaultArtifactDeclarationXmlSerializer implements ArtifactDeclarat
     return doc;
   }
 
-  private void appendChildElement(XmlDslElementModelConverter converter, Element parent, DslElementModelFactory modelResolver,
-                                  ElementDeclaration declaration) {
-    modelResolver.create(declaration)
-        .ifPresent(e -> parent.appendChild(converter.asXml(e)));
-  }
 
-  private List<String> getCDataElements(Node element) {
+  private static class GlobalElementSerializingVisitor implements GlobalElementDeclarationVisitor {
 
-    if (element.getChildNodes().getLength() == 1 && element.getFirstChild().getNodeType() == Node.CDATA_SECTION_NODE) {
-      return singletonList(format("{%s}%s", element.getNamespaceURI(), element.getLocalName()));
-    } else {
-      List<String> identifiers = new LinkedList<>();
-      NodeList childs = element.getChildNodes();
-      IntStream.range(0, childs.getLength()).mapToObj(childs::item)
-          .forEach(c -> identifiers.addAll(getCDataElements(c)));
-      return identifiers;
+    private final Document doc;
+    private final XmlDslElementModelConverter toXmlConverter;
+    private final DslElementModelFactory modelResolver;
+
+    public GlobalElementSerializingVisitor(Document doc,
+                                           XmlDslElementModelConverter toXmlConverter,
+                                           DslElementModelFactory modelResolver) {
+      this.doc = doc;
+      this.toXmlConverter = toXmlConverter;
+      this.modelResolver = modelResolver;
+    }
+
+    @Override
+    public void visit(ConfigurationElementDeclaration declaration) {
+      appendChildFromDeclaration(toXmlConverter, doc.getDocumentElement(), modelResolver, declaration);
+    }
+
+    @Override
+    public void visit(TopLevelParameterDeclaration declaration) {
+      appendChildFromDeclaration(toXmlConverter, doc.getDocumentElement(), modelResolver, declaration);
+    }
+
+    @Override
+    public void visit(FlowElementDeclaration flowDeclaration) {
+      Element flow = doc.createElement(FLOW_ELEMENT_IDENTIFIER);
+      flow.setAttribute(NAME_ATTRIBUTE_NAME, flowDeclaration.getRefName());
+
+      flowDeclaration.getParameterGroups()
+          .forEach(g -> g.getParameters().stream().filter(p -> p.getValue() instanceof ParameterSimpleValue)
+              .forEach(p -> flow.setAttribute(p.getName(), ((ParameterSimpleValue) p.getValue()).getValue())));
+
+      flowDeclaration.getComponents()
+          .forEach(declaration -> appendChildFromDeclaration(toXmlConverter, flow, modelResolver, declaration));
+
+      doc.getDocumentElement().appendChild(flow);
     }
   }
 

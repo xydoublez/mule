@@ -119,7 +119,7 @@ public class CoreExtensionModelTestCase extends AbstractMuleContextTestCase {
     assertThat(coreExtensionModel.getExternalLibraryModels(), empty());
     assertThat(coreExtensionModel.getImportedTypes(), empty());
     assertThat(coreExtensionModel.getConfigurationModels(), empty());
-    assertThat(coreExtensionModel.getOperationModels(), hasSize(15));
+    assertThat(coreExtensionModel.getOperationModels(), hasSize(16));
     assertThat(coreExtensionModel.getConnectionProviders(), empty());
 
     assertThat(coreExtensionModel.getErrorModels(),
