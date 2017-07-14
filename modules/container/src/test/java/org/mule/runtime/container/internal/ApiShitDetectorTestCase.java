@@ -11,7 +11,7 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.fail;
 import static org.mule.runtime.container.internal.ContainerClassLoaderFactory.SYSTEM_PACKAGES;
 import org.mule.runtime.container.api.MuleModule;
-import org.mule.runtime.core.util.FileUtils;
+import org.mule.runtime.core.api.util.FileUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ public class ApiShitDetectorTestCase {
         continue;
       }
 
-      if (!modulePropertyFile.getAbsolutePath().contains("src/main"))
+      if (modulePropertyFile.getAbsolutePath().contains("src/test"))
       {
         logOK.add("Test module: " + modulePropertyFile.getAbsolutePath());
         continue;

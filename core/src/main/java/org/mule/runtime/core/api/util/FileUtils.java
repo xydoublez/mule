@@ -723,7 +723,7 @@ public class FileUtils {
     return "file".equals(url.getProtocol());
   }
 
-  private static Collection<File> findFiles(File folder, IOFileFilter filter, boolean recursive) {
+  public static Collection<File> findFiles(File folder, IOFileFilter filter, boolean recursive) {
     return org.apache.commons.io.FileUtils.listFiles(folder, filter,
                                                      recursive ? TrueFileFilter.INSTANCE : FalseFileFilter.INSTANCE);
   }

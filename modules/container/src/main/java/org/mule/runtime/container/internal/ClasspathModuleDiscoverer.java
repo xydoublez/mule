@@ -71,7 +71,7 @@ public class ClasspathModuleDiscoverer implements ModuleDiscoverer {
     return modules;
   }
 
-  private MuleModule createModule(Properties moduleProperties) {
+  public static MuleModule createModule(Properties moduleProperties) {
     final String moduleName = (String) moduleProperties.get("module.name");
     Set<String> modulePackages = getExportedPackageByProperty(moduleProperties, EXPORTED_CLASS_PACKAGES_PROPERTY);
     Set<String> modulePaths = getExportedResourcePaths(moduleProperties);
@@ -84,7 +84,7 @@ public class ClasspathModuleDiscoverer implements ModuleDiscoverer {
                           exportedServices);
   }
 
-  private List<ExportedService> getExportedServices(Properties moduleProperties, String exportedServicesProperty) {
+  private static List<ExportedService> getExportedServices(Properties moduleProperties, String exportedServicesProperty) {
     final String privilegedExportedPackagesProperty = (String) moduleProperties.get(exportedServicesProperty);
     List<ExportedService> exportedServices;
     if (!isEmpty(privilegedExportedPackagesProperty)) {
@@ -95,7 +95,7 @@ public class ClasspathModuleDiscoverer implements ModuleDiscoverer {
     return exportedServices;
   }
 
-  private List<ExportedService> getServicesFromProperty(String privilegedExportedPackagesProperty) {
+  private static List<ExportedService> getServicesFromProperty(String privilegedExportedPackagesProperty) {
     List<ExportedService> exportedServices = new ArrayList<>();
 
     for (String exportedServiceDefinition : privilegedExportedPackagesProperty.split(",")) {
@@ -116,7 +116,7 @@ public class ClasspathModuleDiscoverer implements ModuleDiscoverer {
     return exportedServices;
   }
 
-  private Set<String> getPrivilegedArtifactIds(Properties moduleProperties) {
+  private static Set<String> getPrivilegedArtifactIds(Properties moduleProperties) {
     Set<String> privilegedArtifacts;
     final String privilegedArtifactsProperty = (String) moduleProperties.get(PRIVILEGED_ARTIFACTS_PROPERTY);
     Set<String> artifactsIds = new HashSet<>();
@@ -131,7 +131,8 @@ public class ClasspathModuleDiscoverer implements ModuleDiscoverer {
     return privilegedArtifacts;
   }
 
-  private Set<String> getExportedPackageByProperty(Properties moduleProperties, String privilegedExportedClassPackagesProperty) {
+  private static Set<String> getExportedPackageByProperty(Properties moduleProperties,
+                                                          String privilegedExportedClassPackagesProperty) {
     final String privilegedExportedPackagesProperty = (String) moduleProperties.get(privilegedExportedClassPackagesProperty);
     Set<String> modulePrivilegedPackages;
     if (!isEmpty(privilegedExportedPackagesProperty)) {
@@ -142,7 +143,7 @@ public class ClasspathModuleDiscoverer implements ModuleDiscoverer {
     return modulePrivilegedPackages;
   }
 
-  private Set<String> getExportedResourcePaths(Properties moduleProperties) {
+  private static Set<String> getExportedResourcePaths(Properties moduleProperties) {
     Set<String> paths = new HashSet<>();
     final String exportedResourcesProperty = (String) moduleProperties.get(EXPORTED_RESOURCE_PROPERTY);
     if (!isEmpty(exportedResourcesProperty)) {
@@ -158,7 +159,7 @@ public class ClasspathModuleDiscoverer implements ModuleDiscoverer {
     return paths;
   }
 
-  private Set<String> getPackagesFromProperty(String privilegedExportedPackagesProperty) {
+  private static Set<String> getPackagesFromProperty(String privilegedExportedPackagesProperty) {
     Set<String> packages = new HashSet<>();
     for (String packageName : privilegedExportedPackagesProperty.split(",")) {
       packageName = packageName.trim();
