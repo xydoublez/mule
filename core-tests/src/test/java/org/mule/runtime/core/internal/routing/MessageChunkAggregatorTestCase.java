@@ -19,7 +19,7 @@ import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.EventContext;
 import org.mule.runtime.core.api.MuleSession;
 import org.mule.runtime.core.api.construct.Flow;
-import org.mule.runtime.core.api.message.GroupCorrelation;
+import org.mule.runtime.api.event.GroupCorrelation;
 import org.mule.runtime.core.api.session.DefaultMuleSession;
 import org.mule.runtime.core.internal.routing.MessageChunkAggregator;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;

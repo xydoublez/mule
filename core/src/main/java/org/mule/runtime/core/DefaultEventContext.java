@@ -220,7 +220,12 @@ public final class DefaultEventContext extends AbstractEventContext implements S
   }
 
   @Override
-  public Optional<EventContext> getParentContext() {
+  public Optional<org.mule.runtime.api.event.EventContext> getParentContext() {
+    return empty();
+  }
+
+  @Override
+  public Optional<EventContext> getInternalParentContext() {
     return empty();
   }
 
@@ -331,7 +336,12 @@ public final class DefaultEventContext extends AbstractEventContext implements S
     }
 
     @Override
-    public Optional<EventContext> getParentContext() {
+    public Optional<org.mule.runtime.api.event.EventContext> getParentContext() {
+      return of(parent);
+    }
+
+    @Override
+    public Optional<EventContext> getInternalParentContext() {
       return of(parent);
     }
 

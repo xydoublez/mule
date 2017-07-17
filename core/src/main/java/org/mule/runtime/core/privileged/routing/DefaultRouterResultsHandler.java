@@ -98,10 +98,7 @@ public class DefaultRouterResultsHandler implements RouterResultsHandler {
 
     List<Message> list = new ArrayList<>();
     for (Event event : nonNullResults) {
-      for (String flowVarName : event.getVariableNames()) {
-        resultBuilder.addVariable(flowVarName, event.getVariable(flowVarName).getValue(),
-                                  event.getVariable(flowVarName).getDataType());
-      }
+      resultBuilder.variables(event.getVariables());
       list.add(event.getMessage());
     }
     final Message coll = Message.builder().collectionPayload(list, Message.class).build();

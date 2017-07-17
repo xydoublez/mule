@@ -188,11 +188,11 @@ public abstract class AbstractPipeline extends AbstractFlowConstruct implements 
                   getSink().accept(event);
                   handleSink.next(event);
                 } catch (RejectedExecutionException ree) {
-                  event.getContext()
+                  event.getInternalContext()
                       .error(updateMessagingExceptionWithError(new MessagingException(event, ree, this), this, getMuleContext()));
                 }
               })
-              .flatMap(event -> Mono.from(event.getContext().getResponsePublisher()));
+              .flatMap(event -> Mono.from(event.getInternalContext().getResponsePublisher()));
         }
       });
     }
@@ -207,7 +207,7 @@ public abstract class AbstractPipeline extends AbstractFlowConstruct implements 
   protected ReactiveProcessor processFlowFunction() {
     return stream -> from(stream)
         .transform(processingStrategy.onPipeline(pipeline))
-        .doOnNext(response -> response.getContext().success(response))
+        .doOnNext(response -> response.getInternalContext().success(response))
         .doOnError(throwable -> LOGGER.error("Unhandled exception in Flow ", throwable));
   }
 
@@ -320,7 +320,7 @@ public abstract class AbstractPipeline extends AbstractFlowConstruct implements 
       long startTime = currentTimeMillis();
 
       // Fire COMPLETE notification on async response
-      Mono.from(event.getContext().getBeforeResponsePublisher())
+      Mono.from(event.getInternalContext().getBeforeResponsePublisher())
           .doOnSuccess(result -> fireCompleteNotification(result, null))
           .doOnError(MessagingException.class, messagingException -> fireCompleteNotification(null, messagingException))
           .doOnError(throwable -> !(throwable instanceof MessagingException),
@@ -328,7 +328,7 @@ public abstract class AbstractPipeline extends AbstractFlowConstruct implements 
                                                                                         this instanceof Processor ? this : null))
 
           )
-          .doOnTerminate((result, throwable) -> event.getContext().getProcessingTime()
+          .doOnTerminate((result, throwable) -> event.getInternalContext().getProcessingTime()
               .ifPresent(time -> time.addFlowExecutionBranchTime(startTime)))
           .subscribe(requestUnbounded());
 

@@ -6,24 +6,22 @@
  */
 package org.mule.runtime.core.internal.interception;
 
-import static org.mule.runtime.core.el.BindingContextUtils.NULL_BINDING_CONTEXT;
-import static org.mule.runtime.core.el.BindingContextUtils.addEventBindings;
-
+import static org.mule.runtime.internal.el.BindingContextUtils.NULL_BINDING_CONTEXT;
+import static org.mule.runtime.internal.el.BindingContextUtils.addEventBindings;
 import org.mule.runtime.api.el.BindingContext;
+import org.mule.runtime.api.event.GroupCorrelation;
 import org.mule.runtime.api.message.Error;
 import org.mule.runtime.api.message.ErrorType;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.metadata.DataType;
 import org.mule.runtime.api.metadata.TypedValue;
+import org.mule.runtime.api.security.SecurityContext;
 import org.mule.runtime.core.api.Event;
-import org.mule.runtime.core.api.EventContext;
 import org.mule.runtime.core.api.MuleSession;
 import org.mule.runtime.core.api.message.ErrorBuilder;
-import org.mule.runtime.core.api.source.MessageSource;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * This implementation is not thread-safe.
@@ -48,14 +46,20 @@ public class DefaultInterceptionEvent implements InternalInterceptionEvent {
     return interceptedInput.getMessage();
   }
 
+
   @Override
-  public <T> TypedValue<T> getVariable(String key) {
-    return interceptedInput.getVariable(key);
+  public Map<String, TypedValue<?>> getVariables() {
+    return interceptedInput.getVariables();
   }
 
   @Override
-  public Set<String> getVariableNames() {
-    return interceptedInput.getVariableNames();
+  public Map<String, TypedValue<?>> getProperties() {
+    return interceptedInput.getProperties();
+  }
+
+  @Override
+  public Map<String, TypedValue<?>> getParameters() {
+    return interceptedInput.getParameters();
   }
 
   @Override
@@ -63,11 +67,26 @@ public class DefaultInterceptionEvent implements InternalInterceptionEvent {
     return interceptedInput.getError();
   }
 
-  /**
-   * @return the context applicable to all events created from the same root {@link Event} from a {@link MessageSource}.
-   */
-  public EventContext getContext() {
+  @Override
+  public org.mule.runtime.api.event.EventContext getContext() {
     return interceptedInput.getContext();
+  }
+
+  @Override
+  public SecurityContext getSecurityContext() {
+    return interceptedInput.getSecurityContext();
+  }
+
+  @Override
+  public GroupCorrelation getGroupCorrelation() {
+    return interceptedInput.getGroupCorrelation();
+  }
+
+
+
+  @Override
+  public String getCorrelationId() {
+    return interceptedInput.getCorrelationId();
   }
 
   @Override

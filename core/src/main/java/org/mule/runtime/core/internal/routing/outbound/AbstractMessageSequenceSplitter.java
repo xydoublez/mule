@@ -6,20 +6,21 @@
  */
 package org.mule.runtime.core.internal.routing.outbound;
 
-import static java.util.Collections.emptySet;
+import static java.util.Collections.emptyMap;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.mule.runtime.core.api.Event.builder;
 import static org.mule.runtime.core.api.processor.MessageProcessors.processToApplyWithChildContext;
-
+import org.mule.runtime.api.event.GroupCorrelation;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.metadata.TypedValue;
 import org.mule.runtime.core.api.Acceptor;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.Event.Builder;
+import org.mule.runtime.core.api.EventContext;
 import org.mule.runtime.core.api.context.MuleContextAware;
 import org.mule.runtime.core.api.exception.MessagingException;
-import org.mule.runtime.core.api.message.GroupCorrelation;
 import org.mule.runtime.core.api.routing.RouterResultsHandler;
 import org.mule.runtime.core.privileged.processor.AbstractInterceptingMessageProcessor;
 import org.mule.runtime.core.internal.routing.AbstractSplitter;
@@ -29,7 +30,7 @@ import org.mule.runtime.core.api.routing.MessageSequence;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * Base implementation of a {@link Message} splitter, that converts its payload in a {@link MessageSequence}, and process each
@@ -113,7 +114,7 @@ public abstract class AbstractMessageSequenceSplitter extends AbstractIntercepti
         // TODO MULE-13052 Migrate Splitter and Foreach implementation to non-blocking
         Event resultEvent = processToApplyWithChildContext(builder.build(), applyNext());
         if (resultEvent != null) {
-          resultEvents.add(builder(originalEvent.getContext(), resultEvent).build());
+          resultEvents.add(builder(originalEvent.getInternalContext(), resultEvent).build());
           lastResult = resultEvent;
         }
       } catch (MessagingException e) {
@@ -128,24 +129,25 @@ public abstract class AbstractMessageSequenceSplitter extends AbstractIntercepti
     return resultEvents;
   }
 
-  protected Set<String> resolvePropagatedFlowVars(Event lastResult) {
-    return emptySet();
+  protected Map<String, ?> resolvePropagatedFlowVars(Event lastResult) {
+    return emptyMap();
   }
 
   protected void propagateFlowVars(Event previousResult, final Builder builder) {
     // Nothing to do
   }
 
-  private void initEventBuilder(Object sequenceValue, Event originalEvent, Builder builder, Set<String> flowVarsFromLastResult) {
+  private void initEventBuilder(Object sequenceValue, Event originalEvent, Builder builder,
+                                Map<String, ?> flowVarsFromLastResult) {
     if (sequenceValue instanceof EventBuilderConfigurer) {
       ((EventBuilderConfigurer) sequenceValue).configure(builder);
     } else if (sequenceValue instanceof Event) {
       final Event payloadAsEvent = (Event) sequenceValue;
       builder.message(payloadAsEvent.getMessage());
-      for (String flowVarName : payloadAsEvent.getVariableNames()) {
-        if (!flowVarsFromLastResult.contains(flowVarName)) {
-          builder.addVariable(flowVarName, payloadAsEvent.getVariable(flowVarName).getValue(),
-                              payloadAsEvent.getVariable(flowVarName).getDataType());
+      for (String flowVarName : payloadAsEvent.getVariables().keySet()) {
+        if (!flowVarsFromLastResult.containsKey(flowVarName)) {
+          builder.addVariable(flowVarName, payloadAsEvent.getVariables().get(flowVarName).getValue(),
+                              payloadAsEvent.getVariables().get(flowVarName).getDataType());
         }
       }
     } else if (sequenceValue instanceof Message) {

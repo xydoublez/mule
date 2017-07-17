@@ -18,7 +18,7 @@ import org.mule.runtime.core.api.EventContext;
 import org.mule.runtime.core.api.connector.ReplyToHandler;
 import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.message.DefaultMultiPartPayload;
-import org.mule.runtime.core.api.message.GroupCorrelation;
+import org.mule.runtime.api.event.GroupCorrelation;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;

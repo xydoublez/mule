@@ -144,7 +144,7 @@ public class MessageEnricherTestCase extends AbstractReactiveProcessorTestCase {
     Event out = process(enricher, in);
 
     assertEquals("bar", out.getSession().getProperty("sessionFoo"));
-    assertEquals("bar", out.getVariable("flowFoo").getValue());
+    assertEquals("bar", out.getVariables().get("flowFoo").getValue());
   }
 
   @Test
@@ -175,7 +175,7 @@ public class MessageEnricherTestCase extends AbstractReactiveProcessorTestCase {
     enricher.addEnrichExpressionPair(new EnrichExpressionPair("#[mel:message.outboundProperties.myHeader]"));
     enricher.setEnrichmentMessageProcessor(event -> Event.builder(event).addVariable("flowFoo", "bar").build());
     Event out = process(enricher, testEvent());
-    assertThat(out.getVariableNames(), not(hasItem("flowFoo")));
+    assertThat(out.getVariables().keySet(), not(hasItem("flowFoo")));
   }
 
   @Test
@@ -197,7 +197,7 @@ public class MessageEnricherTestCase extends AbstractReactiveProcessorTestCase {
     enricher.setEnrichmentMessageProcessor(event -> Event.builder(event)
         .message(InternalMessage.builder(event.getMessage()).payload("bar").build()).build());
     Event out = process(enricher, testEvent());
-    assertEquals("bar", out.getVariable("foo").getValue());
+    assertEquals("bar", out.getVariables().get("foo").getValue());
   }
 
   @Test
@@ -229,8 +229,8 @@ public class MessageEnricherTestCase extends AbstractReactiveProcessorTestCase {
     enricher.setEnrichmentMessageProcessor(event -> Event.builder(event)
         .message(InternalMessage.builder(event.getMessage()).payload("bar").mediaType(dataType.getMediaType()).build()).build());
     Event out = process(enricher, testEvent());
-    assertEquals("bar", out.getVariable("foo").getValue());
-    assertThat(out.getVariable("foo").getDataType(), like(String.class, JSON, UTF_16));
+    assertEquals("bar", out.getVariables().get("foo").getValue());
+    assertThat(out.getVariables().get("foo").getDataType(), like(String.class, JSON, UTF_16));
   }
 
   public MessageEnricher baseEnricher() {

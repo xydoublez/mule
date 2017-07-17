@@ -13,7 +13,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.mule.runtime.core.api.context.notification.RoutingNotification.CORRELATION_TIMEOUT;
 import static org.mule.runtime.core.api.context.notification.RoutingNotification.MISSED_AGGREGATION_GROUP_EVENT;
-import static org.mule.runtime.core.api.message.GroupCorrelation.NOT_SET;
+import static org.mule.runtime.api.event.GroupCorrelation.NOT_SET;
 import static org.mule.runtime.core.api.util.StringMessageUtils.truncate;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Disposable;

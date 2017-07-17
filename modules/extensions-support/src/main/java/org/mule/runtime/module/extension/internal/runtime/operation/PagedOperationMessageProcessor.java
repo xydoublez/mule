@@ -59,7 +59,7 @@ public class PagedOperationMessageProcessor extends OperationMessageProcessor {
       Event resultEvent = super.doProcess(event, operationContext).block();
       PagingProvider<?, ?> pagingProvider = getTarget()
           .map(target -> getPagingProvider(
-                                           (Message) resultEvent.getVariable(target).getValue()))
+                                           (Message) resultEvent.getVariables().get(target).getValue()))
           .orElseGet(() -> getPagingProvider(resultEvent.getMessage()));
 
       if (pagingProvider == null) {

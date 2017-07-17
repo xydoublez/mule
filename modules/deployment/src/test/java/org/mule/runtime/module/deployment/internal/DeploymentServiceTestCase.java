@@ -4243,8 +4243,8 @@ public class DeploymentServiceTestCase extends AbstractMuleTestCase {
     public Event process(Event event) throws MuleException {
       invocationCount++;
       String variableName = "policyParameter";
-      if (event.getVariableNames().contains(variableName)) {
-        policyParametrization += event.getVariable(variableName).getValue();
+      if (event.getVariables().keySet().contains(variableName)) {
+        policyParametrization += event.getVariables().get(variableName).getValue();
       }
 
       return event;

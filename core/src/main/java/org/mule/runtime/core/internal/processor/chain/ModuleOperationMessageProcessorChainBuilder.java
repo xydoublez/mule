@@ -10,7 +10,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toMap;
-import static org.mule.runtime.core.el.BindingContextUtils.NULL_BINDING_CONTEXT;
+import static org.mule.runtime.internal.el.BindingContextUtils.NULL_BINDING_CONTEXT;
 import static org.mule.runtime.core.internal.message.InternalMessage.builder;
 import static org.mule.runtime.extension.api.ExtensionConstants.TARGET_PARAMETER_NAME;
 import static reactor.core.publisher.Flux.from;
@@ -180,7 +180,7 @@ public class ModuleOperationMessageProcessorChainBuilder extends ExplicitMessage
     }
 
     private Event createEventWithParameters(Event event) {
-      Event.Builder builder = Event.builder(event.getContext());
+      Event.Builder builder = Event.builder(event.getInternalContext());
       builder.message(builder().nullPayload().build());
       builder.parameters(evaluateParameters(event, parameters));
       builder.properties(evaluateParameters(event, properties));

@@ -160,7 +160,8 @@ public class IdempotentRedeliveryPolicy extends AbstractRedeliveryPolicy {
       }
 
       try {
-        Event returnEvent = processNext(Event.builder(DefaultEventContext.child(event.getContext(), empty()), event).build());
+        Event returnEvent =
+            processNext(Event.builder(DefaultEventContext.child(event.getInternalContext(), empty()), event).build());
         counter = findCounter(messageId);
         if (counter != null) {
           resetCounter(messageId);

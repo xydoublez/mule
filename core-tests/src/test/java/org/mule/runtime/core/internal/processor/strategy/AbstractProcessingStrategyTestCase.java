@@ -426,7 +426,7 @@ public abstract class AbstractProcessingStrategyTestCase extends AbstractReactiv
 
   protected void processNonBlocking(Flow flow, Event event, Consumer<Event> onResponse, Consumer<Throwable> onError) {
     just(event).transform(flow).subscribe(requestUnbounded());
-    from(event.getContext().getResponsePublisher()).subscribe(onResponse, onError);
+    from(event.getInternalContext().getResponsePublisher()).subscribe(onResponse, onError);
   }
 
   @Test

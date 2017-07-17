@@ -45,7 +45,6 @@ import static org.mule.test.metadata.extension.resolver.TestNoConfigMetadataReso
 import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.toMetadataType;
 import static reactor.core.publisher.Mono.empty;
 import static reactor.core.publisher.Mono.just;
-
 import org.mule.runtime.api.el.DefaultExpressionLanguageFactoryService;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.message.Message;
@@ -151,7 +150,7 @@ public class OperationMessageProcessorTestCase extends AbstractOperationMessageP
     when(operationExecutor.execute(any(ExecutionContext.class)))
         .thenReturn(just(builder().output(payload).mediaType(mediaType).attributes(attributes).build()));
 
-    InternalMessage message = (InternalMessage) messageProcessor.process(event).getVariable(TARGET_VAR).getValue();
+    InternalMessage message = (InternalMessage) messageProcessor.process(event).getVariables().get(TARGET_VAR).getValue();
     assertThat(message, is(notNullValue()));
 
     assertThat(message.getPayload().getValue(), is(sameInstance(payload)));
@@ -228,7 +227,7 @@ public class OperationMessageProcessorTestCase extends AbstractOperationMessageP
     Object value = new Object();
     when(operationExecutor.execute(any(ExecutionContext.class))).thenReturn(just(value));
 
-    InternalMessage message = (InternalMessage) messageProcessor.process(event).getVariable(TARGET_VAR).getValue();
+    InternalMessage message = (InternalMessage) messageProcessor.process(event).getVariables().get(TARGET_VAR).getValue();
     assertThat(message, is(notNullValue()));
     assertThat(message.getPayload().getValue(), is(sameInstance(value)));
   }

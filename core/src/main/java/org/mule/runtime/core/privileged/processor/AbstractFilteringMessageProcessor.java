@@ -65,7 +65,7 @@ public abstract class AbstractFilteringMessageProcessor extends AbstractIntercep
           if (isThrowOnUnaccepted()) {
             sink.error(filterUnacceptedException(builder.build()));
           } else {
-            event.getContext().success();
+            event.getInternalContext().success();
           }
         }
       }).transform(applyNext());

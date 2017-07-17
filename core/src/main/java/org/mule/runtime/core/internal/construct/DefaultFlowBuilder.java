@@ -214,10 +214,10 @@ public class DefaultFlowBuilder implements Builder {
             try {
               getSink().accept(request);
             } catch (RejectedExecutionException ree) {
-              request.getContext()
+              request.getInternalContext()
                   .error(updateMessagingExceptionWithError(new MessagingException(event, ree, this), this, getMuleContext()));
             }
-            return Mono.from(request.getContext().getResponsePublisher())
+            return Mono.from(request.getInternalContext().getResponsePublisher())
                 .map(r -> {
                   Event result = createReturnEventForParentFlowConstruct(r, event);
                   return result;

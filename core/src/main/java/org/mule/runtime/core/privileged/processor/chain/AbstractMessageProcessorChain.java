@@ -182,12 +182,12 @@ abstract class AbstractMessageProcessorChain extends AbstractAnnotatedObject imp
     interceptors.add((processor, next) -> stream -> from(stream).concatMap(event -> just(event)
         .transform(next)
         .onErrorResume(RejectedExecutionException.class,
-                       throwable -> Mono.from(event.getContext()
+                       throwable -> Mono.from(event.getInternalContext()
                            .error(updateMessagingExceptionWithError(new MessagingException(event, throwable, processor),
                                                                     processor, muleContext)))
                            .then(Mono.empty()))
         .onErrorResume(MessagingException.class,
-                       throwable -> Mono.from(event.getContext().error(throwable)).then(Mono.empty()))));
+                       throwable -> Mono.from(event.getInternalContext().error(throwable)).then(Mono.empty()))));
 
     return interceptors;
   }

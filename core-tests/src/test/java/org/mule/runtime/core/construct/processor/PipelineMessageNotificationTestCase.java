@@ -226,11 +226,11 @@ public class PipelineMessageNotificationTestCase extends AbstractReactiveProcess
       }
 
       if (exceptionExpected) {
-        return expectedAction == notification.getAction() && exception != null && notification.getMessage() != null
-            && (this.event == null || this.event.getMessage().equals(notification.getMessage()));
+        return expectedAction == notification.getAction() && exception != null && notification.getEvent().getMessage() != null
+            && (this.event == null || this.event.getMessage().equals(notification.getEvent().getMessage()));
       } else {
-        return expectedAction == notification.getAction() && exception == null && notification.getMessage() != null
-            && (this.event == null || this.event.getMessage().equals(notification.getMessage()));
+        return expectedAction == notification.getAction() && exception == null && notification.getEvent().getMessage() != null
+            && (this.event == null || this.event.getMessage().equals(notification.getEvent().getMessage()));
       }
     }
   }

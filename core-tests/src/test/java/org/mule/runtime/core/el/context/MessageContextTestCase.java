@@ -27,7 +27,7 @@ import org.mule.runtime.api.metadata.DataType;
 import org.mule.runtime.api.metadata.TypedValue;
 import org.mule.runtime.core.api.DefaultTransformationService;
 import org.mule.runtime.core.api.Event;
-import org.mule.runtime.core.api.message.GroupCorrelation;
+import org.mule.runtime.api.event.GroupCorrelation;
 import org.mule.runtime.core.internal.context.notification.DefaultFlowCallStack;
 import org.mule.runtime.core.internal.message.InternalMessage;
 

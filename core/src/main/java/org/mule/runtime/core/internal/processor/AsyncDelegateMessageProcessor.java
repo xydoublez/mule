@@ -123,8 +123,8 @@ public class AsyncDelegateMessageProcessor extends AbstractMessageProcessorOwner
                     .transform(scheduleAsync(delegate))
                     .doOnNext(event -> fireAsyncCompleteNotification(event, null))
                     .doOnError(MessagingException.class, e -> fireAsyncCompleteNotification(e.getEvent(), e))
-                    .subscribe(event -> asyncRequest.getContext().success(event),
-                               throwable -> asyncRequest.getContext().error(throwable))))
+                    .subscribe(event -> asyncRequest.getInternalContext().success(event),
+                               throwable -> asyncRequest.getInternalContext().error(throwable))))
             .subscribe(requestUnbounded()));
   }
 
@@ -142,7 +142,7 @@ public class AsyncDelegateMessageProcessor extends AbstractMessageProcessorOwner
   private Event asyncEvent(Event event) {
     // Clone event, make it async and remove ReplyToHandler
     return Event
-        .builder(fireAndForgetChild(event.getContext(), ofNullable(getLocation())), event)
+        .builder(fireAndForgetChild(event.getInternalContext(), ofNullable(getLocation())), event)
         .replyToHandler(null)
         .session(new DefaultMuleSession(event.getSession())).build();
   }

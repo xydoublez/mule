@@ -87,9 +87,9 @@ public class AsyncDelegateMessageProcessorTestCase extends AbstractReactiveProce
     Event result = process(messageProcessor, request);
 
     // Complete parent context so we can assert event context completion based on async completion.
-    request.getContext().success(result);
+    request.getInternalContext().success(result);
 
-    assertCompletionNotDone(request.getContext());
+    assertCompletionNotDone(request.getInternalContext());
 
     // Permit async processing now we have already asserted that response alone is not enough to complete event context.
     asyncEntryLatch.countDown();
@@ -97,14 +97,14 @@ public class AsyncDelegateMessageProcessorTestCase extends AbstractReactiveProce
     assertThat(latch.await(LOCK_TIMEOUT, MILLISECONDS), is(true));
 
     // Block until async completes, not just target processor.
-    from(target.sensedEvent.getContext().getCompletionPublisher()).block(ofMillis(BLOCK_TIMEOUT));
+    from(target.sensedEvent.getInternalContext().getCompletionPublisher()).block(ofMillis(BLOCK_TIMEOUT));
     assertThat(target.sensedEvent, notNullValue());
 
     // Block to ensure async fully completes before testing state
-    from(request.getContext().getCompletionPublisher()).block(ofMillis(BLOCK_TIMEOUT));
+    from(request.getInternalContext().getCompletionPublisher()).block(ofMillis(BLOCK_TIMEOUT));
 
-    assertCompletionDone(target.sensedEvent.getContext());
-    assertCompletionDone(request.getContext());
+    assertCompletionDone(target.sensedEvent.getInternalContext());
+    assertCompletionDone(request.getInternalContext());
 
     assertTargetEvent(request);
     assertResponse(result);

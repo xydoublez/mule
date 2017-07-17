@@ -6,10 +6,10 @@
  */
 package org.mule.runtime.core.internal.routing;
 
+import org.mule.runtime.api.event.GroupCorrelation;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.config.i18n.CoreMessages;
-import org.mule.runtime.core.api.message.GroupCorrelation;
 import org.mule.runtime.core.api.routing.RoutingException;
 
 import java.util.ArrayList;

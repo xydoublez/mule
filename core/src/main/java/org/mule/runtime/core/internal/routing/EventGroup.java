@@ -7,7 +7,7 @@
 package org.mule.runtime.core.internal.routing;
 
 import static java.util.stream.Collectors.toList;
-import static org.mule.runtime.core.api.message.GroupCorrelation.NOT_SET;
+import static org.mule.runtime.api.event.GroupCorrelation.NOT_SET;
 import static org.mule.runtime.core.api.util.StringUtils.DASH;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.message.Message;
@@ -369,7 +369,7 @@ public class EventGroup implements Comparable<EventGroup>, Serializable, Deseria
     }
 
     private int getEventOrder(Event event) {
-      Integer orderVariable = (Integer) event.getVariable(MULE_ARRIVAL_ORDER_PROPERTY).getValue();
+      Integer orderVariable = (Integer) event.getVariables().get(MULE_ARRIVAL_ORDER_PROPERTY).getValue();
       return orderVariable != null ? orderVariable : -1;
     }
   }

@@ -218,7 +218,7 @@ public class FlowRefFactoryBeanTestCase extends AbstractMuleContextTestCase {
     when(applicationContext.getBean(eq(STATIC_REFERENCED_FLOW))).thenReturn(target);
     when(target.apply(any())).thenAnswer(invocation -> {
       Mono<Event> mono = from(invocation.getArgumentAt(0, Publisher.class));
-      return mono.doOnNext(event -> event.getContext().success(result)).map(event -> result);
+      return mono.doOnNext(event -> event.getInternalContext().success(result)).map(event -> result);
     });
     return createFlowRefFactoryBean(STATIC_REFERENCED_FLOW);
   }
@@ -230,7 +230,7 @@ public class FlowRefFactoryBeanTestCase extends AbstractMuleContextTestCase {
     when(applicationContext.getBean(eq(PARSED_DYNAMIC_REFERENCED_FLOW))).thenReturn(target);
     when(target.apply(any())).thenAnswer(invocation -> {
       Mono<Event> mono = from(invocation.getArgumentAt(0, Publisher.class));
-      return mono.doOnNext(event -> event.getContext().success(result)).map(event -> result);
+      return mono.doOnNext(event -> event.getInternalContext().success(result)).map(event -> result);
     });
     return createFlowRefFactoryBean(DYNAMIC_REFERENCED_FLOW);
   }

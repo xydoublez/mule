@@ -6,6 +6,7 @@
  */
 package org.mule.runtime.core.api.context.notification;
 
+import org.mule.runtime.api.event.GroupCorrelation;
 import org.mule.runtime.api.message.Error;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.meta.AnnotatedObject;
@@ -13,7 +14,6 @@ import org.mule.runtime.api.metadata.TypedValue;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.el.ExpressionManager;
 import org.mule.runtime.core.api.exception.MessagingException;
-import org.mule.runtime.core.api.message.GroupCorrelation;
 import org.mule.runtime.core.api.processor.Processor;
 
 import java.util.HashMap;
@@ -30,6 +30,7 @@ public class EnrichedNotificationInfo {
   private GroupCorrelation groupCorrelation;
   private Message message;
   private Optional<Error> error;
+  private org.mule.runtime.api.event.Event event;
   private Object component; // this should be AnnotatedObject, but not all interfaces mention it (though implementations do)
   private Exception exception;
   private Map<String, TypedValue> variables;
@@ -37,7 +38,7 @@ public class EnrichedNotificationInfo {
   private FlowCallStack flowCallStack;
 
   // TODO: MULE-12626: remove when Studio uses interception API
-  Event event;
+  Event internalEvent;
 
   /**
    * Extract information from the event and exception to provide notification data.
@@ -81,11 +82,7 @@ public class EnrichedNotificationInfo {
 
   private static Map<String, TypedValue> createVariablesMap(Event event) {
     Map<String, TypedValue> variables = new HashMap<>();
-
-    event.getVariableNames().forEach(name -> {
-      variables.put(name, event.getVariable(name));
-    });
-
+    variables.putAll(event.getVariables());
     return variables;
   }
 
@@ -104,8 +101,8 @@ public class EnrichedNotificationInfo {
   public EnrichedNotificationInfo(String uniqueId, String correlationId, GroupCorrelation groupCorrelation, Message message,
                                   Optional<Error> error, Object component, Exception exception,
                                   Map<String, TypedValue> variables, String originatingFlowName, FlowCallStack flowCallStack) {
-    this.id = uniqueId;
-    this.correlationId = correlationId;
+    this.id = event.getContext().getId();
+    this.correlationId = event.getCorrelationId();
     this.groupCorrelation = groupCorrelation;
     this.message = message;
     this.error = error;
@@ -116,12 +113,8 @@ public class EnrichedNotificationInfo {
     this.flowCallStack = flowCallStack;
   }
 
-  public String getUniqueId() {
-    return id;
-  }
-
-  public String getCorrelationId() {
-    return correlationId;
+  public org.mule.runtime.api.event.Event getEvent() {
+    return event;
   }
 
   public GroupCorrelation getGroupCorrelation() {
@@ -129,15 +122,15 @@ public class EnrichedNotificationInfo {
   }
 
   public Message getMessage() {
-    return message;
+    return event.getMessage();
   }
 
   public Optional<Error> getError() {
-    return error;
+    return event.getError();
   }
 
-  public Map<String, TypedValue> getVariables() {
-    return variables;
+  public Map<String, TypedValue<?>> getVariables() {
+    return event.getVariables();
   }
 
   public AnnotatedObject getComponent() {
@@ -162,6 +155,6 @@ public class EnrichedNotificationInfo {
 
   // TODO: MULE-12626: remove when Studio uses interception API
   public TypedValue evaluateExpression(ExpressionManager expressionManager, String script) {
-    return expressionManager.evaluate(script, event);
+    return expressionManager.evaluate(script, internalEvent);
   }
 }
