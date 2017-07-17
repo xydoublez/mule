@@ -100,7 +100,7 @@ public class IdempotentRedeliveryPolicy extends AbstractRedeliveryPolicy {
   private Supplier<ObjectStore> internalObjectStoreSupplier() {
     return () -> {
       ObjectStoreManager objectStoreManager = muleContext.getObjectStoreManager();
-      return objectStoreManager.createObjectStore(flowConstruct.getName() + "." + getClass().getName(),
+      return objectStoreManager.createObjectStore(getLocation().getRootContainerName() + "." + getClass().getName(),
                                                   ObjectStoreSettings.builder()
                                                       .persistent(false)
                                                       .entryTtl((long) 60 * 5 * 1000)

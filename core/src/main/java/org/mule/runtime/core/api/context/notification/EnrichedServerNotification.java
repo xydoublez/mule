@@ -8,7 +8,6 @@ package org.mule.runtime.core.api.context.notification;
 
 import org.mule.runtime.api.component.location.ComponentLocation;
 import org.mule.runtime.api.event.Event;
-import org.mule.runtime.api.event.GroupCorrelation;
 import org.mule.runtime.api.meta.AnnotatedObject;
 
 /**
@@ -40,10 +39,6 @@ public abstract class EnrichedServerNotification extends ServerNotification {
 
   public String getCorrelationId() {
     return notificationInfo.getEvent().getCorrelationId();
-  }
-
-  public GroupCorrelation getGroupCorrelation() {
-    return notificationInfo.getGroupCorrelation();
   }
 
   public Event getEvent() {

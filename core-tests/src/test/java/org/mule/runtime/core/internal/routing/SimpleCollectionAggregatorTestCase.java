@@ -59,9 +59,9 @@ public class SimpleCollectionAggregatorTestCase extends AbstractMuleContextTestC
     Message message3 = Message.of("test event C");
 
     Event event1 =
-        Event.builder(executionContext).message(message1).groupCorrelation(new GroupCorrelation(3, null)).flow(flow).build();
-    Event event2 = Event.builder(executionContext).message(message2).flow(flow).build();
-    Event event3 = Event.builder(executionContext).message(message3).flow(flow).build();
+        Event.builder(executionContext).message(message1).groupCorrelation(new GroupCorrelation(3, null)).build();
+    Event event2 = Event.builder(executionContext).message(message2).build();
+    Event event3 = Event.builder(executionContext).message(message3).build();
 
     assertNull(router.process(event1));
     assertNull(router.process(event2));
@@ -102,7 +102,7 @@ public class SimpleCollectionAggregatorTestCase extends AbstractMuleContextTestC
     Message message1 = of("test event A");
 
     Event event1 =
-        Event.builder(executionContext).message(message1).groupCorrelation(new GroupCorrelation(1, null)).flow(flow).build();
+        Event.builder(executionContext).message(message1).groupCorrelation(new GroupCorrelation(1, null)).build();
 
     Event resultEvent = router.process(event1);
 
@@ -144,10 +144,10 @@ public class SimpleCollectionAggregatorTestCase extends AbstractMuleContextTestC
     Message messageCollection2 = Message.of(list2);
 
     Event event1 =
-        Event.builder(executionContext).message(messageCollection1).groupCorrelation(new GroupCorrelation(2, null)).flow(flow)
+        Event.builder(executionContext).message(messageCollection1).groupCorrelation(new GroupCorrelation(2, null))
             .build();
     Event event2 =
-        Event.builder(executionContext).message(messageCollection2).groupCorrelation(new GroupCorrelation(2, null)).flow(flow)
+        Event.builder(executionContext).message(messageCollection2).groupCorrelation(new GroupCorrelation(2, null))
             .build();
 
     assertNull(router.process(event1));

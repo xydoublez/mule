@@ -62,7 +62,6 @@ public class DefaultEventBuilder implements Event.Builder {
   private Map<String, TypedValue<?>> moduleParameters = new HashMap<>();
   private Map<String, Object> internalParameters = new HashMap<>();
   private Error error;
-  private FlowConstruct flow;
   private GroupCorrelation groupCorrelation = new GroupCorrelation(null, null);
   private String legacyCorrelationId;
   private FlowCallStack flowCallStack = new DefaultFlowCallStack();
@@ -81,7 +80,6 @@ public class DefaultEventBuilder implements Event.Builder {
     this.context = event.getInternalContext();
     this.originalEvent = event;
     this.message = event.getMessage();
-    this.flow = event.getFlowConstruct();
     this.groupCorrelation = event.getGroupCorrelation();
     this.legacyCorrelationId = event.getLegacyCorrelationId();
     this.flowCallStack = event.getFlowCallStack().clone();
@@ -224,13 +222,6 @@ public class DefaultEventBuilder implements Event.Builder {
   }
 
   @Override
-  public Event.Builder flow(FlowConstruct flow) {
-    this.flow = flow;
-    this.modified = true;
-    return this;
-  }
-
-  @Override
   public Event.Builder replyToHandler(ReplyToHandler replyToHandler) {
     this.replyToHandler = replyToHandler;
     this.modified = true;
@@ -266,7 +257,7 @@ public class DefaultEventBuilder implements Event.Builder {
       requireNonNull(message);
 
       return new EventImplementation(context, message, flowVariables, moduleProperties, moduleParameters, internalParameters,
-                                     flow, session, replyToDestination, replyToHandler,
+                                     session, replyToDestination, replyToHandler,
                                      flowCallStack, groupCorrelation, error, legacyCorrelationId, notificationsEnabled);
     }
   }
@@ -321,13 +312,11 @@ public class DefaultEventBuilder implements Event.Builder {
     // Use this constructor from the builder
     private EventImplementation(EventContext context, Message message, Map<String, TypedValue<?>> variables,
                                 Map<String, TypedValue<?>> properties, Map<String, TypedValue<?>> parameters,
-                                Map<String, ?> internalParameters,
-                                FlowConstruct flowConstruct, MuleSession session,
+                                Map<String, ?> internalParameters, MuleSession session,
                                 Object replyToDestination, ReplyToHandler replyToHandler,
                                 FlowCallStack flowCallStack, GroupCorrelation groupCorrelation, Error error,
                                 String legacyCorrelationId, boolean notificationsEnabled) {
       this.context = context;
-      this.flowConstruct = flowConstruct;
       if (flowConstruct != null) {
         this.flowName = flowConstruct.getName();
       }

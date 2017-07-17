@@ -24,6 +24,7 @@ import static org.mule.runtime.extension.api.values.ValueResolvingException.UNKN
 import static org.mule.runtime.module.extension.internal.util.MuleExtensionUtils.getClassLoader;
 import static org.mule.runtime.module.extension.internal.util.MuleExtensionUtils.getInitialiserEvent;
 import org.mule.metadata.api.ClassTypeLoader;
+import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
@@ -47,7 +48,6 @@ import org.mule.runtime.core.api.DefaultMuleException;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.construct.FlowConstruct;
-import org.mule.runtime.core.api.construct.FlowConstructAware;
 import org.mule.runtime.core.api.context.MuleContextAware;
 import org.mule.runtime.core.api.extension.ExtensionManager;
 import org.mule.runtime.core.api.streaming.CursorProviderFactory;
@@ -71,14 +71,16 @@ import org.mule.runtime.module.extension.internal.runtime.operation.OperationMes
 import org.mule.runtime.module.extension.internal.runtime.resolver.ParameterValueResolver;
 import org.mule.runtime.module.extension.internal.runtime.source.ExtensionMessageSource;
 import org.mule.runtime.module.extension.internal.value.ValueProviderMediator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+
+import javax.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class that groups all the common behaviour between different extension's components, like {@link OperationMessageProcessor} and
@@ -89,7 +91,7 @@ import java.util.function.Function;
  * @since 4.0
  */
 public abstract class ExtensionComponent<T extends ComponentModel> extends AbstractAnnotatedObject
-    implements MuleContextAware, MetadataKeyProvider, MetadataProvider<T>, ComponentValueProvider, FlowConstructAware,
+    implements MuleContextAware, MetadataKeyProvider, MetadataProvider<T>, ComponentValueProvider,
     Lifecycle {
 
   private final static Logger LOGGER = LoggerFactory.getLogger(ExtensionComponent.class);
@@ -119,6 +121,9 @@ public abstract class ExtensionComponent<T extends ComponentModel> extends Abstr
   @Inject
   private MuleMetadataService metadataService;
 
+  @Inject
+  private ConfigurationComponentLocator componentLocator;
+
   protected ExtensionComponent(ExtensionModel extensionModel,
                                T componentModel,
                                ConfigurationProvider configurationProvider,
@@ -143,6 +148,7 @@ public abstract class ExtensionComponent<T extends ComponentModel> extends Abstr
    */
   @Override
   public final void initialise() throws InitialisationException {
+    flowConstruct = FlowConstruct.getFromAnnotatedObject(componentLocator, this);
     valueProviderMediator.setMuleContext(muleContext);
     if (cursorProviderFactory == null) {
       cursorProviderFactory = componentModel.getModelProperty(PagedOperationModelProperty.class)
@@ -313,11 +319,6 @@ public abstract class ExtensionComponent<T extends ComponentModel> extends Abstr
       throw new ValueResolvingException("An unknown error occurred trying to resolve values. " + e.getCause().getMessage(),
                                         UNKNOWN, e);
     }
-  }
-
-  @Override
-  public void setFlowConstruct(FlowConstruct flowConstruct) {
-    this.flowConstruct = flowConstruct;
   }
 
   protected <R> R runWithMetadataContext(Function<MetadataContext, R> metadataContextFunction)

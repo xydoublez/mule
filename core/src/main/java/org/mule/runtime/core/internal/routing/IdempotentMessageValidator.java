@@ -18,7 +18,6 @@ import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNee
 import static org.mule.runtime.internal.el.BindingContextUtils.CORRELATION_ID;
 import static org.mule.runtime.internal.el.BindingContextUtils.NULL_BINDING_CONTEXT;
 import static org.slf4j.LoggerFactory.getLogger;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.lifecycle.Initialisable;
@@ -33,7 +32,6 @@ import org.mule.runtime.api.store.ObjectStoreSettings;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.construct.FlowConstruct;
-import org.mule.runtime.core.api.construct.FlowConstructAware;
 import org.mule.runtime.core.api.context.MuleContextAware;
 import org.mule.runtime.core.api.exception.MessagingException;
 import org.mule.runtime.core.api.processor.Processor;
@@ -51,7 +49,7 @@ import org.slf4j.Logger;
  * http://www.eaipatterns.com/IdempotentReceiver.html</a>
  */
 public class IdempotentMessageValidator extends AbstractAnnotatedObject
-    implements Processor, MuleContextAware, FlowConstructAware, Initialisable, Disposable {
+    implements Processor, MuleContextAware, Initialisable, Disposable {
 
   private static final Logger LOGGER = getLogger(IdempotentMessageValidator.class);
 
@@ -67,11 +65,6 @@ public class IdempotentMessageValidator extends AbstractAnnotatedObject
   @Override
   public void setMuleContext(MuleContext context) {
     this.muleContext = context;
-  }
-
-  @Override
-  public void setFlowConstruct(FlowConstruct flowConstruct) {
-    this.flowConstruct = flowConstruct;
   }
 
   @Override

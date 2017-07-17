@@ -26,13 +26,13 @@ public class FlowTestCase extends AbstractELTestCase {
 
   @Test
   public void flowName() throws Exception {
-    Event event = Event.builder(context).message(of("")).flow(flowConstruct).build();
+    Event event = Event.builder(context).message(of("")).build();
     assertEquals("flowName", evaluate("flow.name", event));
   }
 
   @Test
   public void assignToFlowName() throws Exception {
-    Event event = Event.builder(context).message(of("")).flow(flowConstruct).build();
+    Event event = Event.builder(context).message(of("")).build();
     assertFinalProperty("flow.name='foo'", event);
   }
 

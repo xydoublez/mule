@@ -250,7 +250,6 @@ public class OperationMessageProcessorTestCase extends AbstractOperationMessageP
     FlowConstruct flowConstruct = mock(FlowConstruct.class);
     when(flowConstruct.getName()).thenReturn(flowName);
 
-    messageProcessor.setFlowConstruct(flowConstruct);
     messageProcessor.setMuleContext(context);
     messageProcessor.initialise();
   }
@@ -270,7 +269,6 @@ public class OperationMessageProcessorTestCase extends AbstractOperationMessageP
     FlowConstruct flowConstruct = mock(FlowConstruct.class);
     when(flowConstruct.getName()).thenReturn(flowName);
 
-    messageProcessor.setFlowConstruct(flowConstruct);
     messageProcessor.setMuleContext(context);
     messageProcessor.initialise();
   }

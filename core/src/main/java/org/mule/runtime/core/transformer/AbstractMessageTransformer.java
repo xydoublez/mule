@@ -125,7 +125,7 @@ public abstract class AbstractMessageTransformer extends AbstractTransformer imp
       MuleClientFlowConstruct flowConstruct =
           new MuleClientFlowConstruct(muleContext);
       ComponentLocation location = getLocation() != null ? getLocation() : fromSingleComponent("AbstractMessageTransformer");
-      event = Event.builder(create(flowConstruct, location)).message(message).flow(flowConstruct).build();
+      event = Event.builder(create(flowConstruct, location)).message(message).build();
     }
     try {
       result = transformMessage(event, enc);

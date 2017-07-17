@@ -113,7 +113,6 @@ public class MessageEnricherTestCase extends AbstractReactiveProcessorTestCase {
     enricher.setEnrichmentMessageProcessor(event -> {
       throw testException;
     });
-    enricher.setFlowConstruct(getTestFlow(muleContext));
 
     thrown.expect(sameInstance(testException));
     process(enricher, testEvent());

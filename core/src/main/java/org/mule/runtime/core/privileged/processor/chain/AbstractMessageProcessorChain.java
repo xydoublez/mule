@@ -14,7 +14,6 @@ import static org.mule.runtime.core.api.context.notification.MessageProcessorNot
 import static org.mule.runtime.core.api.context.notification.MessageProcessorNotification.createFrom;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.disposeIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
-import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.setFlowConstructIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.setMuleContextIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
 import static org.mule.runtime.core.api.processor.MessageProcessors.processToApply;
@@ -23,7 +22,6 @@ import static org.mule.runtime.core.api.util.StringUtils.isBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 import static reactor.core.publisher.Flux.from;
 import static reactor.core.publisher.Flux.just;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.lifecycle.Startable;
@@ -33,8 +31,6 @@ import org.mule.runtime.api.meta.AnnotatedObject;
 import org.mule.runtime.api.streaming.CursorProvider;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.core.api.construct.FlowConstruct;
-import org.mule.runtime.core.api.construct.Pipeline;
 import org.mule.runtime.core.api.context.notification.MessageProcessorNotification;
 import org.mule.runtime.core.api.context.notification.ServerNotificationManager;
 import org.mule.runtime.core.api.exception.MessagingException;
@@ -284,15 +280,6 @@ abstract class AbstractMessageProcessorChain extends AbstractAnnotatedObject imp
   public void setMuleContext(MuleContext muleContext) {
     this.muleContext = muleContext;
     setMuleContextIfNeeded(getMessageProcessorsForLifecycle(), muleContext);
-  }
-
-  @Override
-  public void setFlowConstruct(FlowConstruct flowConstruct) {
-    if (flowConstruct instanceof Pipeline
-        && ((Pipeline) flowConstruct).getProcessingStrategy() != null) {
-      processingStrategy = ((Pipeline) flowConstruct).getProcessingStrategy();
-    }
-    setFlowConstructIfNeeded(getMessageProcessorsForLifecycle(), flowConstruct);
   }
 
   @Override

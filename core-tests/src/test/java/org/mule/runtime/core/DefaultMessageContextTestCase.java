@@ -55,7 +55,7 @@ public class DefaultMessageContextTestCase extends AbstractMuleTestCase {
   @Test
   public void noCorrelationIdInContext() {
     final Message message = of(TEST_PAYLOAD);
-    final Event event = Event.builder(executionContext).message(message).flow(flow).build();
+    final Event event = Event.builder(executionContext).message(message).build();
 
     assertThat(event.getCorrelationId(), is(GENERATED_CORRELATION_ID));
   }
@@ -63,7 +63,7 @@ public class DefaultMessageContextTestCase extends AbstractMuleTestCase {
   @Test
   public void correlationIdInContext() {
     final Message message = of(TEST_PAYLOAD);
-    final Event event = Event.builder(executionContextWithCorrelation).message(message).flow(flow).build();
+    final Event event = Event.builder(executionContextWithCorrelation).message(message).build();
 
     assertThat(event.getCorrelationId(), is(CUSTOM_CORRELATION_ID));
   }
@@ -71,7 +71,7 @@ public class DefaultMessageContextTestCase extends AbstractMuleTestCase {
   @Test
   public void overrideCorrelationIdInContext() {
     final Message message = of(TEST_PAYLOAD);
-    final Event event = Event.builder(executionContextWithCorrelation).message(message).flow(flow)
+    final Event event = Event.builder(executionContextWithCorrelation).message(message)
         .groupCorrelation(new GroupCorrelation(null, null)).build();
 
     assertThat(event.getCorrelationId(), is(CUSTOM_CORRELATION_ID));
@@ -81,7 +81,7 @@ public class DefaultMessageContextTestCase extends AbstractMuleTestCase {
   public void overrideCorrelationIdInContextSequence() {
     final Message message = of(TEST_PAYLOAD);
     final Event event =
-        Event.builder(executionContextWithCorrelation).message(message).correlationId(CUSTOM_CORRELATION_ID).flow(flow)
+        Event.builder(executionContextWithCorrelation).message(message).correlationId(CUSTOM_CORRELATION_ID)
             .groupCorrelation(new GroupCorrelation(null, 6)).build();
 
     assertThat(event.getCorrelationId(), is(CUSTOM_CORRELATION_ID));

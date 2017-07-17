@@ -7,6 +7,7 @@
 package org.mule.functional.api.component;
 
 import static org.junit.Assert.fail;
+
 import org.mule.runtime.api.el.ValidationResult;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;

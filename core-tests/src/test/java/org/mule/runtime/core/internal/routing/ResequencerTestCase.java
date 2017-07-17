@@ -59,9 +59,9 @@ public class ResequencerTestCase extends AbstractMuleContextTestCase {
     Message message2 = of("test event B");
     Message message3 = of("test event C");
 
-    Event event1 = Event.builder(context).message(message1).flow(getTestFlow(muleContext)).session(session).build();
-    Event event2 = Event.builder(context).message(message2).flow(getTestFlow(muleContext)).session(session).build();
-    Event event3 = Event.builder(context).message(message3).flow(getTestFlow(muleContext)).session(session).build();
+    Event event1 = Event.builder(context).message(message1).session(session).build();
+    Event event2 = Event.builder(context).message(message2).session(session).build();
+    Event event3 = Event.builder(context).message(message3).session(session).build();
 
     assertNull(router.process(event2));
     assertNull(router.process(event3));
@@ -94,9 +94,9 @@ public class ResequencerTestCase extends AbstractMuleContextTestCase {
     Message message2 = of("test event B");
     Message message3 = of("test event C");
 
-    Event event1 = Event.builder(context).message(message1).flow(getTestFlow(muleContext)).session(session).build();
-    Event event2 = Event.builder(context).message(message2).flow(getTestFlow(muleContext)).session(session).build();
-    Event event3 = Event.builder(context).message(message3).flow(getTestFlow(muleContext)).session(session).build();
+    Event event1 = Event.builder(context).message(message1).session(session).build();
+    Event event2 = Event.builder(context).message(message2).session(session).build();
+    Event event3 = Event.builder(context).message(message3).session(session).build();
 
     // set a resequencing comparator. We need to reset the router since it will
     // not process the same event group

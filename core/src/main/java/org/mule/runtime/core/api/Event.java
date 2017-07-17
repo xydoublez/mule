@@ -425,15 +425,6 @@ public interface Event extends Serializable, org.mule.runtime.api.event.Event {
     Builder replyToDestination(Object replyToDestination);
 
     /**
-     * 
-     * @param flow
-     * @return the builder instance
-     * @deprecated TODO MULE-10013 remove this
-     */
-    @Deprecated
-    Builder flow(FlowConstruct flow);
-
-    /**
      * Disables the firing of notifications when processing the produced event.
      * 
      * @deprecated Transport infrastructure is deprecated.

@@ -424,7 +424,7 @@ public abstract class AbstractMuleContextTestCase extends AbstractMuleTestCase {
         }
       }
     }
-    return Event.builder(DefaultEventContext.create(flowConstruct, TEST_CONNECTOR_LOCATION)).flow(flowConstruct);
+    return Event.builder(DefaultEventContext.create(flowConstruct, TEST_CONNECTOR_LOCATION));
   }
 
   @Override

@@ -44,7 +44,7 @@ public class VariablesTestCase extends AbstractELTestCase {
   @Test
   public void flowVariable() throws Exception {
     Message message = of("");
-    Event event = Event.builder(context).message(message).flow(flowConstruct)
+    Event event = Event.builder(context).message(message)
         .addVariable("foo", "bar").build();
     assertEquals(event.getVariables().get("foo").getValue(), evaluate("flowVars['foo']", event));
   }
@@ -52,7 +52,7 @@ public class VariablesTestCase extends AbstractELTestCase {
   @Test
   public void assignValueToFlowVariable() throws Exception {
     Message message = of("");
-    Event event = Event.builder(context).message(message).flow(flowConstruct)
+    Event event = Event.builder(context).message(message)
         .addVariable("foo", "bar_old").build();
     Event.Builder eventBuilder = Event.builder(event);
     evaluate("flowVars['foo']='bar'", event, eventBuilder);
@@ -62,7 +62,7 @@ public class VariablesTestCase extends AbstractELTestCase {
   @Test
   public void assignValueToNewFlowVariable() throws Exception {
     Message message = of("");
-    Event event = Event.builder(context).message(message).flow(flowConstruct).build();
+    Event event = Event.builder(context).message(message).build();
     Event.Builder eventBuilder = Event.builder(event);
     evaluate("flowVars['foo']='bar'", event, eventBuilder);
     assertEquals("bar", eventBuilder.build().getVariables().get("foo").getValue());
@@ -71,7 +71,7 @@ public class VariablesTestCase extends AbstractELTestCase {
   @Test
   public void sessionVariablesMap() throws Exception {
     Message message = of("");
-    Event event = Event.builder(context).message(message).flow(flowConstruct).build();
+    Event event = Event.builder(context).message(message).build();
     event.getSession().setProperty("foo", "bar");
     assertTrue(evaluate("sessionVars", event) instanceof Map);
   }
@@ -84,7 +84,7 @@ public class VariablesTestCase extends AbstractELTestCase {
   @Test
   public void sessionVariable() throws Exception {
     Message message = of("");
-    Event event = Event.builder(context).message(message).flow(flowConstruct).build();
+    Event event = Event.builder(context).message(message).build();
     event.getSession().setProperty("foo", "bar");
     assertEquals(event.getSession().getProperty("foo"), evaluate("sessionVars['foo']", event));
   }
@@ -92,7 +92,7 @@ public class VariablesTestCase extends AbstractELTestCase {
   @Test
   public void assignValueToSessionVariable() throws Exception {
     Message message = of("");
-    Event event = Event.builder(context).message(message).flow(flowConstruct).build();
+    Event event = Event.builder(context).message(message).build();
     event.getSession().setProperty("foo", "bar_old");
     evaluate("sessionVars['foo']='bar'", event);
     assertEquals("bar", event.getSession().getProperty("foo"));
@@ -101,7 +101,7 @@ public class VariablesTestCase extends AbstractELTestCase {
   @Test
   public void assignValueToNewSessionVariable() throws Exception {
     Message message = of("");
-    Event event = Event.builder(context).message(message).flow(flowConstruct).build();
+    Event event = Event.builder(context).message(message).build();
     evaluate("sessionVars['foo']='bar'", event);
     assertEquals("bar", event.getSession().getProperty("foo"));
   }
@@ -109,7 +109,7 @@ public class VariablesTestCase extends AbstractELTestCase {
   @Test
   public void variableFromFlowScope() throws Exception {
     Message message = of("");
-    Event event = Event.builder(context).message(message).flow(flowConstruct)
+    Event event = Event.builder(context).message(message)
         .addVariable("foo", "bar").build();
     event.getSession().setProperty("foo", "NOTbar");
     assertEquals(event.getVariables().get("foo").getValue(), evaluate("foo", event));
@@ -118,7 +118,7 @@ public class VariablesTestCase extends AbstractELTestCase {
   @Test
   public void updateVariableFromFlowScope() throws Exception {
     Message message = of("");
-    Event event = Event.builder(context).message(message).flow(flowConstruct)
+    Event event = Event.builder(context).message(message)
         .addVariable("foo", "bar").build();
     assertEquals("bar_new", evaluate("foo='bar_new'", event));
   }
@@ -126,7 +126,7 @@ public class VariablesTestCase extends AbstractELTestCase {
   @Test
   public void variableFromSessionScope() throws Exception {
     Message message = of("");
-    Event event = Event.builder(context).message(message).flow(flowConstruct).build();
+    Event event = Event.builder(context).message(message).build();
     event.getSession().setProperty("foo", "bar");
     assertEquals(event.getSession().getProperty("foo"), evaluate("foo", event));
   }
@@ -134,7 +134,7 @@ public class VariablesTestCase extends AbstractELTestCase {
   @Test
   public void updateVariableFromSessionScope() throws Exception {
     Message message = of("");
-    Event event = Event.builder(context).message(message).flow(flowConstruct).build();
+    Event event = Event.builder(context).message(message).build();
     event.getSession().setProperty("foo", "bar");
     assertEquals("bar_new", evaluate("foo='bar_new'", event));
   }
@@ -142,7 +142,7 @@ public class VariablesTestCase extends AbstractELTestCase {
   @Test
   public void assignValueToVariable() throws Exception {
     Message message = of("");
-    Event event = Event.builder(context).message(message).flow(flowConstruct)
+    Event event = Event.builder(context).message(message)
         .addVariable("foo", "bar_old").build();
     Event.Builder eventBuilder = Event.builder(event);
     evaluate("foo='bar'", event, eventBuilder);
@@ -152,7 +152,7 @@ public class VariablesTestCase extends AbstractELTestCase {
   @Test
   public void assignValueToLocalVariable() throws Exception {
     Message message = of("");
-    Event event = Event.builder(context).message(message).flow(flowConstruct).build();
+    Event event = Event.builder(context).message(message).build();
     evaluate("localVar='bar'", event);
   }
 
@@ -162,14 +162,14 @@ public class VariablesTestCase extends AbstractELTestCase {
   @Test
   public void reassignValueToLocalVariable() throws Exception {
     Message message = of("");
-    Event event = Event.builder(context).message(message).flow(flowConstruct).build();
+    Event event = Event.builder(context).message(message).build();
     evaluate("localVar='bar';localVar='bar2'", event);
   }
 
   @Test
   public void localVariable() throws Exception {
     Message message = of("");
-    Event event = Event.builder(context).message(message).flow(flowConstruct).build();
+    Event event = Event.builder(context).message(message).build();
     assertEquals("bar", evaluate("localVar='bar';localVar", event));
   }
 }

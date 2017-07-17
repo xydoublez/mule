@@ -10,7 +10,6 @@ package org.mule.runtime.config.spring.factories;
 import org.mule.runtime.api.meta.AbstractAnnotatedObject;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.construct.FlowConstruct;
-import org.mule.runtime.core.api.construct.FlowConstructAware;
 import org.mule.runtime.core.api.context.MuleContextAware;
 import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.api.routing.AggregationStrategy;
@@ -21,7 +20,7 @@ import java.util.List;
 import org.springframework.beans.factory.FactoryBean;
 
 public class ScatterGatherRouterFactoryBean extends AbstractAnnotatedObject
-    implements FactoryBean<ScatterGatherRouter>, MuleContextAware, FlowConstructAware {
+    implements FactoryBean<ScatterGatherRouter>, MuleContextAware {
 
   private boolean parallel = true;
   private long timeout = 0;
@@ -36,7 +35,6 @@ public class ScatterGatherRouterFactoryBean extends AbstractAnnotatedObject
     sg.setParallel(parallel);
     sg.setTimeout(timeout);
     sg.setMuleContext(muleContext);
-    sg.setFlowConstruct(flowConstruct);
 
     for (Processor mp : this.messageProcessors) {
       sg.addRoute(mp);
@@ -81,8 +79,4 @@ public class ScatterGatherRouterFactoryBean extends AbstractAnnotatedObject
     this.muleContext = context;
   }
 
-  @Override
-  public void setFlowConstruct(FlowConstruct flowConstruct) {
-    this.flowConstruct = flowConstruct;
-  }
 }

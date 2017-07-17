@@ -36,7 +36,7 @@ import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.connector.ConnectionManager;
 import org.mule.runtime.core.api.construct.Flow;
 import org.mule.runtime.core.api.construct.FlowConstruct;
-import org.mule.runtime.core.api.construct.FlowConstructAware;
+import org.mule.runtime.core.api.functional.Either;
 import org.mule.runtime.core.api.exception.MessagingException;
 import org.mule.runtime.core.api.functional.Either;
 import org.mule.runtime.core.api.streaming.CursorProviderFactory;
@@ -77,7 +77,7 @@ import org.reactivestreams.Publisher;
  *
  * @since 4.0
  */
-public final class SourceAdapter implements Startable, Stoppable, Initialisable, FlowConstructAware {
+public final class SourceAdapter implements Startable, Stoppable, Initialisable {
 
   private final ExtensionModel extensionModel;
   private final SourceModel sourceModel;
@@ -265,9 +265,10 @@ public final class SourceAdapter implements Startable, Stoppable, Initialisable,
         connectionHandler = connectionManager.getConnection(configurationInstance.get().getValue());
         connectionSetter.get().set(source, connectionHandler.getConnection());
       } catch (ConnectionException e) {
+        // TODO review here how to get the flow name.
         throw new MuleRuntimeException(createStaticMessage(format(
                                                                   "Could not obtain connection for message source '%s' on flow '%s'",
-                                                                  getName(), flowConstruct.getName())),
+                                                                  getName(), "lalala")),
                                        e);
       }
     }
@@ -341,11 +342,6 @@ public final class SourceAdapter implements Startable, Stoppable, Initialisable,
         .map(param -> param.getModelProperty(DeclaringMemberModelProperty.class).get())
         .findAny()
         .map(modelProperty -> modelProperty.getDeclaringField().getName()).orElse(TRANSACTIONAL_ACTION_PARAMETER_NAME);
-  }
-
-  @Override
-  public void setFlowConstruct(FlowConstruct flowConstruct) {
-    this.flowConstruct = flowConstruct;
   }
 
   public void setComponentLocation(ComponentLocation componentLocation) {

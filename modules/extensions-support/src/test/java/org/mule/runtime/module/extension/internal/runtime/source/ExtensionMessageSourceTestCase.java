@@ -498,7 +498,6 @@ public class ExtensionMessageSourceTestCase extends AbstractMuleContextTestCase 
         new ExtensionMessageSource(extensionModel, sourceModel, sourceAdapterFactory, configurationProvider,
                                    retryPolicyTemplate, cursorStreamProviderFactory, extensionManager);
     messageSource.setListener(messageProcessor);
-    messageSource.setFlowConstruct(flowConstruct);
     muleContext.getInjector().inject(messageSource);
     return messageSource;
   }

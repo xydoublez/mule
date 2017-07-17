@@ -248,7 +248,6 @@ public class ModuleFlowProcessingPhase
     Message message = template.getMessage();
     Event templateEvent =
         builder(create(messageProcessContext.getFlowConstruct(), sourceLocation, null, responseCompletion)).message(message)
-            .flow(messageProcessContext.getFlowConstruct())
             .build();
 
     if (message.getPayload().getValue() instanceof SourceResultAdapter) {

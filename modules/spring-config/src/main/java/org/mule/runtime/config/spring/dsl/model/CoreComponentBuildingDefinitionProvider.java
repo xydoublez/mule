@@ -81,7 +81,7 @@ import org.mule.runtime.config.spring.factories.ScatterGatherRouterFactoryBean;
 import org.mule.runtime.config.spring.factories.SchedulingMessageSourceFactoryBean;
 import org.mule.runtime.config.spring.factories.SubflowMessageProcessorChainFactoryBean;
 import org.mule.runtime.config.spring.factories.TryProcessorFactoryBean;
-import org.mule.runtime.config.spring.factories.processor.MessageProcessorChainFactoryBean;
+import org.mule.runtime.core.privileged.processor.objectfactory.MessageProcessorChainObjectFactory;
 import org.mule.runtime.config.spring.factories.streaming.InMemoryCursorIteratorProviderObjectFactory;
 import org.mule.runtime.config.spring.factories.streaming.InMemoryCursorStreamProviderObjectFactory;
 import org.mule.runtime.config.spring.factories.streaming.NullCursorIteratorProviderObjectFactory;
@@ -334,7 +334,7 @@ public class CoreComponentBuildingDefinitionProvider implements ComponentBuildin
             .checkingThatIsClassOrInheritsFrom(MESSAGE_PROCESSOR_CLASS))
         .asPrototype().build());
     componentBuildingDefinitions.add(baseDefinition.withIdentifier(PROCESSOR_CHAIN)
-        .withTypeDefinition(fromType(Processor.class)).withObjectFactoryType(MessageProcessorChainFactoryBean.class)
+        .withTypeDefinition(fromType(Processor.class)).withObjectFactoryType(MessageProcessorChainObjectFactory.class)
         .withSetterParameterDefinition(MESSAGE_PROCESSORS, fromChildCollectionConfiguration(Processor.class).build())
         .asPrototype().build());
     addModuleOperationChainParser(componentBuildingDefinitions);

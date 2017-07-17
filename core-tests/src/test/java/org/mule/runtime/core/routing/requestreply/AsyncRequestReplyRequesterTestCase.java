@@ -25,7 +25,6 @@ import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNee
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
 import static org.mule.runtime.core.api.processor.MessageProcessors.newChain;
 import static org.slf4j.LoggerFactory.getLogger;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.scheduler.Scheduler;
@@ -109,7 +108,6 @@ public class AsyncRequestReplyRequesterTestCase extends AbstractMuleContextTestC
     asyncReplyMP = new TestAsyncRequestReplyRequester(muleContext);
     SensingNullMessageProcessor target = getSensingNullMessageProcessor();
     AsyncDelegateMessageProcessor asyncMP = createAsyncMessageProcessor(target);
-    asyncMP.setFlowConstruct(flow);
     initialiseIfNeeded(asyncMP, true, muleContext);
     asyncMP.start();
     asyncReplyMP.setListener(asyncMP);
@@ -129,7 +127,6 @@ public class AsyncRequestReplyRequesterTestCase extends AbstractMuleContextTestC
     SensingNullMessageProcessor target = getSensingNullMessageProcessor();
     target.setWaitTime(30000);
     AsyncDelegateMessageProcessor asyncMP = createAsyncMessageProcessor(target);
-    asyncMP.setFlowConstruct(flow);
     initialiseIfNeeded(asyncMP, true, muleContext);
     asyncMP.start();
     asyncReplyMP.setListener(asyncMP);

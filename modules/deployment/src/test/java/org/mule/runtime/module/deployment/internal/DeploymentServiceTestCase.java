@@ -154,6 +154,8 @@ import org.mule.tck.probe.file.FileExists;
 import org.mule.tck.util.CompilerUtils.ExtensionCompiler;
 import org.mule.tck.util.CompilerUtils.JarCompiler;
 import org.mule.tck.util.CompilerUtils.SingleClassCompiler;
+import org.mule.test.runner.classloader.TestContainerModuleDiscoverer;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -4172,7 +4174,7 @@ public class DeploymentServiceTestCase extends AbstractMuleTestCase {
 
     mainFlow.process(Event.builder(DefaultEventContext.create(mainFlow, TEST_CONNECTOR_LOCATION))
         .message(muleMessage)
-        .flow(mainFlow).build());
+        .build());
   }
 
   private void assertZombieApplication(String appId) {

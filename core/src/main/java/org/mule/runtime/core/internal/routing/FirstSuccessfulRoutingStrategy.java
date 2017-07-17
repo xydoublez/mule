@@ -17,6 +17,7 @@ import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.meta.AnnotatedObject;
 import org.mule.runtime.core.api.DefaultMuleException;
+import org.mule.runtime.core.api.DefaultTransformationService;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.connector.DispatchException;
@@ -25,6 +26,8 @@ import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.api.routing.RoutingException;
 
 import java.util.List;
+
+import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +40,9 @@ import org.slf4j.LoggerFactory;
  * be route to the next route. This continues until a successful route is found.
  */
 public class FirstSuccessfulRoutingStrategy implements RoutingStrategy {
+
+  @Inject
+  private DefaultTransformationService transformationService;
 
   /**
    * logger used by this class
@@ -84,7 +90,7 @@ public class FirstSuccessfulRoutingStrategy implements RoutingStrategy {
 
     for (Processor mp : messageProcessors) {
       try {
-        returnEvent = processor.processRoute(mp, builder(child(event.getContext(), empty()), event).build());
+        returnEvent = processor.processRoute(mp, builder(child(event.getInternalContext(), empty()), event).build());
 
         if (returnEvent == null) {
           failed = false;
@@ -112,7 +118,7 @@ public class FirstSuccessfulRoutingStrategy implements RoutingStrategy {
       }
     }
 
-    return returnEvent != null ? builder(event.getContext(), returnEvent).build() : null;
+    return returnEvent != null ? builder(event.getInternalContext(), returnEvent).build() : null;
   }
 
   /**
@@ -145,7 +151,7 @@ public class FirstSuccessfulRoutingStrategy implements RoutingStrategy {
         if (resultMessage != null) {
           try {
             logger.trace("Response payload: \n"
-                + truncate(muleContext.getTransformationService().getPayloadForLogging(resultMessage), 100, false));
+                + truncate(transformationService.getPayloadForLogging(resultMessage), 100, false));
           } catch (Exception e) {
             logger.trace("Response payload: \n(unable to retrieve payload: " + e.getMessage());
           }

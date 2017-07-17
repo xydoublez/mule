@@ -19,7 +19,6 @@ import static org.mockito.Mockito.mock;
 import static org.mule.runtime.api.message.Message.of;
 import static org.mule.runtime.api.meta.AbstractAnnotatedObject.LOCATION_KEY;
 import static org.mule.runtime.core.api.transaction.TransactionCoordination.getInstance;
-import static org.mule.tck.MuleTestUtils.getTestFlow;
 
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.core.api.Event;
@@ -101,7 +100,6 @@ public class UntilSuccessfulTestCase extends AbstractMuleContextTestCase {
   private UntilSuccessful buildUntilSuccessful(Long millisBetweenRetries) throws Exception {
     UntilSuccessful untilSuccessful = new UntilSuccessful();
     untilSuccessful.setMuleContext(muleContext);
-    untilSuccessful.setFlowConstruct(getTestFlow(muleContext));
     untilSuccessful.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
     untilSuccessful.setMaxRetries(2);
 

@@ -5,7 +5,7 @@
  * LICENSE.txt file.
  */
 
-package org.mule.runtime.module.deployment.internal;
+package org.mule.test.runner.classloader;
 
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import org.mule.runtime.container.api.MuleModule;
@@ -19,12 +19,12 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A {@link ModuleDiscoverer} that enables to change discovered modules to enable testing privileged
- * API scenarios.
+ * A {@link ModuleDiscoverer} that enables to change discovered modules to enable testing privileged API scenarios.
  */
 public class TestContainerModuleDiscoverer implements ModuleDiscoverer {
 
   private final List<String> privilegedArtifactIds;
+  private ModuleDiscoverer delegateModuleDiscoverer;
 
   /**
    * Creates a module discoverer
@@ -35,12 +35,26 @@ public class TestContainerModuleDiscoverer implements ModuleDiscoverer {
     checkArgument(privilegedArtifactIds != null, "privilegedArtifactIds cannot be null");
 
     this.privilegedArtifactIds = privilegedArtifactIds;
+    this.delegateModuleDiscoverer = new ContainerModuleDiscoverer(this.getClass().getClassLoader());
+  }
+
+  /**
+   * Creates a module discoverer
+   *
+   * @param privilegedArtifactIds identifiers of the artifacts that will be conceded privileged API access. Non null
+   */
+  public TestContainerModuleDiscoverer(List<String> privilegedArtifactIds, ModuleDiscoverer moduleDiscoverer) {
+    checkArgument(privilegedArtifactIds != null, "privilegedArtifactIds cannot be null");
+    checkArgument(moduleDiscoverer != null, "moduleDiscoverer cannot be null");
+
+    this.privilegedArtifactIds = privilegedArtifactIds;
+    this.delegateModuleDiscoverer = moduleDiscoverer;
   }
 
   @Override
   public List<MuleModule> discover() {
     DefaultModuleRepository containerModuleDiscoverer =
-        new DefaultModuleRepository(new ContainerModuleDiscoverer(this.getClass().getClassLoader()));
+        new DefaultModuleRepository(delegateModuleDiscoverer);
 
     List<MuleModule> discoveredModules = containerModuleDiscoverer.getModules();
     List<MuleModule> updateModules = new ArrayList<>(discoveredModules.size());

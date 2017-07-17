@@ -72,11 +72,11 @@ public class DefaultRouterResultsHandlerTestCase extends AbstractMuleTestCase {
   public void aggregateSingleEvent() {
 
     Message message1 = Message.of("test event A");
-    Event event1 = Event.builder(context).message(message1).flow(flow).addVariable("key1", "value1").build();
+    Event event1 = Event.builder(context).message(message1).addVariable("key1", "value1").build();
     event1.getSession().setProperty("key", "value");
 
     Message message2 = Message.of("test event B");
-    Event event2 = Event.builder(context).message(message2).flow(flow).addVariable("key2", "value2").build();
+    Event event2 = Event.builder(context).message(message2).addVariable("key2", "value2").build();
     event2.getSession().setProperty("key", "valueNEW");
     event2.getSession().setProperty("key1", "value1");
 
@@ -100,11 +100,11 @@ public class DefaultRouterResultsHandlerTestCase extends AbstractMuleTestCase {
     Message message2 = Message.of("test event B");
     Message message3 = Message.of("test event C");
     Event event1 =
-        Event.builder(context).message(message1).flow(flow).addVariable("key1", "value1", simpleDateType1).build();
+        Event.builder(context).message(message1).addVariable("key1", "value1", simpleDateType1).build();
     MuleSession session = event1.getSession();
-    Event event2 = Event.builder(context).message(message2).flow(flow).session(session)
+    Event event2 = Event.builder(context).message(message2).session(session)
         .addVariable("key2", "value2", simpleDateType1).build();
-    Event event3 = Event.builder(context).message(message3).flow(flow).session(session)
+    Event event3 = Event.builder(context).message(message3).session(session)
         .addVariable("key3", "value3", simpleDateType1).build();
     event1.getSession().setProperty("key", "value");
     event2.getSession().setProperty("key1", "value1");
@@ -144,8 +144,8 @@ public class DefaultRouterResultsHandlerTestCase extends AbstractMuleTestCase {
   public void aggregateMultipleEventsAllButOneNull() {
     Message message1 = Message.of("test event A");
     Message message2 = Message.of("test event B");
-    Event event1 = Event.builder(context).message(message1).flow(flow).addVariable("key", "value").build();
-    Event event2 = Event.builder(context).message(message2).flow(flow).addVariable("key2", "value2").build();
+    Event event1 = Event.builder(context).message(message1).addVariable("key", "value").build();
+    Event event2 = Event.builder(context).message(message2).addVariable("key2", "value2").build();
     List<Event> events = new ArrayList<>();
     events.add(null);
     events.add(event2);
@@ -162,7 +162,7 @@ public class DefaultRouterResultsHandlerTestCase extends AbstractMuleTestCase {
   @Test
   public void aggregateSingleMuleMessageCollection() {
     Message message1 = Message.of("test event A");
-    Event event1 = Event.builder(context).message(message1).flow(flow).addVariable("key1", "value1").build();
+    Event event1 = Event.builder(context).message(message1).addVariable("key1", "value1").build();
 
     Message message2 = Message.of("test event B");
     Message message3 = Message.of("test event C");
@@ -171,7 +171,7 @@ public class DefaultRouterResultsHandlerTestCase extends AbstractMuleTestCase {
     list.add(message2);
     list.add(message3);
     Message messageCollection = Message.of(list);
-    Event event2 = Event.builder(context).message(messageCollection).flow(flow).addVariable("key2", "value2").build();
+    Event event2 = Event.builder(context).message(messageCollection).addVariable("key2", "value2").build();
 
     Event result = resultsHandler.aggregateResults(Collections.<Event>singletonList(event2), event1);
     assertSame(event2, result);
@@ -185,7 +185,7 @@ public class DefaultRouterResultsHandlerTestCase extends AbstractMuleTestCase {
   @Test
   public void aggregateMultipleMuleMessageCollections() {
     Message message1 = Message.of("test event A");
-    Event event1 = Event.builder(context).message(message1).flow(flow).addVariable("key1", "value1").build();
+    Event event1 = Event.builder(context).message(message1).addVariable("key1", "value1").build();
 
     Message message2 = Message.of("test event B");
     Message message3 = Message.of("test event C");
@@ -196,14 +196,14 @@ public class DefaultRouterResultsHandlerTestCase extends AbstractMuleTestCase {
     list.add(message2);
     list.add(message3);
     Message messageCollection = Message.of(list);
-    Event event2 = Event.builder(context).message(messageCollection).flow(flow).addVariable("key2", "value2").build();
+    Event event2 = Event.builder(context).message(messageCollection).addVariable("key2", "value2").build();
 
     List<InternalMessage> list2 = new ArrayList<>();
     list.add(message4);
     list.add(message5);
     Message messageCollection2 = Message.of(list2);
     Event event3 =
-        Event.builder(context).message(messageCollection2).flow(flow).addVariable("key3", "value3").build();
+        Event.builder(context).message(messageCollection2).addVariable("key3", "value3").build();
 
     List<Event> events = new ArrayList<>();
     events.add(event2);

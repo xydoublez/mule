@@ -274,7 +274,7 @@ public class TestEventBuilder {
 
     Event.Builder builder = Event.builder(eventContext)
         .message((Message) spyTransformer.transform(muleMessage)).groupCorrelation(correlation)
-        .flow(flow).replyToHandler(replyToHandler);
+        .replyToHandler(replyToHandler);
     for (Entry<String, TypedValue> variableEntry : variables.entrySet()) {
       builder.addVariable(variableEntry.getKey(), variableEntry.getValue().getValue(), variableEntry.getValue().getDataType());
     }

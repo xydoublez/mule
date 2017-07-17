@@ -61,10 +61,11 @@ public class ArtifactIsolatedClassLoaderBuilder {
   private List<String> providedInclusions = newArrayList();
   private List<URL> applicationUrls = newArrayList();
   private List<String> extraBootPackages;
+  private List<String> extraPrivilegedArtifacts = newArrayList();
 
   /**
-   * Sets the {@link List} of Maven coordinates in format {@code <groupId>:<artifactId>} in order to be
-   * added to the sharedLib {@link org.mule.runtime.module.artifact.classloader.ArtifactClassLoader}
+   * Sets the {@link List} of Maven coordinates in format {@code <groupId>:<artifactId>} in order to be added to the sharedLib
+   * {@link org.mule.runtime.module.artifact.classloader.ArtifactClassLoader}
    *
    * @param sharedPluginLibCoordinates {@link List} of Maven coordinates in format {@code <groupId>:<artifactId>}
    * @return this
@@ -145,6 +146,19 @@ public class ArtifactIsolatedClassLoaderBuilder {
   }
 
   /**
+   * Sets the {@link List} of {@link String}s containing the extra privileged artifacts defined to be appended to the container in
+   * addition to the pre-defined ones.
+   *
+   * @param extraPrivilegedArtifacts {@link List} of {@link String}s containing the extra privileged artifacts defined to be
+   *        appended to the container in addition to the pre-defined ones.
+   * @return this
+   */
+  public ArtifactIsolatedClassLoaderBuilder setExtraPrivilegedArtifacts(List<String> extraPrivilegedArtifacts) {
+    this.extraPrivilegedArtifacts = extraPrivilegedArtifacts;
+    return this;
+  }
+
+  /**
    * Sets Maven artifacts to be excluded from the {@code provided} scope direct dependencies of the rootArtifact. In format
    * {@code [groupId]:[artifactId]:[extension]:[classifier]:[version]}.
    * <p/>
@@ -188,8 +202,8 @@ public class ArtifactIsolatedClassLoaderBuilder {
    * Sets the {@link List} of {@link Class}es to be exported by rootArtifact (if it is a Mule plugin) in addition to their APIs,
    * for testing purposes only.
    *
-   * @param exportPluginClasses of {@link Class}es to be exported by rootArtifact (if it is a Mule plugin) in addition to their APIs,
-   *                            for testing purposes only.
+   * @param exportPluginClasses of {@link Class}es to be exported by rootArtifact (if it is a Mule plugin) in addition to their
+   *        APIs, for testing purposes only.
    * @return this
    */
   public ArtifactIsolatedClassLoaderBuilder setExportPluginClasses(final List<Class> exportPluginClasses) {
@@ -255,7 +269,8 @@ public class ArtifactIsolatedClassLoaderBuilder {
     }
 
     ArtifactsUrlClassification artifactsUrlClassification = classPathClassifier.classify(context);
-    return isolatedClassLoaderFactory.createArtifactClassLoader(context.getExtraBootPackages(), artifactsUrlClassification);
+    return isolatedClassLoaderFactory.createArtifactClassLoader(context.getExtraBootPackages(), extraPrivilegedArtifacts,
+                                                                artifactsUrlClassification);
   }
 
   /**

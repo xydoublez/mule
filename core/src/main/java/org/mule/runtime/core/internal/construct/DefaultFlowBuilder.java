@@ -17,6 +17,7 @@ import static org.mule.runtime.core.api.construct.Flow.INITIAL_STATE_STARTED;
 import static org.mule.runtime.core.api.processor.MessageProcessors.processToApply;
 import static org.mule.runtime.core.api.processor.strategy.AsyncProcessingStrategyFactory.DEFAULT_MAX_CONCURRENCY;
 import static org.mule.runtime.core.api.util.ExceptionUtils.updateMessagingExceptionWithError;
+import static org.mule.runtime.core.internal.construct.AbstractFlowConstruct.createFlowStatistics;
 import static reactor.core.publisher.Flux.from;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.message.Error;
@@ -28,6 +29,7 @@ import org.mule.runtime.core.api.construct.Flow;
 import org.mule.runtime.core.api.construct.Flow.Builder;
 import org.mule.runtime.core.api.exception.MessagingException;
 import org.mule.runtime.core.api.exception.MessagingExceptionHandler;
+import org.mule.runtime.core.api.management.stats.FlowConstructStatistics;
 import org.mule.runtime.core.api.processor.MessageProcessorChainBuilder;
 import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.api.processor.strategy.ProcessingStrategyFactory;
@@ -176,7 +178,8 @@ public class DefaultFlowBuilder implements Builder {
     checkImmutable();
 
     flow = new DefaultFlow(name, muleContext, source, processors,
-                           ofNullable(exceptionListener), ofNullable(processingStrategyFactory), initialState, maxConcurrency);
+                           ofNullable(exceptionListener), ofNullable(processingStrategyFactory), initialState, maxConcurrency,
+                           createFlowStatistics(name, muleContext));
     return flow;
   }
 
@@ -194,8 +197,9 @@ public class DefaultFlowBuilder implements Builder {
     protected DefaultFlow(String name, MuleContext muleContext, MessageSource source, List<Processor> processors,
                           Optional<MessagingExceptionHandler> exceptionListener,
                           Optional<ProcessingStrategyFactory> processingStrategyFactory, String initialState,
-                          int maxConcurrency) {
-      super(name, muleContext, source, processors, exceptionListener, processingStrategyFactory, initialState, maxConcurrency);
+                          int maxConcurrency, FlowConstructStatistics flowConstructStatistics) {
+      super(name, muleContext, source, processors, exceptionListener, processingStrategyFactory, initialState, maxConcurrency,
+            flowConstructStatistics);
     }
 
     @Override
@@ -236,7 +240,7 @@ public class DefaultFlowBuilder implements Builder {
 
       // TODO MULE-10013
       // Create new event for current flow with current flowConstruct, replyToHandler etc.
-      event = Event.builder(event).flow(this).replyToHandler(replyToHandler).replyToDestination(replyToDestination).build();
+      event = Event.builder(event).replyToHandler(replyToHandler).replyToDestination(replyToDestination).build();
       resetRequestContextEvent(event);
       return event;
     }
@@ -246,7 +250,7 @@ public class DefaultFlowBuilder implements Builder {
         Optional<Error> errorOptional = result.getError();
         // TODO MULE-10013
         // Create new event with original FlowConstruct, ReplyToHandler and synchronous
-        result = Event.builder(result).flow(original.getFlowConstruct())
+        result = Event.builder(result)
             .replyToHandler(original.getReplyToHandler())
             .replyToDestination(original.getReplyToDestination())
             .error(errorOptional.orElse(null)).build();
@@ -263,12 +267,12 @@ public class DefaultFlowBuilder implements Builder {
     @Override
     protected void configurePreProcessors(MessageProcessorChainBuilder builder) throws MuleException {
       super.configurePreProcessors(builder);
-      builder.chain(new FlowConstructStatisticsMessageProcessor());
+      builder.chain(new FlowConstructStatisticsMessageProcessor(getStatistics()));
     }
 
     @Override
     protected void configurePostProcessors(MessageProcessorChainBuilder builder) throws MuleException {
-      builder.chain(new AsyncReplyToPropertyRequestReplyReplier());
+      builder.chain(new AsyncReplyToPropertyRequestReplyReplier(getSource()));
       super.configurePostProcessors(builder);
     }
 

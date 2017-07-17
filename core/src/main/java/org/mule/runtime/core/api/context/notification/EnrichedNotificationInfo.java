@@ -6,7 +6,6 @@
  */
 package org.mule.runtime.core.api.context.notification;
 
-import org.mule.runtime.api.event.GroupCorrelation;
 import org.mule.runtime.api.message.Error;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.meta.AnnotatedObject;
@@ -16,7 +15,6 @@ import org.mule.runtime.core.api.el.ExpressionManager;
 import org.mule.runtime.core.api.exception.MessagingException;
 import org.mule.runtime.core.api.processor.Processor;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -27,7 +25,6 @@ public class EnrichedNotificationInfo {
 
   private String id;
   private String correlationId;
-  private GroupCorrelation groupCorrelation;
   private Message message;
   private Optional<Error> error;
   private org.mule.runtime.api.event.Event event;
@@ -57,10 +54,7 @@ public class EnrichedNotificationInfo {
       }
 
       notificationInfo =
-          new EnrichedNotificationInfo(event.getContext().getId(), event.getCorrelationId(), event.getGroupCorrelation(),
-                                       event.getMessage(), event.getError(), component, e, createVariablesMap(event),
-                                       event.getContext().getOriginatingLocation().getRootContainerName(),
-                                       event.getFlowCallStack());
+          new EnrichedNotificationInfo(event, component, e, event.getFlowCallStack());
       notificationInfo.event = event;
       return notificationInfo;
     } else if (e != null) {
@@ -70,20 +64,13 @@ public class EnrichedNotificationInfo {
           return createInfo(messagingException.getEvent(), e, componentFromException(e));
         }
       } else {
-        notificationInfo = new EnrichedNotificationInfo(null, null, null,
-                                                        null, null, null, e, new HashMap<>(), null, null);
+        notificationInfo = new EnrichedNotificationInfo(null, e, null, null);
         notificationInfo.event = event;
         return notificationInfo;
       }
     }
 
     throw new RuntimeException("Neither event or exception present");
-  }
-
-  private static Map<String, TypedValue> createVariablesMap(Event event) {
-    Map<String, TypedValue> variables = new HashMap<>();
-    variables.putAll(event.getVariables());
-    return variables;
   }
 
   private static AnnotatedObject componentFromException(Exception e) {
@@ -98,39 +85,15 @@ public class EnrichedNotificationInfo {
     return null;
   }
 
-  public EnrichedNotificationInfo(String uniqueId, String correlationId, GroupCorrelation groupCorrelation, Message message,
-                                  Optional<Error> error, Object component, Exception exception,
-                                  Map<String, TypedValue> variables, String originatingFlowName, FlowCallStack flowCallStack) {
-    this.id = event.getContext().getId();
-    this.correlationId = event.getCorrelationId();
-    this.groupCorrelation = groupCorrelation;
-    this.message = message;
-    this.error = error;
+  public EnrichedNotificationInfo(Event event, Object component, Exception exception, FlowCallStack flowCallStack) {
+    this.event = event;
     this.component = component;
     this.exception = exception;
-    this.variables = variables;
-    this.originatingFlowName = originatingFlowName;
     this.flowCallStack = flowCallStack;
   }
 
   public org.mule.runtime.api.event.Event getEvent() {
     return event;
-  }
-
-  public GroupCorrelation getGroupCorrelation() {
-    return groupCorrelation;
-  }
-
-  public Message getMessage() {
-    return event.getMessage();
-  }
-
-  public Optional<Error> getError() {
-    return event.getError();
-  }
-
-  public Map<String, TypedValue<?>> getVariables() {
-    return event.getVariables();
   }
 
   public AnnotatedObject getComponent() {
@@ -143,10 +106,6 @@ public class EnrichedNotificationInfo {
 
   public Exception getException() {
     return exception;
-  }
-
-  public String getOriginatingFlowName() {
-    return originatingFlowName;
   }
 
   public FlowCallStack getFlowCallStack() {

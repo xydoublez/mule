@@ -40,7 +40,6 @@ public class MessageChunkAggregatorTestCase extends AbstractMuleContextTestCase 
 
     MessageChunkAggregator router = new MessageChunkAggregator();
     router.setMuleContext(muleContext);
-    router.setFlowConstruct(flow);
     router.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
     router.initialise();
 
@@ -50,10 +49,10 @@ public class MessageChunkAggregatorTestCase extends AbstractMuleContextTestCase 
 
     EventContext context = DefaultEventContext.create(flow, TEST_CONNECTOR_LOCATION, "foo");
 
-    Event event1 = Event.builder(context).message(message1).groupCorrelation(new GroupCorrelation(3, null)).flow(flow)
+    Event event1 = Event.builder(context).message(message1).groupCorrelation(new GroupCorrelation(3, null))
         .session(session).build();
-    Event event2 = Event.builder(context).message(message2).flow(flow).session(session).build();
-    Event event3 = Event.builder(context).message(message3).flow(flow).session(session).build();
+    Event event2 = Event.builder(context).message(message2).session(session).build();
+    Event event3 = Event.builder(context).message(message3).session(session).build();
 
     assertNull(router.process(event1));
     assertNull(router.process(event2));

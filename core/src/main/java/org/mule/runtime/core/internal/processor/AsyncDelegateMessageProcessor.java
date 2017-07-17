@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import static java.util.Optional.ofNullable;
 import static org.mule.runtime.core.DefaultEventContext.fireAndForgetChild;
 import static org.mule.runtime.core.api.config.i18n.CoreMessages.objectIsNull;
+import static org.mule.runtime.core.api.construct.FlowConstruct.getFromAnnotatedObject;
 import static org.mule.runtime.core.api.context.notification.AsyncMessageNotification.PROCESS_ASYNC_COMPLETE;
 import static org.mule.runtime.core.api.context.notification.AsyncMessageNotification.PROCESS_ASYNC_SCHEDULED;
 import static org.mule.runtime.core.api.context.notification.EnrichedNotificationInfo.createInfo;
@@ -19,7 +20,7 @@ import static org.mule.runtime.core.internal.util.rx.Operators.requestUnbounded;
 import static reactor.core.publisher.Flux.from;
 import static reactor.core.publisher.Flux.just;
 import static reactor.core.scheduler.Schedulers.fromExecutorService;
-
+import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
@@ -28,6 +29,7 @@ import org.mule.runtime.api.lifecycle.Stoppable;
 import org.mule.runtime.api.scheduler.Scheduler;
 import org.mule.runtime.core.DefaultEventContext;
 import org.mule.runtime.core.api.Event;
+import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.construct.Pipeline;
 import org.mule.runtime.core.api.context.notification.AsyncMessageNotification;
 import org.mule.runtime.core.api.exception.MessagingException;
@@ -60,11 +62,13 @@ public class AsyncDelegateMessageProcessor extends AbstractMessageProcessorOwner
 
   @Inject
   private SchedulerService schedulerService;
+  @Inject
+  private ConfigurationComponentLocator componentLocator;
 
   protected Logger logger = LoggerFactory.getLogger(getClass());
+  private FlowConstruct flowConstruct;
 
   protected MessageProcessorChain delegate;
-
   private Scheduler scheduler;
   private reactor.core.scheduler.Scheduler reactorScheduler;
   protected String name;
@@ -80,6 +84,7 @@ public class AsyncDelegateMessageProcessor extends AbstractMessageProcessorOwner
 
   @Override
   public void initialise() throws InitialisationException {
+    flowConstruct = getFromAnnotatedObject(componentLocator, this);
     if (delegate == null) {
       throw new InitialisationException(objectIsNull("delegate message processor"), this);
     }

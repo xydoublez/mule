@@ -96,12 +96,11 @@ public class OnErrorContinueHandlerTestCase extends AbstractMuleContextTestCase 
     flow.initialise();
     onErrorContinueHandler = new OnErrorContinueHandler();
     onErrorContinueHandler.setMuleContext(mockMuleContext);
-    onErrorContinueHandler.setFlowConstruct(flow);
     final MuleRegistry registry = mockMuleContext.getRegistry();
     doReturn(mockStreamingManager).when(registry).lookupObject(StreamingManager.class);
 
     context = DefaultEventContext.create(flow, TEST_CONNECTOR_LOCATION);
-    muleEvent = Event.builder(context).message(muleMessage).flow(flow).build();
+    muleEvent = Event.builder(context).message(muleMessage).build();
   }
 
   @Test
@@ -133,9 +132,9 @@ public class OnErrorContinueHandlerTestCase extends AbstractMuleContextTestCase 
 
   @Test
   public void testHandleExceptionWithMessageProcessorsChangingEvent() throws Exception {
-    Event lastEventCreated = Event.builder(context).message(muleMessage).flow(flow).build();
+    Event lastEventCreated = Event.builder(context).message(muleMessage).build();
     onErrorContinueHandler
-        .setMessageProcessors(asList(createChagingEventMessageProcessor(Event.builder(context).message(muleMessage).flow(flow)
+        .setMessageProcessors(asList(createChagingEventMessageProcessor(Event.builder(context).message(muleMessage)
             .build()),
                                      createChagingEventMessageProcessor(lastEventCreated)));
     onErrorContinueHandler.initialise();
@@ -156,9 +155,9 @@ public class OnErrorContinueHandlerTestCase extends AbstractMuleContextTestCase 
     muleEvent = spy(muleEvent);
     when(mockException.getStackTrace()).thenReturn(new StackTraceElement[0]);
 
-    Event lastEventCreated = Event.builder(context).message(muleMessage).flow(flow).build();
+    Event lastEventCreated = Event.builder(context).message(muleMessage).build();
     onErrorContinueHandler
-        .setMessageProcessors(asList(createFailingEventMessageProcessor(Event.builder(context).message(muleMessage).flow(flow)
+        .setMessageProcessors(asList(createFailingEventMessageProcessor(Event.builder(context).message(muleMessage)
             .build()),
                                      createFailingEventMessageProcessor(lastEventCreated)));
     onErrorContinueHandler.initialise();

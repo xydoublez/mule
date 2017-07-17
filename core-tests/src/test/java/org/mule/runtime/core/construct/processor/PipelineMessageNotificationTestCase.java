@@ -119,7 +119,7 @@ public class PipelineMessageNotificationTestCase extends AbstractReactiveProcess
     pipeline.initialise();
     pipeline.start();
 
-    event = Event.builder(context).message(of("request")).flow(pipeline).build();
+    event = Event.builder(context).message(of("request")).build();
 
     process(pipeline, event);
 
@@ -133,7 +133,7 @@ public class PipelineMessageNotificationTestCase extends AbstractReactiveProcess
     pipeline.initialise();
     pipeline.start();
 
-    event = Event.builder(context).message(of("request")).flow(pipeline).build();
+    event = Event.builder(context).message(of("request")).build();
 
     thrown.expect(instanceOf(MessagingException.class));
     thrown.expectCause(instanceOf(IllegalStateException.class));

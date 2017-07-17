@@ -103,7 +103,6 @@ public class FirstSuccessfulTestCase extends AbstractMuleContextTestCase {
     final FlowConstruct flow = mock(FlowConstruct.class, withSettings().extraInterfaces(AnnotatedObject.class));
     when(flow.getMuleContext()).thenReturn(muleContext);
     when(((AnnotatedObject) flow).getLocation()).thenReturn(TEST_CONNECTOR_LOCATION);
-    fs.setFlowConstruct(flow);
     fs.setMuleContext(muleContext);
 
     fs.setRoutes(asList(processors));

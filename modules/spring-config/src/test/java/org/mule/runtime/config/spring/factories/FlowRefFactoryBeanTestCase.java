@@ -31,7 +31,6 @@ import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
 import static org.mule.runtime.dsl.api.component.config.DefaultComponentLocation.fromSingleComponent;
 import static reactor.core.publisher.Mono.from;
 import static reactor.core.publisher.Mono.just;
-
 import org.mule.runtime.api.component.location.ComponentLocation;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
@@ -43,8 +42,6 @@ import org.mule.runtime.api.lifecycle.Stoppable;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.construct.Flow;
-import org.mule.runtime.core.api.construct.FlowConstruct;
-import org.mule.runtime.core.api.construct.FlowConstructAware;
 import org.mule.runtime.core.api.context.MuleContextAware;
 import org.mule.runtime.core.api.el.ExtendedExpressionManager;
 import org.mule.runtime.core.api.processor.MessageProcessorChain;
@@ -59,14 +56,13 @@ import org.junit.Test;
 import org.mockito.MockSettings;
 import org.reactivestreams.Publisher;
 import org.springframework.context.ApplicationContext;
-
 import reactor.core.publisher.Mono;
 
 @SmallTest
 public class FlowRefFactoryBeanTestCase extends AbstractMuleContextTestCase {
 
   private static final MockSettings INITIALIZABLE_MESSAGE_PROCESSOR =
-      withSettings().extraInterfaces(Processor.class, Initialisable.class, Disposable.class, Startable.class, Stoppable.class);
+      withSettings().extraInterfaces(Initialisable.class, Disposable.class, Startable.class, Stoppable.class);
   private static final String STATIC_REFERENCED_FLOW = "staticReferencedFlow";
   private static final String DYNAMIC_REFERENCED_FLOW = "dynamicReferencedFlow";
   private static final String PARSED_DYNAMIC_REFERENCED_FLOW = "parsedDynamicReferencedFlow";
@@ -138,21 +134,6 @@ public class FlowRefFactoryBeanTestCase extends AbstractMuleContextTestCase {
   }
 
   @Test
-  public void dynamicFlowRefSubFlowConstructAware() throws Exception {
-    FlowConstruct flowConstruct = mock(FlowConstruct.class);
-    Event event = testEvent();
-    FlowConstructAware targetSubFlowConstructAware = mock(FlowConstructAware.class, INITIALIZABLE_MESSAGE_PROCESSOR);
-    when(((Processor) targetSubFlowConstructAware).apply(any(Publisher.class))).thenReturn(just(result));
-
-    FlowRefFactoryBean flowRefFactoryBean = createDynamicFlowRefFactoryBean((Processor) targetSubFlowConstructAware);
-    final Processor flowRefProcessor = getFlowRefProcessor(flowRefFactoryBean);
-    ((FlowConstructAware) flowRefProcessor).setFlowConstruct(flowConstruct);
-    assertSame(result.getMessage(), flowRefProcessor.process(event).getMessage());
-
-    verify(targetSubFlowConstructAware).setFlowConstruct(flowConstruct);
-  }
-
-  @Test
   public void dynamicFlowRefSubContextAware() throws Exception {
     Event event = testEvent();
     MuleContextAware targetMuleContextAware = mock(MuleContextAware.class, INITIALIZABLE_MESSAGE_PROCESSOR);
@@ -166,11 +147,9 @@ public class FlowRefFactoryBeanTestCase extends AbstractMuleContextTestCase {
 
   @Test
   public void dynamicFlowRefSubFlowMessageProcessorChain() throws Exception {
-    FlowConstruct flowConstruct = mock(FlowConstruct.class);
     Event event = testEvent();
 
-    Processor targetSubFlowConstructAware =
-        (Processor) mock(FlowConstructAware.class, INITIALIZABLE_MESSAGE_PROCESSOR);
+    Processor targetSubFlowConstructAware = mock(Processor.class, INITIALIZABLE_MESSAGE_PROCESSOR);
     when(targetSubFlowConstructAware.process(any(Event.class))).thenReturn(result);
     Processor targetMuleContextAwareAware =
         (Processor) mock(MuleContextAware.class, INITIALIZABLE_MESSAGE_PROCESSOR);
@@ -183,10 +162,8 @@ public class FlowRefFactoryBeanTestCase extends AbstractMuleContextTestCase {
 
     FlowRefFactoryBean flowRefFactoryBean = createDynamicFlowRefFactoryBean(targetSubFlowChain);
     final Processor flowRefProcessor = getFlowRefProcessor(flowRefFactoryBean);
-    ((FlowConstructAware) flowRefProcessor).setFlowConstruct(flowConstruct);
     just(event).transform(flowRefProcessor).block();
 
-    verify((FlowConstructAware) targetSubFlowConstructAware).setFlowConstruct(flowConstruct);
     verify((MuleContextAware) targetMuleContextAwareAware).setMuleContext(mockMuleContext);
   }
 

@@ -13,7 +13,6 @@ import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.startIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
 import static org.slf4j.LoggerFactory.getLogger;
 import static reactor.core.publisher.Mono.error;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.lifecycle.Lifecycle;
@@ -50,8 +49,8 @@ public class DefaultPolicyInstance implements PolicyInstance, FlowConstruct, Mul
 
   @Override
   public void initialise() throws InitialisationException {
-    initialiseIfNeeded(operationPolicyChain, muleContext, this);
-    initialiseIfNeeded(sourcePolicyChain, muleContext, this);
+    initialiseIfNeeded(operationPolicyChain, muleContext);
+    initialiseIfNeeded(sourcePolicyChain, muleContext);
     lifecycleStateManager.fireInitialisePhase((phaseNam, object) -> {
     });
   }

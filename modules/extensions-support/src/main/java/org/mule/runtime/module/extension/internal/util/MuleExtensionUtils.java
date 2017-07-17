@@ -120,7 +120,7 @@ public class MuleExtensionUtils {
    * Returns {@code true} if any of the items in {@code resolvers} return true for the {@link ValueResolver#isDynamic()} method
    *
    * @param resolvers a {@link Iterable} with instances of {@link ValueResolver}
-   * @param <T>       the generic type of the {@link ValueResolver} items
+   * @param <T> the generic type of the {@link ValueResolver} items
    * @return {@code true} if at least one {@link ValueResolver} is dynamic, {@code false} otherwise
    */
   public static <T extends Object> boolean hasAnyDynamic(Iterable<ValueResolver<T>> resolvers) {
@@ -142,11 +142,11 @@ public class MuleExtensionUtils {
 
   /**
    * Returns all the {@link ConnectionProviderModel} instances available for the given {@code configurationModel} plus the ones
-   * globally defined at the {@code extensionModel}.
-   * The {@link List} will first contain those defined at a {@link ConfigurationModel#getConnectionProviders()} level and finally the
-   * ones at {@link ExtensionModel#getConnectionProviders()}
+   * globally defined at the {@code extensionModel}. The {@link List} will first contain those defined at a
+   * {@link ConfigurationModel#getConnectionProviders()} level and finally the ones at
+   * {@link ExtensionModel#getConnectionProviders()}
    *
-   * @param extensionModel     the {@link ExtensionModel} which owns the {@code configurationModel}
+   * @param extensionModel the {@link ExtensionModel} which owns the {@code configurationModel}
    * @param configurationModel a {@link ConfigurationModel}
    * @return a {@link List}. Might be empty but will never be {@code null}
    */
@@ -157,8 +157,7 @@ public class MuleExtensionUtils {
   }
 
   /**
-   * Whether at least one {@link ConnectionProviderModel} in the given {@cod extensionModel}
-   * supports OAuth authentication
+   * Whether at least one {@link ConnectionProviderModel} in the given {@cod extensionModel} supports OAuth authentication
    *
    * @param extensionModel a {@link ExtensionModel}
    * @return {@code true} if a {@link ConnectionProviderModel} exist which is OAuth enabled
@@ -195,7 +194,7 @@ public class MuleExtensionUtils {
   /**
    * Adds the given {@code interceptorFactory} to the {@code declaration} as the last interceptor in the list
    *
-   * @param declaration        a {@link BaseDeclaration}
+   * @param declaration a {@link BaseDeclaration}
    * @param interceptorFactory a {@link InterceptorFactory}
    */
   public static void addInterceptorFactory(BaseDeclaration declaration, InterceptorFactory interceptorFactory) {
@@ -205,9 +204,9 @@ public class MuleExtensionUtils {
   /**
    * Adds the given {@code interceptorFactory} to the {@code declaration} at the given {@code position}
    *
-   * @param declaration        a {@link BaseDeclaration}
+   * @param declaration a {@link BaseDeclaration}
    * @param interceptorFactory a {@link InterceptorFactory}
-   * @param position           a valid list index
+   * @param position a valid list index
    */
   public static void addInterceptorFactory(BaseDeclaration declaration, InterceptorFactory interceptorFactory, int position) {
     getOrCreateInterceptorModelProperty(declaration).addInterceptorFactory(interceptorFactory, position);
@@ -280,8 +279,7 @@ public class MuleExtensionUtils {
         return null;
       }
     };
-    return Event.builder(create(flowConstruct, fromSingleComponent("InitializerEvent"))).message(of(null)).flow(flowConstruct)
-        .build();
+    return Event.builder(create(flowConstruct, fromSingleComponent("InitializerEvent"))).message(of(null)).build();
   }
 
   /**
@@ -321,8 +319,8 @@ public class MuleExtensionUtils {
    * Executes the given {@code callable} using the {@link ClassLoader} associated to the {@code extensionModel}
    *
    * @param extensionModel a {@link ExtensionModel}
-   * @param callable       a {@link Callable}
-   * @param <T>            the generic type of the {@code callable}'s return type
+   * @param callable a {@link Callable}
+   * @param <T> the generic type of the {@code callable}'s return type
    * @return the value returned by the {@code callable}
    * @throws Exception if the {@code callable} fails to execute
    */
@@ -396,8 +394,8 @@ public class MuleExtensionUtils {
   }
 
   /**
-   * Tests the {@code configurationModel} for a {@link ConfigurationFactoryModelProperty} and
-   * returns the contained {@link ConfigurationFactory}.
+   * Tests the {@code configurationModel} for a {@link ConfigurationFactoryModelProperty} and returns the contained
+   * {@link ConfigurationFactory}.
    *
    * @param configurationModel a {@link ConfigurationModel}
    * @return a {@link ConfigurationFactory}
@@ -415,9 +413,8 @@ public class MuleExtensionUtils {
   }
 
   /**
-   * Tests the given {@code model} for a {@link MetadataResolverFactoryModelProperty} and if present
-   * it returns the contained {@link MetadataResolverFactory}. If no such property is found, then
-   * a {@link NullMetadataResolverFactory} is returned
+   * Tests the given {@code model} for a {@link MetadataResolverFactoryModelProperty} and if present it returns the contained
+   * {@link MetadataResolverFactory}. If no such property is found, then a {@link NullMetadataResolverFactory} is returned
    *
    * @param model an enriched model
    * @return a {@link MetadataResolverFactory}
@@ -429,9 +426,9 @@ public class MuleExtensionUtils {
   }
 
   /**
-   * Tests the given {@code operationModel} for a {@link OperationExecutorModelProperty} and if present
-   * it returns the enclosed {@link OperationExecutorFactory}. If no such property is found, then a
-   * {@link IllegalOperationModelDefinitionException} is thrown.
+   * Tests the given {@code operationModel} for a {@link OperationExecutorModelProperty} and if present it returns the enclosed
+   * {@link OperationExecutorFactory}. If no such property is found, then a {@link IllegalOperationModelDefinitionException} is
+   * thrown.
    *
    * @param operationModel an {@link OperationModel}
    * @return a {@link OperationExecutorFactory}
@@ -451,9 +448,8 @@ public class MuleExtensionUtils {
   }
 
   /**
-   * Tests the given {@code sourceModel} for a {@link SourceFactoryModelProperty} and if present
-   * it returns the enclosed {@link SourceFactory}. If no such property is found, then a
-   * {@link IllegalSourceModelDefinitionException} is thrown
+   * Tests the given {@code sourceModel} for a {@link SourceFactoryModelProperty} and if present it returns the enclosed
+   * {@link SourceFactory}. If no such property is found, then a {@link IllegalSourceModelDefinitionException} is thrown
    *
    * @param sourceModel a {@link SourceModel}
    * @return a {@link SourceFactory}
@@ -470,8 +466,8 @@ public class MuleExtensionUtils {
   }
 
   /**
-   * Tests the given {@code connectionProviderModel} for a {@link ConnectionProviderFactoryModelProperty} and if present
-   * it returns the enclosed {@link ConnectionProviderFactory}. If no such property is found, then a
+   * Tests the given {@code connectionProviderModel} for a {@link ConnectionProviderFactoryModelProperty} and if present it
+   * returns the enclosed {@link ConnectionProviderFactory}. If no such property is found, then a
    * {@link IllegalConnectionProviderModelDefinitionException} is thrown
    *
    * @param connectionProviderModel a {@link ConnectionProviderModel}
@@ -490,9 +486,9 @@ public class MuleExtensionUtils {
   }
 
   /**
-   * Tests the given {@code connectionProviderModel} for a {@link ConnectionTypeModelProperty} and if present
-   * it returns the enclosed connection type. If no such property is found, then a
-   * {@link IllegalConnectionProviderModelDefinitionException} is thrown
+   * Tests the given {@code connectionProviderModel} for a {@link ConnectionTypeModelProperty} and if present it returns the
+   * enclosed connection type. If no such property is found, then a {@link IllegalConnectionProviderModelDefinitionException} is
+   * thrown
    *
    * @param connectionProviderModel a {@link ConnectionProviderModel}
    * @return a connection {@link Class}
@@ -540,7 +536,9 @@ public class MuleExtensionUtils {
   public static ExtensionModel loadExtension(Class<?> clazz, Map<String, Object> params) {
     params.put(TYPE_PROPERTY_NAME, clazz.getName());
     params.put(VERSION, getProductVersion());
-    //TODO MULE-11797: as this utils is consumed from org.mule.runtime.module.extension.internal.capability.xml.schema.AbstractXmlResourceFactory.generateResource(org.mule.runtime.api.meta.model.ExtensionModel), this util should get dropped once the ticket gets implemented.
+    // TODO MULE-11797: as this utils is consumed from
+    // org.mule.runtime.module.extension.internal.capability.xml.schema.AbstractXmlResourceFactory.generateResource(org.mule.runtime.api.meta.model.ExtensionModel),
+    // this util should get dropped once the ticket gets implemented.
     final DslResolvingContext dslResolvingContext = getDefault(emptySet());
     return new DefaultJavaExtensionModelLoader().loadExtensionModel(clazz.getClassLoader(), dslResolvingContext, params);
   }

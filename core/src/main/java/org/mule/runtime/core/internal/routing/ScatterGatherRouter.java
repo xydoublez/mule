@@ -21,11 +21,13 @@ import static reactor.core.publisher.Flux.from;
 import static reactor.core.publisher.Flux.fromIterable;
 import static reactor.core.publisher.Flux.just;
 import static reactor.core.scheduler.Schedulers.fromExecutorService;
+import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.scheduler.Scheduler;
 import org.mule.runtime.api.util.Preconditions;
 import org.mule.runtime.core.api.Event;
+import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.construct.Pipeline;
 import org.mule.runtime.core.api.processor.AbstractMessageProcessorOwner;
 import org.mule.runtime.core.api.processor.Processor;
@@ -61,6 +63,11 @@ public class ScatterGatherRouter extends AbstractMessageProcessorOwner implement
 
   @Inject
   private SchedulerService schedulerService;
+
+  @Inject
+  private ConfigurationComponentLocator componentLocator;
+
+  private FlowConstruct flowConstruct;
 
   /**
    * Whether the configured routes will run in parallel (default is true).
@@ -129,6 +136,8 @@ public class ScatterGatherRouter extends AbstractMessageProcessorOwner implement
   @Override
   public void initialise() throws InitialisationException {
     try {
+      flowConstruct = FlowConstruct.getFromAnnotatedObject(componentLocator, this);
+
       buildRouteChains();
 
       if (aggregationStrategy == null) {

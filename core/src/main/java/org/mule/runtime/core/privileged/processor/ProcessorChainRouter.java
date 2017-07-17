@@ -7,26 +7,43 @@
 package org.mule.runtime.core.privileged.processor;
 
 import static java.util.Collections.emptyList;
+import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.disposeIfNeeded;
+import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
+import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.startIfNeeded;
+import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
+import static org.mule.runtime.core.api.util.UUID.getUUID;
 import org.mule.runtime.api.event.Event;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
+import org.mule.runtime.api.lifecycle.InitialisationException;
+import org.mule.runtime.api.lifecycle.Lifecycle;
 import org.mule.runtime.api.meta.AbstractAnnotatedObject;
 import org.mule.runtime.core.DefaultEventContext;
+import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.processor.MessageProcessorChain;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Component to be used that supports a collection of {@link MessageProcessorChain}
  */
-public class ProcessorChainRouter extends AbstractAnnotatedObject {
+public class ProcessorChainRouter extends AbstractAnnotatedObject implements Lifecycle {
 
+  private static Logger LOGGER = LoggerFactory.getLogger(ProcessorChainRouter.class);
+
+  @Inject
+  private MuleContext muleContext;
   private List<MessageProcessorChain> processorChains = emptyList();
   private String name;
 
   public Event process(Event event) {
     org.mule.runtime.core.api.Event.Builder builder =
-        org.mule.runtime.core.api.Event.builder(DefaultEventContext.create(null, getLocation()));
+        org.mule.runtime.core.api.Event.builder(DefaultEventContext.create(getUUID(), muleContext.getId(), getLocation()));
     org.mule.runtime.core.api.Event defaultEvent = builder.from(event).build();
     try {
       for (MessageProcessorChain processorChain : processorChains) {
@@ -38,4 +55,27 @@ public class ProcessorChainRouter extends AbstractAnnotatedObject {
     return defaultEvent;
   }
 
+  public void setProcessorChains(List processorChains) {
+    this.processorChains = processorChains;
+  }
+
+  @Override
+  public void stop() throws MuleException {
+    stopIfNeeded(processorChains);
+  }
+
+  @Override
+  public void dispose() {
+    disposeIfNeeded(processorChains, LOGGER);
+  }
+
+  @Override
+  public void start() throws MuleException {
+    startIfNeeded(processorChains);
+  }
+
+  @Override
+  public void initialise() throws InitialisationException {
+    initialiseIfNeeded(processorChains, muleContext);
+  }
 }
