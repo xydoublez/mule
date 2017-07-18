@@ -13,11 +13,6 @@ import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static org.mule.runtime.core.api.util.ExceptionUtils.NULL_ERROR_HANDLER;
 import static org.mule.runtime.core.api.util.StringUtils.EMPTY;
-<<<<<<< HEAD
-=======
-import static org.mule.runtime.dsl.api.component.config.ComponentLocationUtils.getRootOwnerNameFrom;
-
->>>>>>> cnag
 import org.mule.runtime.api.component.location.ComponentLocation;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.EventContext;
@@ -34,7 +29,6 @@ import java.time.OffsetTime;
 import java.util.Optional;
 
 import org.reactivestreams.Publisher;
-
 import reactor.core.publisher.Mono;
 
 /**
@@ -153,7 +147,7 @@ public final class DefaultEventContext extends AbstractEventContext implements S
       exceptionHandler =
           context instanceof AbstractEventContext ? ((AbstractEventContext) context).getExceptionHandler()
               : NULL_ERROR_HANDLER;
-      context = context.getParentContext().orElse(null);
+      context = context.getInternalParentContext().orElse(null);
     }
     return child(parent, componentLocation, exceptionHandler);
   }
@@ -279,11 +273,7 @@ public final class DefaultEventContext extends AbstractEventContext implements S
   @Override
   public String toString() {
     return getClass().getSimpleName() + " { id: " + id + "; correlationId: " + correlationId + "; flowName: "
-<<<<<<< HEAD
         + getOriginatingLocation().getRootContainerName() + "; serverId: " + serverId + " }";
-=======
-        + getRootOwnerNameFrom(getOriginatingLocation()) + "; serverId: " + serverId + " }";
->>>>>>> cnag
   }
 
   private static class ChildEventContext extends AbstractEventContext implements Serializable {
@@ -340,13 +330,8 @@ public final class DefaultEventContext extends AbstractEventContext implements S
     @Override
     public String toString() {
       return getClass().getSimpleName() + " { id: " + getId() + "; correlationId: " + parent.getCorrelationId()
-<<<<<<< HEAD
           + "; flowName: " + parent.getOriginatingLocation().getRootContainerName() + "; commponentLocation: "
           + (componentLocation != null ? componentLocation.getLocation() : EMPTY) + ";";
-=======
-          + "; flowName: " + getRootOwnerNameFrom(parent.getOriginatingLocation()) + "; commponentLocation: "
-          + (componentLocation != null ? componentLocation.getLocation() : EMPTY) + "; handleErrors: " + handleErrors + " }";
->>>>>>> cnag
     }
 
     @Override

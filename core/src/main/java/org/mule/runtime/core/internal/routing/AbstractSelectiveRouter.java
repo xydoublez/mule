@@ -16,7 +16,6 @@ import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.core.api.management.stats.RouterStatistics.TYPE_OUTBOUND;
 import static org.mule.runtime.core.api.processor.MessageProcessors.processToApply;
 import static org.mule.runtime.core.api.rx.Exceptions.checkedFunction;
-import static org.mule.runtime.dsl.api.component.config.ComponentLocationUtils.getRootOwnerNameFrom;
 import static reactor.core.publisher.Flux.from;
 import static reactor.core.publisher.Flux.just;
 import org.mule.runtime.api.exception.MuleException;
@@ -190,15 +189,6 @@ public abstract class AbstractSelectiveRouter extends AbstractAnnotatedObject im
 
   private <O> O transitionLifecycleManagedObjectForAddition(O managedObject) {
     try {
-<<<<<<< HEAD
-      if ((flowConstruct != null) && (managedObject instanceof FlowConstructAware)) {
-        ((FlowConstructAware) managedObject).setFlowConstruct(flowConstruct);
-=======
-      if ((messagingExceptionHandler != null) && (managedObject instanceof MessagingExceptionHandlerAware)) {
-        ((MessagingExceptionHandlerAware) managedObject).setMessagingExceptionHandler(messagingExceptionHandler);
->>>>>>> cnag
-      }
-
       if ((muleContext != null) && (managedObject instanceof MuleContextAware)) {
         ((MuleContextAware) managedObject).setMuleContext(muleContext);
       }

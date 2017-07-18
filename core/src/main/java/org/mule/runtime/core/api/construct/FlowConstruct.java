@@ -10,7 +10,6 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
-import static org.mule.runtime.dsl.api.component.config.ComponentLocationUtils.getRootOwnerNameFrom;
 import org.mule.runtime.api.component.location.ComponentLocation;
 import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
 import org.mule.runtime.api.component.location.Location;
@@ -60,7 +59,7 @@ public interface FlowConstruct extends NamedObject, LifecycleStateEnabled {
 
   static FlowConstruct getFromAnnotatedObject(ConfigurationComponentLocator componentLocator, AnnotatedObject annotatedObject) {
     ComponentLocation location = annotatedObject.getLocation();
-    String rootOwnerName = getRootOwnerNameFrom(location);
+    String rootOwnerName = location.getRootContainerName();
     Optional<AnnotatedObject> objectFoundOptional =
         componentLocator.find(Location.builder().globalName(rootOwnerName).build());
     Optional<FlowConstruct> flowConstruct = objectFoundOptional.flatMap(objectFound -> objectFound instanceof FlowConstruct

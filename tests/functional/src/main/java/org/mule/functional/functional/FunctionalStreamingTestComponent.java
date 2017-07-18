@@ -9,7 +9,6 @@ package org.mule.functional.functional;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.core.api.util.IOUtils.ifInputStream;
 import static org.mule.runtime.core.api.util.StringMessageUtils.getBoilerPlate;
-import static org.mule.runtime.dsl.api.component.config.ComponentLocationUtils.getRootOwnerNameFrom;
 import org.mule.functional.api.component.EventCallback;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.message.Message;
@@ -22,7 +21,6 @@ import org.mule.runtime.core.api.context.MuleContextAware;
 import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.api.registry.RegistrationException;
 import org.mule.runtime.core.api.util.ClassUtils;
-import org.mule.runtime.dsl.api.component.config.ComponentLocationUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -158,7 +156,7 @@ public abstract class FunctionalStreamingTestComponent extends AbstractAnnotated
 
     summary = result.toString();
 
-    String msg = getBoilerPlate("Message Received in service: " + getRootOwnerNameFrom(this.getLocation()) + ". " + summary
+    String msg = getBoilerPlate("Message Received in service: " + this.getLocation().getRootContainerName() + ". " + summary
         + "\n callback: " + eventCallback, '*', 80);
 
     logger.info(msg);

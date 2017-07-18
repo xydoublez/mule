@@ -186,7 +186,8 @@ public class MessageProcessors {
   public static Publisher<Event> processWithChildContext(Event event, ReactiveProcessor processor,
                                                          Optional<ComponentLocation> componentLocation,
                                                          MessagingExceptionHandler exceptionHandler) {
-    return internalProcessWithChildContext(event, processor, child(event.getInternalContext(), componentLocation, exceptionHandler),
+    return internalProcessWithChildContext(event, processor,
+                                           child(event.getInternalContext(), componentLocation, exceptionHandler),
                                            true);
   }
 

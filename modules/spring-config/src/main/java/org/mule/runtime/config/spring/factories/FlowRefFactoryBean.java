@@ -18,12 +18,10 @@ import static reactor.core.publisher.Flux.error;
 import static reactor.core.publisher.Flux.from;
 import static reactor.core.publisher.Flux.just;
 import org.mule.runtime.api.component.location.ComponentLocation;
-import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.lifecycle.Initialisable;
-import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.lifecycle.Stoppable;
 import org.mule.runtime.api.meta.AbstractAnnotatedObject;
 import org.mule.runtime.api.meta.AnnotatedObject;
@@ -31,7 +29,6 @@ import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.i18n.CoreMessages;
 import org.mule.runtime.core.api.construct.Flow;
-import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.context.MuleContextAware;
 import org.mule.runtime.core.api.processor.MessageProcessorChain;
 import org.mule.runtime.core.api.processor.Processor;
@@ -44,7 +41,6 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import java.util.Map;
 
-import javax.inject.Inject;
 import javax.xml.namespace.QName;
 
 import org.reactivestreams.Publisher;
@@ -134,12 +130,8 @@ public class FlowRefFactoryBean extends AbstractAnnotatedObject
   }
 
   private class FlowRefMessageProcessor
-      implements AnnotatedProcessor, Stoppable, Disposable, Initialisable {
+      implements AnnotatedProcessor, Stoppable, Disposable {
 
-    @Inject
-    private ConfigurationComponentLocator componentLocator;
-
-    private FlowConstruct flowConstruct;
     private LoadingCache<String, Processor> cache;
     private boolean isExpression;
 
@@ -150,7 +142,7 @@ public class FlowRefFactoryBean extends AbstractAnnotatedObject
 
             @Override
             public Processor load(String key) throws Exception {
-              return getReferencedFlow(key, flowConstruct);
+              return getReferencedFlow(key);
             }
           });
 
@@ -245,9 +237,5 @@ public class FlowRefFactoryBean extends AbstractAnnotatedObject
       cache.cleanUp();
     }
 
-    @Override
-    public void initialise() throws InitialisationException {
-      this.flowConstruct = FlowConstruct.getFromAnnotatedObject(componentLocator, this);
-    }
   }
 }

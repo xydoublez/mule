@@ -15,8 +15,6 @@ import static org.mule.runtime.core.api.config.i18n.CoreMessages.responseTimedOu
 import static org.mule.runtime.core.api.context.notification.RoutingNotification.ASYNC_REPLY_TIMEOUT;
 import static org.mule.runtime.core.api.context.notification.RoutingNotification.MISSED_ASYNC_REPLY;
 import static org.mule.runtime.core.api.processor.ReactiveProcessor.ProcessingType.BLOCKING;
-import static org.mule.runtime.dsl.api.component.config.ComponentLocationUtils.getRootOwnerNameFrom;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.lifecycle.Initialisable;
