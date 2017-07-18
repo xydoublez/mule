@@ -46,7 +46,10 @@ import org.mule.runtime.core.api.registry.RegistrationException;
 import org.mule.runtime.core.api.streaming.StreamingManager;
 import org.mule.runtime.core.api.util.ExceptionUtils;
 import org.mule.runtime.core.internal.processor.interceptor.ReactiveInterceptorAdapter;
-
+import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -54,11 +57,6 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
-import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 /**
  * Builder needs to return a composite rather than the first MessageProcessor in the chain. This is so that if this chain is
@@ -194,7 +192,7 @@ abstract class AbstractMessageProcessorChain extends AbstractAnnotatedObject imp
 
   private Function<MessagingException, MessagingException> updateMessagingException(Processor processor) {
     return exception -> ExceptionUtils.updateMessagingException(LOGGER, processor, exception, muleContext.getErrorTypeLocator(),
-                                                                muleContext.getErrorTypeRepository(), muleContext);
+                                                                muleContext);
   }
 
   private Consumer<Event> preNotification(Processor processor) {

@@ -44,13 +44,13 @@ import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNee
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.startIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
 import static org.mule.runtime.core.api.rx.Exceptions.unwrap;
-import static org.mule.runtime.core.api.util.ExceptionUtils.getRootCauseException;
 import static org.mule.runtime.core.internal.util.FunctionalUtils.safely;
 import static org.mule.runtime.core.internal.util.JdkVersionUtils.getSupportedJdks;
 import static org.slf4j.LoggerFactory.getLogger;
 import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
 import org.mule.runtime.api.config.custom.CustomizationService;
 import org.mule.runtime.api.deployment.management.ComponentInitialStateManager;
+import org.mule.runtime.api.exception.ErrorMessageAwareException;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.i18n.I18nMessage;
@@ -124,6 +124,11 @@ import org.mule.runtime.core.internal.util.splash.ApplicationStartupSplashScreen
 import org.mule.runtime.core.internal.util.splash.ServerShutdownSplashScreen;
 import org.mule.runtime.core.internal.util.splash.ServerStartupSplashScreen;
 import org.mule.runtime.core.internal.util.splash.SplashScreen;
+import org.slf4j.Logger;
+import reactor.core.publisher.Hooks;
+import javax.inject.Inject;
+import javax.transaction.TransactionManager;
+import javax.xml.namespace.QName;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -131,13 +136,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
-import javax.inject.Inject;
-import javax.transaction.TransactionManager;
-import javax.xml.namespace.QName;
-
-import org.slf4j.Logger;
-import reactor.core.publisher.Hooks;
 
 public class DefaultMuleContext implements MuleContext {
 
@@ -259,8 +257,11 @@ public class DefaultMuleContext implements MuleContext {
       throwable = unwrap(throwable);
       // Only apply hook for Event signals.
       if (signal instanceof Event) {
-        return throwable instanceof MessagingException ? throwable
-            : new MessagingException((Event) signal, getRootCauseException(throwable));
+        return throwable instanceof MessagingException ? throwable : new MessagingException((Event) signal,
+                                                                                            throwable instanceof ErrorMessageAwareException
+                                                                                                ? ((ErrorMessageAwareException) throwable)
+                                                                                                    .getRootCause()
+                                                                                                : throwable);
       } else {
         return throwable;
       }

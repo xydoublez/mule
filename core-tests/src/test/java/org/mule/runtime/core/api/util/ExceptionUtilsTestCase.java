@@ -12,8 +12,6 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -26,9 +24,7 @@ import static org.mule.runtime.core.api.util.ExceptionUtils.containsType;
 import static org.mule.runtime.core.api.util.ExceptionUtils.extractCauseOfType;
 import static org.mule.runtime.core.api.util.ExceptionUtils.extractConnectionException;
 import static org.mule.runtime.core.api.util.ExceptionUtils.extractOfType;
-import static org.mule.runtime.core.api.util.ExceptionUtils.getDeepestOccurrenceOfType;
 import static org.mule.runtime.core.api.util.ExceptionUtils.getFullStackTraceWithoutMessages;
-import static org.mule.runtime.core.api.util.ExceptionUtils.updateMessagingExceptionWithError;
 
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.message.Error;
@@ -41,13 +37,12 @@ import org.mule.runtime.core.api.context.notification.FlowCallStack;
 import org.mule.runtime.core.api.exception.ErrorTypeLocator;
 import org.mule.runtime.core.api.exception.MessagingException;
 import org.mule.runtime.core.api.processor.Processor;
+import org.mule.runtime.core.api.util.ExceptionUtils;
 import org.mule.tck.junit4.AbstractMuleTestCase;
 import org.mule.tck.size.SmallTest;
-
+import org.junit.Test;
 import java.io.IOException;
 import java.util.Optional;
-
-import org.junit.Test;
 
 @SmallTest
 public class ExceptionUtilsTestCase extends AbstractMuleTestCase {
@@ -57,49 +52,11 @@ public class ExceptionUtilsTestCase extends AbstractMuleTestCase {
   @Test
   public void testContainsType() {
     assertTrue(containsType(new IllegalArgumentException(), IllegalArgumentException.class));
-
     assertTrue(containsType(new Exception(new IllegalArgumentException()), IllegalArgumentException.class));
-
     assertTrue(containsType(new Exception(new IllegalArgumentException(new NullPointerException())), NullPointerException.class));
-
     assertTrue(containsType(new Exception(new IllegalArgumentException(new NullPointerException())), RuntimeException.class));
-
     assertTrue(containsType(new Exception(new IllegalArgumentException(new NullPointerException())), Exception.class));
-
     assertFalse(containsType(new Exception(new IllegalArgumentException(new NullPointerException())), IOException.class));
-  }
-
-  @Test
-  public void testLastIndexOfType_deepestIsTheOneWeWant() throws Exception {
-    IllegalArgumentException expected = new IllegalArgumentException("something");
-    assertExpectationsForDeepestOccurence(expected);
-  }
-
-  @Test
-  public void testLastIndexOfType_theOneWeWantIsNotTheDeepest() throws Exception {
-    IllegalArgumentException expected = new IllegalArgumentException("something", new NullPointerException("somenull"));
-    assertExpectationsForDeepestOccurence(expected);
-
-  }
-
-  private void assertExpectationsForDeepestOccurence(IllegalArgumentException expected) {
-    assertSame(expected, getDeepestOccurrenceOfType(expected, IllegalArgumentException.class));
-
-    assertSame(expected, getDeepestOccurrenceOfType(new Exception(expected), IllegalArgumentException.class));
-
-    assertSame(expected,
-               getDeepestOccurrenceOfType(new IllegalArgumentException(new Exception(expected)), IllegalArgumentException.class));
-
-    assertNull(getDeepestOccurrenceOfType(new IllegalArgumentException(new Exception(expected)), IOException.class));
-  }
-
-  @Test
-  public void testLastIndexOfType_nullParameters() throws Exception {
-    assertNull(getDeepestOccurrenceOfType(null, null));
-
-    assertNull(getDeepestOccurrenceOfType(new Exception(), null));
-
-    assertNull(getDeepestOccurrenceOfType(null, Exception.class));
   }
 
   @Test
@@ -177,7 +134,7 @@ public class ExceptionUtilsTestCase extends AbstractMuleTestCase {
     EventContext eventContextMock = mock(EventContext.class);
     when(eventContextMock.getOriginatingLocation()).thenReturn(TEST_CONNECTOR_LOCATION);
 
-    Optional<Error> errorOptional = Optional.ofNullable(null);
+    Optional<Error> errorOptional = Optional.empty();
 
     when(messagingExceptionMock.getEvent()).thenReturn(eventMock);
 
@@ -190,16 +147,18 @@ public class ExceptionUtilsTestCase extends AbstractMuleTestCase {
 
     when(muleContextMock.getErrorTypeLocator()).thenReturn(errorTypeLocatorMock);
 
-    when(errorTypeLocatorMock.lookupErrorType(messagingExceptionMock)).thenReturn(mock(ErrorType.class));
+    ErrorType type = mock(ErrorType.class);
+    when(type.getIdentifier()).thenReturn("SOME_IDENTIFIER");
+    when(errorTypeLocatorMock.lookupErrorType(messagingExceptionMock)).thenReturn(type);
 
 
-    updateMessagingExceptionWithError(messagingExceptionMock, processorMock, muleContextMock);
+    ExceptionUtils.updateMessagingExceptionWithError(messagingExceptionMock, processorMock, muleContextMock);
 
     verify(messagingExceptionMock, atLeast(1)).setProcessedEvent(any(Event.class));
   }
 
   @Test
-  public void updateMessaginExceptionWithError() {
+  public void updateMessagingExceptionWithError() {
     MessagingException messagingExceptionMock = mock(MessagingException.class);
     Processor processorMock = mock(Processor.class);
     MuleContext muleContextMock = mock(MuleContext.class);
@@ -215,6 +174,7 @@ public class ExceptionUtilsTestCase extends AbstractMuleTestCase {
     Optional<Error> errorOptional = Optional.ofNullable(errorMock);
 
     when(messagingExceptionMock.getEvent()).thenReturn(eventMock);
+    when(messagingExceptionMock.getCause()).thenReturn(new Exception());
 
     when(eventMock.getError()).thenReturn(errorOptional);
     when(eventMock.getFlowCallStack()).thenReturn(flowCallStackMock);
@@ -228,7 +188,7 @@ public class ExceptionUtilsTestCase extends AbstractMuleTestCase {
     when(errorTypeLocatorMock.lookupErrorType(messagingExceptionMock)).thenReturn(mock(ErrorType.class));
 
 
-    updateMessagingExceptionWithError(messagingExceptionMock, processorMock, muleContextMock);
+    ExceptionUtils.updateMessagingExceptionWithError(messagingExceptionMock, processorMock, muleContextMock);
 
     verify(messagingExceptionMock, times(0)).setProcessedEvent(any(Event.class));
   }

@@ -26,6 +26,7 @@ import static org.mule.runtime.core.api.exception.Errors.ComponentIdentifiers.UN
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
 import static org.mule.runtime.core.api.processor.strategy.AsyncProcessingStrategyFactory.DEFAULT_MAX_CONCURRENCY;
 import static org.mule.tck.util.MuleContextUtils.mockContextWithServices;
+
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.message.ErrorType;
@@ -50,11 +51,6 @@ import org.mule.runtime.core.internal.construct.DefaultFlowBuilder.DefaultFlow;
 import org.mule.runtime.core.internal.exception.ErrorHandler;
 import org.mule.runtime.core.internal.exception.ErrorHandlerFactory;
 import org.mule.tck.junit4.AbstractReactiveProcessorTestCase;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -63,6 +59,9 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.ArgumentMatcher;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 
 @RunWith(Parameterized.class)
 public class PipelineMessageNotificationTestCase extends AbstractReactiveProcessorTestCase {
@@ -92,6 +91,7 @@ public class PipelineMessageNotificationTestCase extends AbstractReactiveProcess
     when(muleContext.getNotificationManager()).thenReturn(notificationManager);
     ErrorTypeLocator errorTypeLocator = mock(ErrorTypeLocator.class);
     ErrorType errorType = mock(ErrorType.class);
+    when(errorType.getIdentifier()).thenReturn("SOME_ID");
     when(errorTypeLocator.lookupErrorType(any(Throwable.class))).thenReturn(errorType);
     when(errorTypeLocator.<String, Throwable>lookupComponentErrorType(any(ComponentIdentifier.class),
                                                                       any(Throwable.class)))
