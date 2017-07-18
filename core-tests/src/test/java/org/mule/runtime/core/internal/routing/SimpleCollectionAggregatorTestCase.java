@@ -48,7 +48,6 @@ public class SimpleCollectionAggregatorTestCase extends AbstractMuleContextTestC
     SensingNullMessageProcessor sensingMessageProcessor = getSensingNullMessageProcessor();
     router.setListener(sensingMessageProcessor);
     router.setMuleContext(muleContext);
-    router.setFlowConstruct(flow);
     router.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
     router.initialise();
 
@@ -94,7 +93,6 @@ public class SimpleCollectionAggregatorTestCase extends AbstractMuleContextTestC
     SensingNullMessageProcessor sensingMessageProcessor = getSensingNullMessageProcessor();
     router.setListener(sensingMessageProcessor);
     router.setMuleContext(muleContext);
-    router.setFlowConstruct(flow);
     router.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
     router.initialise();
 
@@ -124,7 +122,6 @@ public class SimpleCollectionAggregatorTestCase extends AbstractMuleContextTestC
 
     SimpleCollectionAggregator router = new SimpleCollectionAggregator();
     router.setMuleContext(muleContext);
-    router.setFlowConstruct(flow);
     router.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
     router.initialise();
 

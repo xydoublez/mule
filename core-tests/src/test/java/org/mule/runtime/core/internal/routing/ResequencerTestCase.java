@@ -49,7 +49,6 @@ public class ResequencerTestCase extends AbstractMuleContextTestCase {
 
     TestEventResequencer router = new TestEventResequencer(3);
     router.setMuleContext(muleContext);
-    router.setFlowConstruct(flow);
     router.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
     router.initialise();
 
@@ -84,7 +83,6 @@ public class ResequencerTestCase extends AbstractMuleContextTestCase {
 
     TestEventResequencer router = new TestEventResequencer(3);
     router.setMuleContext(muleContext);
-    router.setFlowConstruct(flow);
     router.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
     router.initialise();
 
@@ -104,7 +102,6 @@ public class ResequencerTestCase extends AbstractMuleContextTestCase {
     router = new TestEventResequencer(3);
     router.setMuleContext(muleContext);
     router.setEventComparator(new EventPayloadComparator());
-    router.setFlowConstruct(flow);
     router.setAnnotations(singletonMap(LOCATION_KEY, fromSingleComponent("flow")));
     router.initialise();
 

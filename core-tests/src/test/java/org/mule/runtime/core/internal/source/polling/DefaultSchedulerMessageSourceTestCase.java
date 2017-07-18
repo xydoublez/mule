@@ -89,7 +89,6 @@ public class DefaultSchedulerMessageSourceTestCase extends AbstractMuleContextTe
   private DefaultSchedulerMessageSource createMessageSource() throws Exception {
     schedulerMessageSource =
         new DefaultSchedulerMessageSource(muleContext, scheduler());
-    schedulerMessageSource.setFlowConstruct(getTestFlow(muleContext));
     schedulerMessageSource.initialise();
     return schedulerMessageSource;
   }

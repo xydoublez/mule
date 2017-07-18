@@ -864,10 +864,6 @@ public class DefaultMessageProcessorChainTestCase extends AbstractReactiveProces
       this.muleContextInjected = true;
     }
 
-    @Override
-    public void setFlowConstruct(FlowConstruct flowConstruct) {
-      this.flowConstuctInjected = true;
-    }
   }
 
   class AppendingInterceptingMP extends AbstractInterceptingMessageProcessor implements Lifecycle {

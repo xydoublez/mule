@@ -44,7 +44,6 @@ public class AggregatorTestCase extends AbstractMuleContextTestCase {
 
     TestEventAggregator router = new TestEventAggregator(3);
     router.setMuleContext(muleContext);
-    router.setFlowConstruct(flow);
     router.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
     router.initialise();
 
