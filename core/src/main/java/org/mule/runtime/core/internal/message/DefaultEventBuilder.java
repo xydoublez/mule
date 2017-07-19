@@ -38,7 +38,6 @@ import org.mule.runtime.core.api.store.DeserializationPostInitialisable;
 import org.mule.runtime.core.api.transformer.TransformerException;
 import org.mule.runtime.core.internal.context.notification.DefaultFlowCallStack;
 import org.mule.runtime.core.internal.util.CopyOnWriteCaseInsensitiveMap;
-import org.mule.runtime.internal.event.EventImplementation;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -90,8 +89,9 @@ public class DefaultEventBuilder implements Event.Builder {
     this.notificationsEnabled = event.isNotificationsEnabled();
 
     this.flowVariables.putAll(event.getVariables());
-    this.moduleProperties = event.getProperties();
-    this.moduleParameters = event.getParameters();
+    this.moduleProperties.putAll(event.getProperties());
+    this.moduleParameters.putAll(event.getParameters());
+    this.internalParameters.putAll(event.getInternalParameters());
   }
 
   public DefaultEventBuilder(EventContext messageContext, Event event) {

@@ -70,12 +70,13 @@ public abstract class AbstractFlowConstruct extends AbstractAnnotatedObject impl
   private final String initialState;
 
   public AbstractFlowConstruct(String name, MuleContext muleContext, Optional<MessagingExceptionHandler> exceptionListener,
-                               String initialState, FlowConstructStatistics flowConstructStatistics) {
+                               String initialState, FlowConstructStatistics statistics) {
     this.muleContext = muleContext;
     this.name = name;
     this.exceptionListener = exceptionListener.orElse(muleContext.getDefaultErrorHandler());
     this.initialState = initialState;
     this.lifecycleManager = new FlowConstructLifecycleManager(this, muleContext);
+    this.statistics = statistics;
   }
 
   @Override

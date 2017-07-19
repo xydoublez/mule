@@ -11,6 +11,7 @@ import static java.util.Collections.singletonMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mule.runtime.api.meta.AbstractAnnotatedObject.LOCATION_KEY;
 import static org.mule.runtime.core.api.construct.Flow.builder;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.setMuleContextIfNeeded;
@@ -23,7 +24,7 @@ import static org.mule.tck.MuleTestUtils.getTestFlow;
 import static org.mule.tck.junit4.TestsLogConfigurationHelper.clearLoggingConfig;
 import static org.mule.tck.junit4.TestsLogConfigurationHelper.configureLoggingForTest;
 import static org.slf4j.LoggerFactory.getLogger;
-
+import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.metadata.DataType;
@@ -37,6 +38,7 @@ import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.api.config.DefaultMuleConfiguration;
 import org.mule.runtime.core.api.config.MuleConfiguration;
+import org.mule.runtime.core.api.config.MuleProperties;
 import org.mule.runtime.core.api.config.builders.DefaultsConfigurationBuilder;
 import org.mule.runtime.core.api.config.builders.SimpleConfigurationBuilder;
 import org.mule.runtime.core.api.construct.Flow;
@@ -72,6 +74,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 
 /**
@@ -134,6 +137,8 @@ public abstract class AbstractMuleContextTestCase extends AbstractMuleTestCase {
    */
   private boolean disposeContextPerClass;
   private static boolean logConfigured;
+
+  private ConfigurationComponentLocator componentLocator = Mockito.mock(ConfigurationComponentLocator.class, RETURNS_DEEP_STUBS);
 
   protected boolean isDisposeContextPerClass() {
     return disposeContextPerClass;
@@ -299,7 +304,14 @@ public abstract class AbstractMuleContextTestCase extends AbstractMuleTestCase {
   protected void configureMuleContext(MuleContextBuilder contextBuilder) {}
 
   protected ConfigurationBuilder getBuilder() throws Exception {
-    return new DefaultsConfigurationBuilder();
+    return new DefaultsConfigurationBuilder() {
+
+      @Override
+      protected void doConfigure(MuleContext muleContext) throws Exception {
+        super.doConfigure(muleContext);
+        muleContext.getRegistry().registerObject(MuleProperties.OBJECT_CONFIGURATION_COMPONENT_LOCATOR, componentLocator);
+      }
+    };
   }
 
   protected String getConfigurationResources() {

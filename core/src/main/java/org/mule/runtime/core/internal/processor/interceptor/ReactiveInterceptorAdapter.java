@@ -149,7 +149,7 @@ public class ReactiveInterceptorAdapter
   }
 
   private Map<String, Object> getResolvedParams(final Event eventWithResolvedParams) {
-    return (Map<String, Object>) eventWithResolvedParams.getParameters().get(INTERCEPTION_RESOLVED_PARAMS).getValue();
+    return (Map<String, Object>) eventWithResolvedParams.getInternalParameters().get(INTERCEPTION_RESOLVED_PARAMS);
   }
 
   private Function<Event, Event> doAfter(ComponentLocation componentLocation, ProcessorInterceptor interceptor,
@@ -187,13 +187,13 @@ public class ReactiveInterceptorAdapter
   }
 
   private Event removeResolvedParameters(Event event) {
-    if (event.getParameters().containsKey(INTERCEPTION_RESOLVED_CONTEXT)) {
-      Processor processor = (Processor) event.getParameters().get(INTERCEPTION_COMPONENT).getValue();
+    if (event.getInternalParameters().containsKey(INTERCEPTION_RESOLVED_CONTEXT)) {
+      Processor processor = (Processor) event.getInternalParameters().get(INTERCEPTION_COMPONENT);
 
       if (processor instanceof ParametersResolverProcessor) {
         ((ParametersResolverProcessor) processor)
-            .disposeResolvedParameters((ExecutionContext<OperationModel>) event.getParameters().get(INTERCEPTION_RESOLVED_CONTEXT)
-                .getValue());
+            .disposeResolvedParameters((ExecutionContext<OperationModel>) event.getInternalParameters()
+                .get(INTERCEPTION_RESOLVED_CONTEXT));
       }
     }
 

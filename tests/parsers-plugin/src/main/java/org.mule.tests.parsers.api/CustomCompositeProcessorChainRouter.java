@@ -6,8 +6,9 @@
  */
 package org.mule.tests.parsers.api;
 
-import org.mule.runtime.core.privileged.processor.ProcessorChainRouter;
+import org.mule.runtime.core.privileged.processor.CompositeProcessorChainRouter;
 
-public class CustomProcessorChainRouter extends ProcessorChainRouter {
+public class CustomCompositeProcessorChainRouter extends CompositeProcessorChainRouter
+{
 
 }

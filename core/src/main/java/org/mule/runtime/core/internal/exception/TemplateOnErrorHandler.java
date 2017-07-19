@@ -33,7 +33,6 @@ import org.mule.runtime.core.api.exception.ErrorTypeRepository;
 import org.mule.runtime.core.api.exception.MessagingException;
 import org.mule.runtime.core.api.exception.MessagingExceptionHandlerAcceptor;
 import org.mule.runtime.core.api.exception.SingleErrorTypeMatcher;
-import org.mule.runtime.core.api.management.stats.FlowConstructStatistics;
 import org.mule.runtime.core.api.processor.MessageProcessorChain;
 import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.api.transaction.TransactionCoordination;
@@ -170,7 +169,6 @@ public abstract class TemplateOnErrorHandler extends AbstractExceptionListener
   }
 
   private void processStatistics() {
-    FlowConstructStatistics statistics = getFlowConstruct().getStatistics();
     if (statistics != null && statistics.isEnabled()) {
       statistics.incExecutionError();
     }

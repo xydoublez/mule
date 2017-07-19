@@ -359,7 +359,7 @@ public class OperationMessageProcessorTestCase extends AbstractOperationMessageP
         (PrecalculatedExecutionContextAdapter) spy(resolveParameters.getContext());
 
     messageProcessor.process(Event.builder(event)
-        .parameters(singletonMap(INTERCEPTION_RESOLVED_CONTEXT, context))
+        .internalParameters(singletonMap(INTERCEPTION_RESOLVED_CONTEXT, context))
         .build());
 
     verify(operationExecutor).execute(any(ExecutionContext.class));

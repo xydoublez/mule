@@ -12,20 +12,16 @@ import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.mule.runtime.core.api.context.notification.EnrichedNotificationInfo.createInfo;
 import static org.mule.runtime.core.api.context.notification.SecurityNotification.SECURITY_AUTHENTICATION_FAILED;
-
-import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.security.SecurityException;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.GlobalNameableObject;
 import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.context.notification.ExceptionNotification;
 import org.mule.runtime.core.api.context.notification.SecurityNotification;
 import org.mule.runtime.core.api.context.notification.ServerNotification;
 import org.mule.runtime.core.api.exception.MessagingException;
-import org.mule.runtime.core.api.exception.MessagingExceptionHandler;
 import org.mule.runtime.core.api.exception.TypedException;
 import org.mule.runtime.core.api.management.stats.FlowConstructStatistics;
 import org.mule.runtime.core.api.processor.Processor;
@@ -36,8 +32,6 @@ import org.mule.runtime.core.api.processor.AbstractMessageProcessorOwner;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,9 +48,6 @@ public abstract class AbstractExceptionListener extends AbstractMessageProcessor
 
   protected transient Logger logger = LoggerFactory.getLogger(getClass());
 
-  @Inject
-  private ConfigurationComponentLocator componentLocator;
-
   protected List<Processor> messageProcessors = new CopyOnWriteArrayList<>();
 
   protected AtomicBoolean initialised = new AtomicBoolean(false);
@@ -65,8 +56,7 @@ public abstract class AbstractExceptionListener extends AbstractMessageProcessor
   protected String logException = TRUE.toString();
 
   protected String globalName;
-
-  private FlowConstruct flowConstruct;
+  protected FlowConstructStatistics statistics;
 
   @Override
   public String getGlobalName() {
@@ -143,7 +133,6 @@ public abstract class AbstractExceptionListener extends AbstractMessageProcessor
    * @param t the fatal exception to log
    */
   protected void logFatal(Event event, Throwable t) {
-    FlowConstructStatistics statistics = flowConstruct.getStatistics();
     if (statistics != null && statistics.isEnabled()) {
       statistics.incFatalError();
     }
@@ -202,7 +191,8 @@ public abstract class AbstractExceptionListener extends AbstractMessageProcessor
     }
   }
 
-  public FlowConstruct getFlowConstruct() {
-    return flowConstruct;
+  public void setStatistics(FlowConstructStatistics statistics)
+  {
+    this.statistics = statistics;
   }
 }

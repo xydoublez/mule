@@ -35,6 +35,7 @@ import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.api.processor.strategy.ProcessingStrategyFactory;
 import org.mule.runtime.core.api.source.MessageSource;
 import org.mule.runtime.core.internal.construct.processor.FlowConstructStatisticsMessageProcessor;
+import org.mule.runtime.core.internal.exception.AbstractExceptionListener;
 import org.mule.runtime.core.internal.processor.strategy.TransactionAwareWorkQueueProcessingStrategyFactory;
 import org.mule.runtime.core.internal.routing.requestreply.SimpleAsyncRequestReplyRequester.AsyncReplyToPropertyRequestReplyReplier;
 
@@ -177,9 +178,13 @@ public class DefaultFlowBuilder implements Builder {
   public Flow build() {
     checkImmutable();
 
+    FlowConstructStatistics flowStatistics = createFlowStatistics(name, muleContext);
+    if (exceptionListener instanceof AbstractExceptionListener) {
+      ((AbstractExceptionListener) exceptionListener).setStatistics(flowStatistics);
+    }
     flow = new DefaultFlow(name, muleContext, source, processors,
                            ofNullable(exceptionListener), ofNullable(processingStrategyFactory), initialState, maxConcurrency,
-                           createFlowStatistics(name, muleContext));
+                           flowStatistics);
     return flow;
   }
 

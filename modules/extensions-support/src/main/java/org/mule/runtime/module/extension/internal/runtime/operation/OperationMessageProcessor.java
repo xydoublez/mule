@@ -150,7 +150,7 @@ public class OperationMessageProcessor extends ExtensionComponent<OperationModel
       Optional<ConfigurationInstance> configuration;
       OperationExecutionFunction operationExecutionFunction;
 
-      if (event.getParameters().containsKey(INTERCEPTION_RESOLVED_CONTEXT)) {
+      if (event.getInternalParameters().containsKey(INTERCEPTION_RESOLVED_CONTEXT)) {
         // If the event already contains an execution context, use that one.
         ExecutionContextAdapter<OperationModel> operationContext = getPrecalculatedContext(event);
         configuration = operationContext.getConfiguration();
@@ -200,7 +200,7 @@ public class OperationMessageProcessor extends ExtensionComponent<OperationModel
   }
 
   private PrecalculatedExecutionContextAdapter getPrecalculatedContext(Event event) {
-    return (PrecalculatedExecutionContextAdapter) (event.getParameters().get(INTERCEPTION_RESOLVED_CONTEXT).getValue());
+    return (PrecalculatedExecutionContextAdapter) (event.getInternalParameters().get(INTERCEPTION_RESOLVED_CONTEXT));
   }
 
   protected Mono<Event> doProcess(Event event, ExecutionContextAdapter<OperationModel> operationContext) {

@@ -38,6 +38,7 @@ public abstract class AbstractMuleObjectOwner<T> extends AbstractAnnotatedObject
 
   @Override
   public void setMuleContext(MuleContext muleContext) {
+    this.muleContext = muleContext;
     setMuleContextIfNeeded(getOwnedObjects(), muleContext);
   }
 

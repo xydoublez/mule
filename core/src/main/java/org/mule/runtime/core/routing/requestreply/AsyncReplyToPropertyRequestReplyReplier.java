@@ -13,9 +13,17 @@ import org.mule.runtime.core.api.connector.DefaultReplyToHandler;
 import org.mule.runtime.core.api.construct.Pipeline;
 import org.mule.runtime.core.api.endpoint.LegacyImmutableEndpoint;
 import org.mule.runtime.core.privileged.routing.requestreply.AbstractReplyToPropertyRequestReplyReplier;
+import org.mule.runtime.core.api.construct.FlowConstruct;
 
 public class AsyncReplyToPropertyRequestReplyReplier extends AbstractReplyToPropertyRequestReplyReplier
 {
+
+  private final FlowConstruct flowConstruct;
+
+  public AsyncReplyToPropertyRequestReplyReplier(FlowConstruct flowConstruct) {
+    super();
+    this.flowConstruct = flowConstruct;
+  }
 
   @Override
   protected boolean shouldProcessEvent(Event event) {
@@ -28,4 +36,8 @@ public class AsyncReplyToPropertyRequestReplyReplier extends AbstractReplyToProp
     return !mep.hasResponse() && event.getReplyToHandler() instanceof DefaultReplyToHandler;
   }
 
+  @Override
+  public FlowConstruct getFlowConstruct() {
+    return flowConstruct;
+  }
 }
