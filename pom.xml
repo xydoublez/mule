@@ -2215,6 +2215,9 @@
         </profile>
 		<profile>
             <id>release</id>
+            <modules>
+                <module>sources-community</module>
+            </modules>
             <properties>
                 <skipIntegrationTests>true</skipIntegrationTests>
                 <skipVerifications>false</skipVerifications>
@@ -2297,6 +2300,50 @@
                             </execution>
                         </executions>
                     </plugin>
+                
+                    <!--<plugin>-->
+                        <!--<groupId>org.apache.maven.plugins</groupId>-->
+                        <!--<artifactId>maven-install-plugin</artifactId>-->
+                        <!--<executions>-->
+                            <!--<execution>-->
+                                <!--<phase>install</phase>-->
+                                <!--<goals>-->
+                                    <!--<goal>install-file</goal>-->
+                                <!--</goals>-->
+                                <!--<configuration>-->
+                                    <!--<groupId>${project.groupId}</groupId>-->
+                                    <!--<artifactId>mule-${project.version}</artifactId>-->
+                                    <!--<version>${project.version}</version>-->
+                                    <!--<packaging>zip</packaging>-->
+                                    <!--<classifier>src</classifier>-->
+                                    <!--<file>-->
+                                        <!--${project.build.directory}/mule-${project.version}-src.zip-->
+                                    <!--</file>-->
+                                <!--</configuration>-->
+                            <!--</execution>-->
+                        <!--</executions>-->
+                    <!--</plugin>-->
+                    <!--<plugin>-->
+                        <!--<groupId>org.apache.maven.plugins</groupId>-->
+                        <!--<artifactId>maven-deploy-plugin</artifactId>-->
+                        <!--<executions>-->
+                            <!--<execution>-->
+                                <!--<phase>deploy</phase>-->
+                                <!--<goals>-->
+                                    <!--<goal>deploy-file</goal>-->
+                                <!--</goals>-->
+                                <!--<configuration>-->
+                                    <!--<packaging>jar</packaging>-->
+                                    <!--<generatePom>true</generatePom>-->
+                                    <!--<url>${project.distributionManagement.repository.url}</url>-->
+                                    <!--<artifactId>${project.artifactId}</artifactId>-->
+                                    <!--<groupId>${project.groupId}</groupId>-->
+                                    <!--<version>${project.version}</version>-->
+                                    <!--<file>${project.build.directory}/${project.artifactId}-${project.version}.jar</file>-->
+                                <!--</configuration>-->
+                            <!--</execution>-->
+                        <!--</executions>-->
+                    <!--</plugin>-->
                 </plugins>
             </build>
         </profile>
