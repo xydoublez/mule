@@ -240,11 +240,6 @@ public class MuleEventTestCase extends AbstractMuleContextTestCase {
 
     // Publisher is conserved after serialization so attempting to obtain result via before event is successful.
     assertThat(from(before.getInternalContext().getResponsePublisher()).block(), equalTo(result));
-
-    // Cache entry is removed on deserialization
-    assertThat(((Pipeline) before.getFlowConstruct()).getSerializationEventContextCache().get(before.getContext().getId()),
-               is(nullValue()));
-
   }
 
   private static class TestEventTransformer extends AbstractTransformer {

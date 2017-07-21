@@ -10,34 +10,23 @@ import static org.mule.runtime.core.api.MessageExchangePattern.REQUEST_RESPONSE;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.MessageExchangePattern;
 import org.mule.runtime.core.api.connector.DefaultReplyToHandler;
-import org.mule.runtime.core.api.construct.Pipeline;
-import org.mule.runtime.core.api.endpoint.LegacyImmutableEndpoint;
 import org.mule.runtime.core.privileged.routing.requestreply.AbstractReplyToPropertyRequestReplyReplier;
-import org.mule.runtime.core.api.construct.FlowConstruct;
+
+import java.util.Optional;
 
 public class AsyncReplyToPropertyRequestReplyReplier extends AbstractReplyToPropertyRequestReplyReplier
 {
 
-  private final FlowConstruct flowConstruct;
+  private MessageExchangePattern messageExchangePattern = REQUEST_RESPONSE;
 
-  public AsyncReplyToPropertyRequestReplyReplier(FlowConstruct flowConstruct) {
+  public AsyncReplyToPropertyRequestReplyReplier(Optional<MessageExchangePattern> messageExchangePatternOptional) {
     super();
-    this.flowConstruct = flowConstruct;
+    this.messageExchangePattern = messageExchangePatternOptional.orElse(messageExchangePattern);
   }
 
   @Override
   protected boolean shouldProcessEvent(Event event) {
-    // Only process ReplyToHandler is running one-way and standard ReplyToHandler is being used.
-    MessageExchangePattern mep = REQUEST_RESPONSE;
-    if (getFlowConstruct() instanceof Pipeline
-        && ((Pipeline) getFlowConstruct()).getSource() instanceof LegacyImmutableEndpoint) {
-      mep = ((LegacyImmutableEndpoint) ((Pipeline) getFlowConstruct()).getSource()).getExchangePattern();
-    }
-    return !mep.hasResponse() && event.getReplyToHandler() instanceof DefaultReplyToHandler;
+    return !messageExchangePattern.hasResponse() && event.getReplyToHandler() instanceof DefaultReplyToHandler;
   }
 
-  @Override
-  public FlowConstruct getFlowConstruct() {
-    return flowConstruct;
-  }
 }

@@ -168,7 +168,7 @@ public class AsyncDelegateMessageProcessorTestCase extends AbstractReactiveProce
   private AsyncDelegateMessageProcessor createAsyncDelegateMessageProcessor(Processor listener, FlowConstruct flowConstruct)
       throws Exception {
     AsyncDelegateMessageProcessor mp = new AsyncDelegateMessageProcessor(newChain(listener), "thread");
-    mp.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
+    mp.setAnnotations(getFakeComponentLocationAnnotations());
     initialiseIfNeeded(mp, true, muleContext);
     return mp;
   }

@@ -6,16 +6,12 @@
  */
 package org.mule.runtime.core.internal.routing;
 
-import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mule.runtime.api.message.Message.of;
-import static org.mule.runtime.api.meta.AbstractAnnotatedObject.LOCATION_KEY;
-import static org.mule.runtime.dsl.api.component.config.DefaultComponentLocation.fromSingleComponent;
-import static org.mule.tck.MuleTestUtils.getTestFlow;
-
+import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.core.DefaultEventContext;
@@ -24,6 +20,7 @@ import org.mule.runtime.core.api.EventContext;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.MuleSession;
 import org.mule.runtime.core.api.construct.Flow;
+import org.mule.runtime.core.api.lifecycle.LifecycleUtils;
 import org.mule.runtime.core.api.session.DefaultMuleSession;
 import org.mule.runtime.core.internal.routing.correlation.CorrelationSequenceComparator;
 import org.mule.runtime.core.internal.routing.correlation.EventCorrelatorCallback;
@@ -49,8 +46,8 @@ public class ResequencerTestCase extends AbstractMuleContextTestCase {
 
     TestEventResequencer router = new TestEventResequencer(3);
     router.setMuleContext(muleContext);
-    router.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
-    router.initialise();
+    router.setAnnotations(getFakeComponentLocationAnnotations());
+    initialiseIfNeeded(router, true, muleContext);
 
     EventContext context = DefaultEventContext.create(flow, TEST_CONNECTOR_LOCATION, "foo");
 
@@ -82,9 +79,8 @@ public class ResequencerTestCase extends AbstractMuleContextTestCase {
     assertNotNull(flow);
 
     TestEventResequencer router = new TestEventResequencer(3);
-    router.setMuleContext(muleContext);
-    router.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
-    router.initialise();
+    router.setAnnotations(getFakeComponentLocationAnnotations());
+    initialiseIfNeeded(router, true, muleContext);
 
     EventContext context = DefaultEventContext.create(flow, TEST_CONNECTOR_LOCATION, "foo");
 
@@ -102,8 +98,8 @@ public class ResequencerTestCase extends AbstractMuleContextTestCase {
     router = new TestEventResequencer(3);
     router.setMuleContext(muleContext);
     router.setEventComparator(new EventPayloadComparator());
-    router.setAnnotations(singletonMap(LOCATION_KEY, fromSingleComponent("flow")));
-    router.initialise();
+    router.setAnnotations(getFakeComponentLocationAnnotations());
+    initialiseIfNeeded(router, true, muleContext);
 
     assertNull(router.process(event2));
     assertNull(router.process(event3));

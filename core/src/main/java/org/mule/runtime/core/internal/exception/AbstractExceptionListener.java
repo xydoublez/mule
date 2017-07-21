@@ -191,8 +191,7 @@ public abstract class AbstractExceptionListener extends AbstractMessageProcessor
     }
   }
 
-  public void setStatistics(FlowConstructStatistics statistics)
-  {
+  public void setStatistics(FlowConstructStatistics statistics) {
     this.statistics = statistics;
   }
 }

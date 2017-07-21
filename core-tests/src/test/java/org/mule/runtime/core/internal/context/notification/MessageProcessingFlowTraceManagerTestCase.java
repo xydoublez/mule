@@ -341,6 +341,7 @@ public class MessageProcessingFlowTraceManagerTestCase extends AbstractMuleTestC
   protected Event buildEvent(String eventId, FlowCallStack flowStack) {
     Event event = mock(Event.class);
     when(event.getContext()).thenReturn(messageContext);
+    when(event.getInternalContext()).thenReturn(messageContext);
     when(event.getFlowCallStack()).thenReturn(flowStack);
     return event;
   }

@@ -141,15 +141,6 @@ public interface Event extends Serializable, org.mule.runtime.api.event.Event {
   MuleSession getSession();
 
   /**
-   * Retrieves the service for the current event
-   * 
-   * @return the service for the event
-   * @deprecated TODO MULE-10013 remove this
-   */
-  @Deprecated
-  FlowConstruct getFlowConstruct();
-
-  /**
    * Returns the muleContext for the Mule node that this event was received in
    * 
    * @return the muleContext for the Mule node that this event was received in
@@ -251,6 +242,15 @@ public interface Event extends Serializable, org.mule.runtime.api.event.Event {
      * @return the builder instance
      */
     Builder from(org.mule.runtime.api.event.Event event);
+
+
+    /**
+     * Sets the {@link MuleContext} of the artifact
+     *
+     * @param muleContext context of the artifact
+     * @return the builder instance
+     */
+    Event.Builder muleContext(MuleContext muleContext);
 
     /**
      * Set the {@link Message} to construct {@link Event} with.

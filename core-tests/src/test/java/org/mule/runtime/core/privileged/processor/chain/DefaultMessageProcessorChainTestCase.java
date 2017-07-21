@@ -50,7 +50,6 @@ import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.MuleSession;
 import org.mule.runtime.core.api.config.MuleConfiguration;
 import org.mule.runtime.core.api.construct.Flow;
-import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.context.MuleContextAware;
 import org.mule.runtime.core.api.exception.ErrorTypeLocator;
 import org.mule.runtime.core.api.execution.ExceptionContextProvider;
@@ -683,6 +682,7 @@ public class DefaultMessageProcessorChainTestCase extends AbstractReactiveProces
   @Test
   public void testAll() throws Exception {
     ScatterGatherRouter scatterGatherRouter = new ScatterGatherRouter();
+    scatterGatherRouter.setAnnotations(getFakeComponentLocationAnnotations());
     scatterGatherRouter.addRoute(getAppendingMP("1"));
     scatterGatherRouter.addRoute(getAppendingMP("2"));
     scatterGatherRouter.addRoute(getAppendingMP("3"));
@@ -704,10 +704,12 @@ public class DefaultMessageProcessorChainTestCase extends AbstractReactiveProces
   @Test
   public void testChoice() throws Exception {
     ChoiceRouter choiceRouter = new ChoiceRouter();
+    choiceRouter.setAnnotations(getFakeComponentLocationAnnotations());
     choiceRouter.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
     choiceRouter.addRoute("true", newChain(getAppendingMP("1")));
     choiceRouter.addRoute("true", newChain(getAppendingMP("2")));
     choiceRouter.addRoute("true", newChain(getAppendingMP("3")));
+    initialiseIfNeeded(choiceRouter, muleContext);
 
     assertThat(process(newChain(choiceRouter), getTestEventUsingFlow("0")).getMessage().getPayload().getValue(), equalTo("01"));
   }
@@ -995,6 +997,7 @@ public class DefaultMessageProcessorChainTestCase extends AbstractReactiveProces
     when(event.getSession()).thenReturn(mock(MuleSession.class));
     when(event.getError()).thenReturn(empty());
     when(event.getContext()).thenReturn(eventContext);
+    when(event.getInternalContext()).thenReturn(eventContext);
     return event;
   }
 

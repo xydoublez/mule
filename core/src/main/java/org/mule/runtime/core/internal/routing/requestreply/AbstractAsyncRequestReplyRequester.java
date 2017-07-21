@@ -365,7 +365,7 @@ public abstract class AbstractAsyncRequestReplyRequester extends AbstractInterce
     MultipleEvent multipleEvent = (MultipleEvent) store.retrieve(correlationId);
     Event event = multipleEvent.getEvent();
     // TODO MULE-10302 remove this.
-    if (event.getFlowConstruct() == null) {
+    if (event.getMuleContext() == null) {
       try {
         DeserializationPostInitialisable.Implementation.init(event, muleContext);
       } catch (Exception e) {

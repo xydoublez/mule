@@ -6,7 +6,6 @@
  */
 package org.mule.runtime.core.internal.routing;
 
-import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
@@ -15,13 +14,13 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mule.runtime.api.message.Message.of;
-import static org.mule.runtime.api.meta.AbstractAnnotatedObject.LOCATION_KEY;
+import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
+import org.mule.runtime.api.event.GroupCorrelation;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.core.DefaultEventContext;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.EventContext;
 import org.mule.runtime.core.api.construct.Flow;
-import org.mule.runtime.api.event.GroupCorrelation;
 import org.mule.runtime.core.internal.message.InternalMessage;
 import org.mule.tck.SensingNullMessageProcessor;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
@@ -47,9 +46,8 @@ public class SimpleCollectionAggregatorTestCase extends AbstractMuleContextTestC
     SimpleCollectionAggregator router = new SimpleCollectionAggregator();
     SensingNullMessageProcessor sensingMessageProcessor = getSensingNullMessageProcessor();
     router.setListener(sensingMessageProcessor);
-    router.setMuleContext(muleContext);
-    router.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
-    router.initialise();
+    router.setAnnotations(getFakeComponentLocationAnnotations());
+    initialiseIfNeeded(router, true, muleContext);
 
     EventContext executionContext = DefaultEventContext.create(flow, TEST_CONNECTOR_LOCATION, "foo");
 
@@ -93,8 +91,8 @@ public class SimpleCollectionAggregatorTestCase extends AbstractMuleContextTestC
     SensingNullMessageProcessor sensingMessageProcessor = getSensingNullMessageProcessor();
     router.setListener(sensingMessageProcessor);
     router.setMuleContext(muleContext);
-    router.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
-    router.initialise();
+    router.setAnnotations(getFakeComponentLocationAnnotations());
+    initialiseIfNeeded(router, true, muleContext);
 
     EventContext executionContext = DefaultEventContext.create(flow, TEST_CONNECTOR_LOCATION, "foo");
     Message message1 = of("test event A");
@@ -122,8 +120,8 @@ public class SimpleCollectionAggregatorTestCase extends AbstractMuleContextTestC
 
     SimpleCollectionAggregator router = new SimpleCollectionAggregator();
     router.setMuleContext(muleContext);
-    router.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
-    router.initialise();
+    router.setAnnotations(getFakeComponentLocationAnnotations());
+    initialiseIfNeeded(router, true, muleContext);
 
     EventContext executionContext = DefaultEventContext.create(flow, TEST_CONNECTOR_LOCATION, "foo");
 

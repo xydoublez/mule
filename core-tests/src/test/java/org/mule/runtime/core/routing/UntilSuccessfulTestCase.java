@@ -8,7 +8,6 @@ package org.mule.runtime.core.routing;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -17,7 +16,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mule.runtime.api.message.Message.of;
-import static org.mule.runtime.api.meta.AbstractAnnotatedObject.LOCATION_KEY;
 import static org.mule.runtime.core.api.transaction.TransactionCoordination.getInstance;
 
 import org.mule.runtime.api.exception.MuleException;
@@ -99,17 +97,15 @@ public class UntilSuccessfulTestCase extends AbstractMuleContextTestCase {
 
   private UntilSuccessful buildUntilSuccessful(Long millisBetweenRetries) throws Exception {
     UntilSuccessful untilSuccessful = new UntilSuccessful();
-    untilSuccessful.setMuleContext(muleContext);
-    untilSuccessful.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
     untilSuccessful.setMaxRetries(2);
-
+    untilSuccessful.setAnnotations(getFakeComponentLocationAnnotations());
     if (millisBetweenRetries != null) {
       untilSuccessful.setMillisBetweenRetries(millisBetweenRetries);
     }
 
     targetMessageProcessor = new ConfigurableMessageProcessor();
     untilSuccessful.setMessageProcessors(singletonList(targetMessageProcessor));
-
+    muleContext.getInjector().inject(untilSuccessful);
     return untilSuccessful;
   }
 
@@ -199,7 +195,6 @@ public class UntilSuccessfulTestCase extends AbstractMuleContextTestCase {
   @Test
   public void testDefaultMillisWait() throws Exception {
     untilSuccessful = buildUntilSuccessful(null);
-    untilSuccessful.setMuleContext(muleContext);
     untilSuccessful.initialise();
     untilSuccessful.start();
     assertEquals(60 * 1000, untilSuccessful.getMillisBetweenRetries());
@@ -221,6 +216,5 @@ public class UntilSuccessfulTestCase extends AbstractMuleContextTestCase {
   public static Collection<Boolean> modeParameters() {
     return asList(new Boolean[] {Boolean.TRUE, Boolean.FALSE});
   }
-
 
 }

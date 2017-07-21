@@ -153,7 +153,7 @@ public class DefaultInterceptionEvent implements InternalInterceptionEvent {
     final Event newEvent = interceptedOutput.build();
     if (interceptedInput != newEvent) {
       interceptedInput = newEvent;
-      interceptedOutput = Event.builder(interceptedInput).removeParameter(INTERCEPTION_RESOLVED_PARAMS);
+      interceptedOutput = Event.builder(interceptedInput).removeInternalParameter(INTERCEPTION_RESOLVED_PARAMS);
     }
     return interceptedInput;
   }

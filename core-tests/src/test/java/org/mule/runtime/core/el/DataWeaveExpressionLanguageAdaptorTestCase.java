@@ -40,6 +40,7 @@ import static org.mule.runtime.core.el.BindingContextUtils.VARS;
 import static org.mule.runtime.core.el.DataWeaveExpressionLanguageAdaptor.FLOW;
 import static org.mule.runtime.dsl.api.component.config.DefaultComponentLocation.fromSingleComponent;
 import static org.mule.runtime.internal.el.BindingContextUtils.AUTHENTICATION;
+import static org.mule.runtime.internal.el.BindingContextUtils.VARIABLES;
 import static org.mule.test.allure.AllureConstants.ExpressionLanguageFeature.EXPRESSION_LANGUAGE;
 import static org.mule.test.allure.AllureConstants.ExpressionLanguageFeature.ExpressionLanguageStory.SUPPORT_DW;
 import org.mule.runtime.api.el.BindingContext;
@@ -51,6 +52,7 @@ import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.metadata.DataType;
 import org.mule.runtime.api.metadata.TypedValue;
 import org.mule.runtime.api.security.Authentication;
+import org.mule.runtime.api.security.SecurityContext;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.MuleManifest;
@@ -58,10 +60,10 @@ import org.mule.runtime.core.api.expression.ExpressionRuntimeException;
 import org.mule.runtime.core.api.message.BaseAttributes;
 import org.mule.runtime.core.api.security.DefaultMuleAuthentication;
 import org.mule.runtime.core.api.security.DefaultMuleCredentials;
-import org.mule.runtime.api.security.SecurityContext;
 import org.mule.runtime.core.internal.message.InternalMessage;
 import org.mule.runtime.core.security.DefaultSecurityContext;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
 import java.util.HashMap;
@@ -193,8 +195,8 @@ public class DataWeaveExpressionLanguageAdaptorTestCase extends AbstractWeaveExp
     String var2 = "var2";
     when(event.getVariables().keySet()).thenReturn(Sets.newHashSet(var1, var2));
     TypedValue varValue = new TypedValue<>(null, OBJECT);
-    when(event.getVariables().get(var1)).thenReturn(varValue);
-    when(event.getVariables().get(var2)).thenReturn(varValue);
+    when(event.getVariables()).thenReturn(ImmutableMap.<String, TypedValue<?>>builder()
+        .put(var1, varValue).put(var2, varValue).build());
 
     TypedValue result = expressionLanguage.evaluate(VARS, event, BindingContext.builder().build());
     assertThat(result.getValue(), is(instanceOf(Map.class)));
@@ -208,7 +210,9 @@ public class DataWeaveExpressionLanguageAdaptorTestCase extends AbstractWeaveExp
     HashSet<String> variables = Sets.newHashSet(PAYLOAD, ATTRIBUTES, ERROR, VARS, FLOW);
     when(event.getVariables().keySet()).thenReturn(variables);
     TypedValue<String> varValue = new TypedValue<>("", STRING);
-    variables.forEach(var -> doReturn(varValue).when(event).getVariables().get(var));
+    when(event.getVariables()).thenReturn(ImmutableMap.<String, TypedValue<?>>builder()
+        .put(PAYLOAD, varValue).put(ATTRIBUTES, varValue).put(ERROR, varValue).put(VARIABLES, varValue).put(FLOW, varValue)
+        .build());
     String flowName = "myFlowName";
 
     assertThat(expressionLanguage.evaluate(PAYLOAD, event, BindingContext.builder().build()).getValue(), is(TEST_PAYLOAD));
