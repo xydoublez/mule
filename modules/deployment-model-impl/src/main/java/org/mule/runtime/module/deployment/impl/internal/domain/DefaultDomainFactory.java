@@ -14,6 +14,7 @@ import static org.mule.runtime.deployment.model.api.domain.DomainDescriptor.DEFA
 import static org.mule.runtime.deployment.model.internal.DefaultRegionPluginClassLoadersFactory.PLUGIN_CLASSLOADER_IDENTIFIER;
 import static org.mule.runtime.deployment.model.internal.DefaultRegionPluginClassLoadersFactory.getArtifactPluginId;
 import static org.mule.runtime.module.reboot.api.MuleContainerBootstrapUtils.getMuleDomainsDir;
+import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.deployment.model.api.domain.Domain;
 import org.mule.runtime.deployment.model.api.domain.DomainDescriptor;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPlugin;
@@ -45,13 +46,14 @@ public class DefaultDomainFactory implements ArtifactFactory<Domain> {
 
   /**
    * Creates a new domain factory
-   *  @param domainDescriptorFactory creates descriptors for the new domains. Non null.
-   * @param domainManager tracks the domains deployed on the container. Non null.
-   * @param classLoaderRepository contains all the class loaders in the container. Non null.
-   * @param serviceRepository repository of available services. Non null.
-   * @param pluginDependenciesResolver resolver for the plugins on which the {@code artifactPluginDescriptor} declares it depends. Non null.
+   *
+   * @param domainDescriptorFactory         creates descriptors for the new domains. Non null.
+   * @param domainManager                   tracks the domains deployed on the container. Non null.
+   * @param classLoaderRepository           contains all the class loaders in the container. Non null.
+   * @param serviceRepository               repository of available services. Non null.
+   * @param pluginDependenciesResolver      resolver for the plugins on which the {@code artifactPluginDescriptor} declares it depends. Non null.
    * @param domainClassLoaderBuilderFactory creates builders to build the classloaders for each domain. Non null.
-   * @param extensionModelLoaderManager
+   * @param extensionModelLoaderManager     manager capable of resolve {@link ExtensionModel extension models}. Non null.
    */
   public DefaultDomainFactory(DomainDescriptorFactory domainDescriptorFactory,
                               DomainManager domainManager,
@@ -59,12 +61,12 @@ public class DefaultDomainFactory implements ArtifactFactory<Domain> {
                               PluginDependenciesResolver pluginDependenciesResolver,
                               DomainClassLoaderBuilderFactory domainClassLoaderBuilderFactory,
                               ExtensionModelLoaderManager extensionModelLoaderManager) {
-    this.extensionModelLoaderManager = extensionModelLoaderManager;
     checkArgument(domainDescriptorFactory != null, "domainDescriptorFactory cannot be null");
     checkArgument(domainManager != null, "Domain manager cannot be null");
     checkArgument(serviceRepository != null, "Service repository cannot be null");
     checkArgument(pluginDependenciesResolver != null, "pluginDependenciesResolver cannot be null");
     checkArgument(domainClassLoaderBuilderFactory != null, "domainClassLoaderBuilderFactory cannot be null");
+    checkArgument(extensionModelLoaderManager != null, "extensionModelLoaderManager cannot be null");
 
     this.classLoaderRepository = classLoaderRepository;
     this.domainDescriptorFactory = domainDescriptorFactory;
@@ -72,6 +74,7 @@ public class DefaultDomainFactory implements ArtifactFactory<Domain> {
     this.serviceRepository = serviceRepository;
     this.pluginDependenciesResolver = pluginDependenciesResolver;
     this.domainClassLoaderBuilderFactory = domainClassLoaderBuilderFactory;
+    this.extensionModelLoaderManager = extensionModelLoaderManager;
   }
 
   @Override

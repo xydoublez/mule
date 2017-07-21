@@ -24,6 +24,14 @@ import org.mule.runtime.core.api.retry.policy.RetryPolicyTemplate;
 import org.mule.runtime.extension.api.runtime.ConfigurationInstance;
 import org.slf4j.Logger;
 
+/**
+ * {@link ConnectionManager} implementation which composes two {@link ConnectionManager} in a hierarchy manner.
+ * <p>
+ * If the this manager can't process a request with the {@link CompositeConnectionManager#childConnectionManager},
+ * it will fallback to the {@link CompositeConnectionManager#parentConnectionManager}
+ *
+ * @since 4.0
+ */
 public class CompositeConnectionManager implements ConnectionManager, Lifecycle, ConnectionManagerAdapter {
 
   private static final Logger LOGGER = getLogger(CompositeConnectionManager.class);
@@ -31,10 +39,101 @@ public class CompositeConnectionManager implements ConnectionManager, Lifecycle,
   private final ConnectionManagerAdapter childConnectionManager;
   private final ConnectionManagerAdapter parentConnectionManager;
 
+  /**
+   * Creates a new instance of {@link CompositeConnectionManager}
+   *
+   * @param childConnectionManager  {@link ConnectionManager} that is considered as the main one
+   * @param parentConnectionManager {@link ConnectionManager} that is considered as the secondary one, is a request
+   *                                can't be handled by the default, this one will be used
+   */
   public CompositeConnectionManager(ConnectionManagerAdapter childConnectionManager,
                                     ConnectionManagerAdapter parentConnectionManager) {
     this.childConnectionManager = childConnectionManager;
     this.parentConnectionManager = parentConnectionManager;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public <C> void bind(Object config, ConnectionProvider<C> connectionProvider) {
+    childConnectionManager.bind(config, connectionProvider);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean hasBinding(Object config) {
+    return childConnectionManager.hasBinding(config) || parentConnectionManager.hasBinding(config);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void unbind(Object config) {
+    if (childConnectionManager.hasBinding(config)) {
+      childConnectionManager.unbind(config);
+    } else if (parentConnectionManager.hasBinding(config)) {
+      parentConnectionManager.unbind(config);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public <C> ConnectionHandler<C> getConnection(Object config) throws ConnectionException {
+    return childConnectionManager.hasBinding(config) ? childConnectionManager.getConnection(config)
+        : parentConnectionManager.getConnection(config);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public <C> ConnectionValidationResult testConnectivity(ConnectionProvider<C> connectionProvider) {
+    return childConnectionManager.testConnectivity(connectionProvider);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public ConnectionValidationResult testConnectivity(ConfigurationInstance configurationInstance)
+      throws IllegalArgumentException {
+    Object value = configurationInstance.getValue();
+
+    if (childConnectionManager.hasBinding(value)) {
+      return childConnectionManager.testConnectivity(configurationInstance);
+    } else {
+      return parentConnectionManager.testConnectivity(configurationInstance);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public RetryPolicyTemplate getDefaultRetryPolicyTemplate() {
+    return childConnectionManager.getDefaultRetryPolicyTemplate();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public <C> RetryPolicyTemplate getRetryTemplateFor(ConnectionProvider<C> connectionProvider) {
+    return childConnectionManager.getRetryTemplateFor(connectionProvider);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public PoolingProfile getDefaultPoolingProfile() {
+    return childConnectionManager.getDefaultPoolingProfile();
   }
 
   @Override
@@ -55,56 +154,5 @@ public class CompositeConnectionManager implements ConnectionManager, Lifecycle,
   @Override
   public void stop() throws MuleException {
     stopIfNeeded(childConnectionManager);
-  }
-
-  @Override
-  public <C> void bind(Object config, ConnectionProvider<C> connectionProvider) {
-    childConnectionManager.bind(config, connectionProvider);
-  }
-
-  @Override
-  public boolean hasBinding(Object config) {
-    return childConnectionManager.hasBinding(config) || parentConnectionManager.hasBinding(config);
-  }
-
-  @Override
-  public void unbind(Object config) {
-    if (childConnectionManager.hasBinding(config)) {
-      childConnectionManager.unbind(config);
-    } else if (parentConnectionManager.hasBinding(config)) {
-      parentConnectionManager.unbind(config);
-    }
-  }
-
-  @Override
-  public <C> ConnectionHandler<C> getConnection(Object config) throws ConnectionException {
-    return childConnectionManager.hasBinding(config) ? childConnectionManager.getConnection(config)
-        : parentConnectionManager.getConnection(config);
-  }
-
-  @Override
-  public <C> ConnectionValidationResult testConnectivity(ConnectionProvider<C> connectionProvider) {
-    return childConnectionManager.testConnectivity(connectionProvider);
-  }
-
-  @Override
-  public ConnectionValidationResult testConnectivity(ConfigurationInstance configurationInstance)
-      throws IllegalArgumentException {
-    return childConnectionManager.testConnectivity(configurationInstance);
-  }
-
-  @Override
-  public RetryPolicyTemplate getDefaultRetryPolicyTemplate() {
-    return childConnectionManager.getDefaultRetryPolicyTemplate();
-  }
-
-  @Override
-  public <C> RetryPolicyTemplate getRetryTemplateFor(ConnectionProvider<C> connectionProvider) {
-    return childConnectionManager.getDefaultRetryPolicyTemplate();
-  }
-
-  @Override
-  public PoolingProfile getDefaultPoolingProfile() {
-    return childConnectionManager.getDefaultPoolingProfile();
   }
 }

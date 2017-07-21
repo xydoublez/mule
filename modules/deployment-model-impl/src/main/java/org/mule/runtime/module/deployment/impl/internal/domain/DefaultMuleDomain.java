@@ -50,11 +50,11 @@ public class DefaultMuleDomain implements Domain {
   private final DomainDescriptor descriptor;
   private final ServiceRepository serviceRepository;
   private final List<ArtifactPlugin> artifactPlugins;
-  private ExtensionModelLoaderManager extensionModelLoaderManager;
-  private MuleContextListener muleContextListener;
-  private ArtifactClassLoader deploymentClassLoader;
+  private final ExtensionModelLoaderManager extensionModelLoaderManager;
   private final ClassLoaderRepository classLoaderRepository;
+  private final ArtifactClassLoader deploymentClassLoader;
 
+  private MuleContextListener muleContextListener;
   private ArtifactContext artifactContext;
 
   public DefaultMuleDomain(DomainDescriptor descriptor, ArtifactClassLoader deploymentClassLoader,
@@ -115,7 +115,6 @@ public class DefaultMuleDomain implements Domain {
     }
   }
 
-
   @Override
   public void init() {
     doInit(false);
@@ -138,7 +137,9 @@ public class DefaultMuleDomain implements Domain {
           .setArtifactInstallationDirectory(new File(MuleContainerBootstrapUtils.getMuleDomainsDir(), getArtifactName()))
           .setExtensionModelLoaderRepository(extensionModelLoaderManager)
           .setArtifactType(DOMAIN)
-          .setEnableLazyInit(lazy).setClassLoaderRepository(classLoaderRepository).setServiceRepository(serviceRepository);
+          .setEnableLazyInit(lazy)
+          .setClassLoaderRepository(classLoaderRepository)
+          .setServiceRepository(serviceRepository);
 
       if (descriptor.getAbsoluteResourcePaths().length > 0) {
         validateConfigurationFileDoNotUsesCoreNamespace();
