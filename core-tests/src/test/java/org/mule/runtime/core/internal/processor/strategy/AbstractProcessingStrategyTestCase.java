@@ -28,7 +28,6 @@ import static reactor.core.Exceptions.bubble;
 import static reactor.core.publisher.Flux.from;
 import static reactor.core.publisher.Mono.just;
 import static reactor.core.scheduler.Schedulers.fromExecutorService;
-
 import org.mule.runtime.api.component.location.ComponentLocation;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.meta.AbstractAnnotatedObject;
@@ -175,7 +174,8 @@ public abstract class AbstractProcessingStrategyTestCase extends AbstractReactiv
 
   @Override
   protected Event.Builder getEventBuilder() throws MuleException {
-    return Event.builder(create(flowBuilder.get().build(), TEST_CONNECTOR_LOCATION));
+    return Event
+        .builder(create(muleContext.getUniqueIdString(), muleContext.getConfiguration().getId(), TEST_CONNECTOR_LOCATION));
   }
 
   protected abstract ProcessingStrategy createProcessingStrategy(MuleContext muleContext, String schedulersNamePrefix);

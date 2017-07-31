@@ -118,11 +118,11 @@ public class ChoiceRouterTestCase extends AbstractReactiveProcessorTestCase {
   }
 
   protected Event fooEvent() throws MuleException {
-    return eventBuilder().message(of("foo")).build();
+    return eventBuilder().muleContext(muleContext).message(of("foo")).build();
   }
 
   protected Event zapEvent() throws MuleException {
-    return eventBuilder().message(of("zap")).build();
+    return eventBuilder().muleContext(muleContext).message(of("zap")).build();
   }
 
   @Test

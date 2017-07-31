@@ -122,7 +122,7 @@ public class SplitterTestCase extends AbstractMuleContextTestCase {
     Splitter splitter = new Splitter();
     splitter.setMuleContext(muleContext);
     splitter.initialise();
-    Event event = eventBuilder().message(toSplit).session(session).build();
+    Event event = eventBuilder().muleContext(muleContext).message(toSplit).session(session).build();
     assertSame(event, splitter.process(event));
   }
 
@@ -162,7 +162,7 @@ public class SplitterTestCase extends AbstractMuleContextTestCase {
     splitter.setListener(grabber);
     splitter.initialise();
 
-    final Builder eventBuilder = eventBuilder().message(toSplit).session(session);
+    final Builder eventBuilder = eventBuilder().muleContext(muleContext).message(toSplit).session(session);
     for (Map.Entry<String, Object> entry : invocationProps.entrySet()) {
       eventBuilder.addVariable(entry.getKey(), entry.getValue());
     }

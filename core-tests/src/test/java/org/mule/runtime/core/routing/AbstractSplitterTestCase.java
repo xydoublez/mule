@@ -54,7 +54,7 @@ public class AbstractSplitterTestCase extends AbstractMuleContextTestCase {
     fruitBowl.addFruit(banana);
     fruitBowl.addFruit(orange);
 
-    final Event inEvent = eventBuilder().message(of(fruitBowl)).build();
+    final Event inEvent = eventBuilder().muleContext(muleContext).message(of(fruitBowl)).build();
 
     Event resultEvent = splitter.process(inEvent);
 
@@ -89,7 +89,7 @@ public class AbstractSplitterTestCase extends AbstractMuleContextTestCase {
     fruitBowl.addFruit(banana);
     fruitBowl.addFruit(orange);
 
-    final Event inEvent = eventBuilder().message(of(fruitBowl)).build();
+    final Event inEvent = eventBuilder().muleContext(muleContext).message(of(fruitBowl)).build();
 
     Event resultEvent = splitter.process(inEvent);
 
@@ -112,7 +112,7 @@ public class AbstractSplitterTestCase extends AbstractMuleContextTestCase {
     fruitBowl.addFruit(banana);
     fruitBowl.addFruit(orange);
 
-    final Event inEvent = eventBuilder().message(of(fruitBowl)).build();
+    final Event inEvent = eventBuilder().muleContext(muleContext).message(of(fruitBowl)).build();
 
     expected.expect(MessagingException.class);
     expected.expectMessage("Expected");

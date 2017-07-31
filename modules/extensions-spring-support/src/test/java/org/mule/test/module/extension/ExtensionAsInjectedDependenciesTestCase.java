@@ -51,7 +51,7 @@ public class ExtensionAsInjectedDependenciesTestCase extends AbstractExtensionFu
     assertCorrectProviderInjected(DYNAMIC_AGE_HEISENBERG, dependent.getDynamicAgeHeisenberg());
 
     final int age = 52;
-    Event event = eventBuilder().message(of("")).addVariable("age", age).build();
+    Event event = eventBuilder().muleContext(muleContext).message(of("")).addVariable("age", age).build();
 
     HeisenbergExtension heisenberg = ExtensionsTestUtils.getConfigurationFromRegistry(DYNAMIC_AGE_HEISENBERG, event, muleContext);
     assertThat(heisenberg.getPersonalInfo().getAge(), is(age));

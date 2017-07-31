@@ -42,7 +42,7 @@ public class SHA256MuleEventKeyGeneratorTestCase extends AbstractMuleContextTest
 
   @Test
   public void generatesKeyApplyingSHA256ToPayload() throws Exception {
-    String key = keyGenerator.generateKey(eventBuilder().message(of(TEST_INPUT)).build());
+    String key = keyGenerator.generateKey(eventBuilder().muleContext(muleContext).message(of(TEST_INPUT)).build());
     assertEquals(TEST_HASH, key);
   }
 

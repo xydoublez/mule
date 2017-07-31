@@ -108,8 +108,7 @@ public class SimpleAsyncRequestReplyRequester extends AbstractAsyncRequestReplyR
 
     private final MessageSource source;
 
-    public AsyncReplyToPropertyRequestReplyReplier(MessageSource source)
-    {
+    public AsyncReplyToPropertyRequestReplyReplier(MessageSource source) {
       this.source = source;
     }
 

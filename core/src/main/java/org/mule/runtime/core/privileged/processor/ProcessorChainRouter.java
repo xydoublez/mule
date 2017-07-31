@@ -23,7 +23,7 @@ import org.mule.runtime.core.api.lifecycle.LifecycleUtils;
 import org.mule.runtime.core.api.processor.MessageProcessorBuilder;
 import org.mule.runtime.core.api.processor.MessageProcessorChain;
 import org.mule.runtime.core.api.processor.Processor;
-import org.mule.runtime.core.processor.chain.ExplicitMessageProcessorChainBuilder;
+import org.mule.runtime.core.internal.processor.chain.ExplicitMessageProcessorChainBuilder;
 
 import java.util.List;
 

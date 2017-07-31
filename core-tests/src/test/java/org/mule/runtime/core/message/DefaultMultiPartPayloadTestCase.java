@@ -158,7 +158,7 @@ public class DefaultMultiPartPayloadTestCase extends AbstractMuleContextTestCase
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
-    setCurrentEvent(eventBuilder().message(message).build());
+    setCurrentEvent(eventBuilder().muleContext(muleContext).message(message).build());
     oos.writeObject(message);
     oos.flush();
     ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
@@ -187,7 +187,7 @@ public class DefaultMultiPartPayloadTestCase extends AbstractMuleContextTestCase
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
-    setCurrentEvent(eventBuilder().message(message).build());
+    setCurrentEvent(eventBuilder().muleContext(muleContext).message(message).build());
     oos.writeObject(message);
     oos.flush();
     ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));

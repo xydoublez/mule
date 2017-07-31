@@ -129,7 +129,8 @@ public class UntilSuccessfulTestCase extends AbstractMuleContextTestCase {
     untilSuccessful.initialise();
     untilSuccessful.start();
 
-    final Event testEvent = eventBuilder().message(of(new ByteArrayInputStream("test_data".getBytes()))).build();
+    final Event testEvent =
+        eventBuilder().muleContext(muleContext).message(of(new ByteArrayInputStream("test_data".getBytes()))).build();
     assertSame(testEvent.getMessage(), untilSuccessful.process(testEvent).getMessage());
     assertTargetEventReceived(testEvent);
   }
@@ -152,7 +153,7 @@ public class UntilSuccessfulTestCase extends AbstractMuleContextTestCase {
     untilSuccessful.initialise();
     untilSuccessful.start();
 
-    final Event testEvent = eventBuilder().message(of("ERROR")).build();
+    final Event testEvent = eventBuilder().muleContext(muleContext).message(of("ERROR")).build();
     expected.expect(MessagingException.class);
     expected.expectCause(instanceOf(RetryPolicyExhaustedException.class));
     try {
@@ -169,7 +170,7 @@ public class UntilSuccessfulTestCase extends AbstractMuleContextTestCase {
     untilSuccessful.initialise();
     untilSuccessful.start();
 
-    final Event testEvent = eventBuilder().message(of("ERROR")).build();
+    final Event testEvent = eventBuilder().muleContext(muleContext).message(of("ERROR")).build();
     expected.expect(MessagingException.class);
     expected.expectCause(instanceOf(RetryPolicyExhaustedException.class));
     try {
@@ -186,7 +187,7 @@ public class UntilSuccessfulTestCase extends AbstractMuleContextTestCase {
     untilSuccessful.initialise();
     untilSuccessful.start();
 
-    final Event testEvent = eventBuilder().message(of("ERROR")).build();
+    final Event testEvent = eventBuilder().muleContext(muleContext).message(of("ERROR")).build();
     assertSame(testEvent.getMessage(), untilSuccessful.process(testEvent).getMessage());
     assertTargetEventReceived(testEvent);
     assertEquals(targetMessageProcessor.getEventCount(), untilSuccessful.getMaxRetries() + 1);

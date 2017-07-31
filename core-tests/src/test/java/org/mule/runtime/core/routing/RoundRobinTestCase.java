@@ -84,7 +84,7 @@ public class RoundRobinTestCase extends AbstractMuleContextTestCase {
 
     Message message = of(singletonList(TEST_MESSAGE));
 
-    roundRobin.process(eventBuilder().message(message).build());
+    roundRobin.process(eventBuilder().muleContext(muleContext).message(message).build());
 
     verify(route1).apply(any(Publisher.class));
     verify(route2, never()).apply(any(Publisher.class));

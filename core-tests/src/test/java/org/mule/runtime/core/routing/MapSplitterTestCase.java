@@ -45,7 +45,7 @@ public class MapSplitterTestCase extends AbstractMuleContextTestCase {
     testMap.put("2", "two");
     testMap.put("3", "three");
 
-    mapSplitter.process(eventBuilder().message(of(testMap)).build());
+    mapSplitter.process(eventBuilder().muleContext(muleContext).message(of(testMap)).build());
 
     assertThat(splitPayloads, hasSize(3));
     assertThat(splitPayloads.get(0), instanceOf(Map.Entry.class));

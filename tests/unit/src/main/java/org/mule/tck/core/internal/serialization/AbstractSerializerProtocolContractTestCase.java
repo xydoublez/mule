@@ -68,7 +68,7 @@ public abstract class AbstractSerializerProtocolContractTestCase extends Abstrac
     DateTime dateTime = new DateTime(calendar, locale);
     dateTime.changeTimeZone("Pacific/Midway");
 
-    Event event = eventBuilder().message(of(dateTime)).build();
+    Event event = eventBuilder().muleContext(muleContext).message(of(dateTime)).build();
     byte[] bytes = serializationProtocol.serialize(event.getMessage());
 
     InternalMessage message = serializationProtocol.deserialize(bytes);

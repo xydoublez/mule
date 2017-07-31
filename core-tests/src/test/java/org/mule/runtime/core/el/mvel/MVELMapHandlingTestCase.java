@@ -52,7 +52,7 @@ public class MVELMapHandlingTestCase extends AbstractMuleContextTestCase {
     Map<String, String> payload = new HashMap<>();
     payload.put(KEY, VALUE);
 
-    Event event = eventBuilder().message(of(payload)).build();
+    Event event = eventBuilder().muleContext(muleContext).message(of(payload)).build();
 
     assertMapKey(event, KEY, VALUE);
     payload.remove(KEY);
@@ -63,7 +63,7 @@ public class MVELMapHandlingTestCase extends AbstractMuleContextTestCase {
   public void nullKeyWhichGetsValueLater() throws Exception {
     Map<String, String> payload = new HashMap<>();
 
-    Event event = eventBuilder().message(of(payload)).build();
+    Event event = eventBuilder().muleContext(muleContext).message(of(payload)).build();
 
     assertMapKey(event, KEY, null);
 
@@ -72,7 +72,7 @@ public class MVELMapHandlingTestCase extends AbstractMuleContextTestCase {
   }
 
   private void assertMapKey(Object payload, String key, Object expectedValue) throws Exception {
-    assertMapKey(eventBuilder().message(of(payload)).build(), key, expectedValue);
+    assertMapKey(eventBuilder().muleContext(muleContext).message(of(payload)).build(), key, expectedValue);
   }
 
   private void assertMapKey(Event event, String key, Object expectedValue) throws Exception {

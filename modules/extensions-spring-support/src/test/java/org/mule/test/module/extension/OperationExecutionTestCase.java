@@ -525,6 +525,6 @@ public class OperationExecutionTestCase extends AbstractExtensionFunctionalTestC
 
   private HeisenbergExtension getConfig(String name) throws Exception {
     return ExtensionsTestUtils
-        .getConfigurationFromRegistry(name, eventBuilder().message(of(EMPTY_STRING)).build(), muleContext);
+        .getConfigurationFromRegistry(name, eventBuilder().muleContext(muleContext).message(of(EMPTY_STRING)).build(), muleContext);
   }
 }

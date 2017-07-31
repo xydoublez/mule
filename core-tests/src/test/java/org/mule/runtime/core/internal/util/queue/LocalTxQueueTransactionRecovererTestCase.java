@@ -77,7 +77,7 @@ public class LocalTxQueueTransactionRecovererTestCase extends AbstractMuleContex
   @Test
   public void pollAndFailThenRecoverWithTwoElements() throws Exception {
     final String MESSAGE_CONTENT_2 = TEST_PAYLOAD + "2";
-    Event testEvent2 = eventBuilder().message(of(MESSAGE_CONTENT_2)).build();
+    Event testEvent2 = eventBuilder().muleContext(muleContext).message(of(MESSAGE_CONTENT_2)).build();
 
     inQueue.offer(testEvent(), 0, TIMEOUT);
     inQueue.offer(testEvent2, 0, TIMEOUT);

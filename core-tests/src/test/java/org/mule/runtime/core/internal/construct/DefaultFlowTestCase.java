@@ -145,7 +145,7 @@ public class DefaultFlowTestCase extends AbstractFlowConstructTestCase {
   public void testProcessOneWayEndpoint() throws Exception {
     flow.initialise();
     flow.start();
-    Event event = eventBuilder()
+    Event event = eventBuilder().muleContext(muleContext)
         .message(of(TEST_PAYLOAD))
         .build();
     Event response = triggerFunction.apply(directInboundMessageSource.getListener(), event);

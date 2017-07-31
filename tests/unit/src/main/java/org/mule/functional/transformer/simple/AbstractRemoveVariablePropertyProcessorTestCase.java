@@ -73,7 +73,7 @@ public abstract class AbstractRemoveVariablePropertyProcessorTestCase extends Ab
   }
 
   protected Event createTestEvent(final Message message) throws MuleException {
-    return eventBuilder().message(message).build();
+    return eventBuilder().muleContext(muleContext).message(message).build();
   }
 
   @Test

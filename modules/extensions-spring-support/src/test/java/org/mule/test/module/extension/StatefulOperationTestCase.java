@@ -57,7 +57,7 @@ public class StatefulOperationTestCase extends AbstractExtensionFunctionalTestCa
   }
 
   private void assertRemainingMoney(String configName, String name, long expectedAmount) throws Exception {
-    Event event = eventBuilder().message(of("")).addVariable("myName", name).build();
+    Event event = eventBuilder().muleContext(muleContext).message(of("")).addVariable("myName", name).build();
 
     HeisenbergExtension heisenbergExtension = ExtensionsTestUtils.getConfigurationFromRegistry(configName, event, muleContext);
     assertThat(heisenbergExtension.getMoney(), equalTo(BigDecimal.valueOf(expectedAmount)));

@@ -89,7 +89,7 @@ public class CustomJavaSerializationProtocolTestCase extends AbstractSerializerP
     final Object payload = echoTestClass.newInstance();
     setObjectName(payload);
 
-    Event event = eventBuilder().message(of(payload)).build();
+    Event event = eventBuilder().muleContext(muleContext).message(of(payload)).build();
     byte[] bytes = serializationProtocol.serialize(event.getMessage());
 
     InternalMessage message = serializationProtocol.deserialize(bytes);

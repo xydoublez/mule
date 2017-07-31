@@ -16,7 +16,6 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 import static org.mule.runtime.api.message.Message.of;
 import static org.mule.tck.MuleTestUtils.createErrorMock;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.message.Error;
 import org.mule.runtime.api.message.Message;
@@ -72,13 +71,15 @@ public class FirstSuccessfulTestCase extends AbstractMuleContextTestCase {
     fs.setFailureExpression("#[mel:payload is Integer]");
     fs.initialise();
 
-    assertThat(fs.process(eventBuilder().message(of("")).build()).getMessageAsString(muleContext), is("abc"));
+    assertThat(fs.process(eventBuilder().muleContext(muleContext).message(of("")).build()).getMessageAsString(muleContext),
+               is("abc"));
   }
 
   @Test
   public void testRouteReturnsNullEvent() throws Exception {
     Processor nullReturningMp = event -> null;
     FirstSuccessful fs = createFirstSuccessfulRouter(nullReturningMp);
+    fs.setAnnotations(getFakeComponentLocationAnnotations());
     fs.initialise();
 
     assertThat(fs.process(testEvent()), nullValue());
@@ -88,6 +89,7 @@ public class FirstSuccessfulTestCase extends AbstractMuleContextTestCase {
   public void testRouteReturnsNullMessage() throws Exception {
     Processor nullEventMp = event -> Event.builder(event).message(null).build();
     FirstSuccessful fs = createFirstSuccessfulRouter(nullEventMp);
+    fs.setAnnotations(getFakeComponentLocationAnnotations());
     fs.initialise();
 
     try {
@@ -100,6 +102,7 @@ public class FirstSuccessfulTestCase extends AbstractMuleContextTestCase {
 
   private FirstSuccessful createFirstSuccessfulRouter(Processor... processors) throws Exception {
     FirstSuccessful fs = new FirstSuccessful();
+    fs.setAnnotations(getFakeComponentLocationAnnotations());
     final FlowConstruct flow = mock(FlowConstruct.class, withSettings().extraInterfaces(AnnotatedObject.class));
     when(flow.getMuleContext()).thenReturn(muleContext);
     when(((AnnotatedObject) flow).getLocation()).thenReturn(TEST_CONNECTOR_LOCATION);
@@ -113,7 +116,7 @@ public class FirstSuccessfulTestCase extends AbstractMuleContextTestCase {
   private String getPayload(Processor mp, MuleSession session, String message) throws Exception {
     Message msg = of(message);
     try {
-      Event event = mp.process(eventBuilder().message(msg).session(session).build());
+      Event event = mp.process(eventBuilder().muleContext(muleContext).message(msg).session(session).build());
       Message returnedMessage = event.getMessage();
       if (event.getError().isPresent()) {
         return EXCEPTION_SEEN;
@@ -148,7 +151,7 @@ public class FirstSuccessfulTestCase extends AbstractMuleContextTestCase {
         } else {
           msg = of("No " + rejectIfMatches);
         }
-        Event muleEvent = eventBuilder().message(msg).error(error).build();
+        Event muleEvent = eventBuilder().muleContext(muleContext).message(msg).error(error).build();
         return muleEvent;
       } catch (Exception e) {
         throw new DefaultMuleException(e);

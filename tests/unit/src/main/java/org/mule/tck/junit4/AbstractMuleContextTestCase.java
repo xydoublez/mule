@@ -462,7 +462,7 @@ public abstract class AbstractMuleContextTestCase extends AbstractMuleTestCase {
 
   @Override
   protected Event.Builder getEventBuilder() throws MuleException {
-    return eventBuilder();
+    return eventBuilder().muleContext(muleContext);
   }
 
   protected boolean isStartContext() {

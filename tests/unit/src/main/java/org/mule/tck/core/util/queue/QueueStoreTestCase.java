@@ -121,7 +121,7 @@ public abstract class QueueStoreTestCase extends AbstractMuleContextTestCase {
     QueueStore queue = createQueue();
     ArrayList<Event> events = new ArrayList<>(NUMBER_OF_ITEMS);
     for (int i = 0; i < NUMBER_OF_ITEMS; i++) {
-      Event testEvent = eventBuilder().message(of("some data")).build();
+      Event testEvent = eventBuilder().muleContext(muleContext).message(of("some data")).build();
       events.add(testEvent);
       queue.offer(testEvent, 0, NUMBER_OF_ITEMS);
 

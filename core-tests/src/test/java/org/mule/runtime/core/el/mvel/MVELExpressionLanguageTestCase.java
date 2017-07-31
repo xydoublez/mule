@@ -211,14 +211,14 @@ public class MVELExpressionLanguageTestCase extends AbstractMuleContextTestCase 
 
   @Test
   public void regexFunction() throws Exception {
-    final Event testEvent = eventBuilder().message(of("TESTfooTEST")).build();
+    final Event testEvent = eventBuilder().muleContext(muleContext).message(of("TESTfooTEST")).build();
     assertEquals("foo", evaluate("regex('TEST(\\\\w+)TEST')", testEvent));
   }
 
   @Test
   public void appTakesPrecedenceOverEverything() throws Exception {
     mvel.setAliases(singletonMap("app", "'other1'"));
-    Event event = eventBuilder().message(of("")).addVariable("app", "otherb").build();
+    Event event = eventBuilder().muleContext(muleContext).message(of("")).addVariable("app", "otherb").build();
     muleContext.getRegistry().registerObject("foo",
                                              (ExpressionLanguageExtension) context -> context.addVariable("app", "otherc"));
     mvel.initialise();
@@ -228,7 +228,7 @@ public class MVELExpressionLanguageTestCase extends AbstractMuleContextTestCase 
   @Test
   public void messageTakesPrecedenceOverEverything() throws Exception {
     mvel.setAliases(singletonMap("message", "'other1'"));
-    Event event = eventBuilder().message(of("")).addVariable("message", "other2").build();
+    Event event = eventBuilder().muleContext(muleContext).message(of("")).addVariable("message", "other2").build();
     muleContext.getRegistry().registerObject("foo",
                                              (ExpressionLanguageExtension) context -> context.addVariable("message", "other3"));
     mvel.initialise();
@@ -237,7 +237,7 @@ public class MVELExpressionLanguageTestCase extends AbstractMuleContextTestCase 
 
   @Test
   public void extensionTakesPrecedenceOverAutoResolved() throws Exception {
-    Event event = eventBuilder().message(of("")).addVariable("foo", "other").build();
+    Event event = eventBuilder().muleContext(muleContext).message(of("")).addVariable("foo", "other").build();
     muleContext.getRegistry().registerObject("key", (ExpressionLanguageExtension) context -> context.addVariable("foo", "bar"));
     mvel.initialise();
     assertEquals("bar", evaluate("foo", event));
@@ -514,7 +514,7 @@ public class MVELExpressionLanguageTestCase extends AbstractMuleContextTestCase 
 
   @Test
   public void collectionAccessPayloadChangedMULE7506() throws Exception {
-    Event event = eventBuilder().message(of(new String[] {"1", "2"})).build();
+    Event event = eventBuilder().muleContext(muleContext).message(of(new String[] {"1", "2"})).build();
     assertEquals("1", mvel.evaluateUntyped("payload[0]", event, Event.builder(event),
                                            ((AnnotatedObject) flowConstruct).getLocation(), null));
     event = Event.builder(event).message(InternalMessage.builder(event.getMessage()).payload(singletonList("1")).build()).build();

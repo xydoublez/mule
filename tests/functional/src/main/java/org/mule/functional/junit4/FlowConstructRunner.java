@@ -33,7 +33,7 @@ import org.mockito.Mockito;
 public abstract class FlowConstructRunner<R extends FlowConstructRunner> {
 
   protected MuleContext muleContext;
-  protected TestEventBuilder eventBuilder = new TestEventBuilder();
+  protected TestEventBuilder eventBuilder = new TesteventBuilder().muleContext(muleContext);
   private Event requestEvent;
 
   /**

@@ -297,7 +297,7 @@ public abstract class AbstractOperationMessageProcessorTestCase extends Abstract
     when(message.getPayload())
         .thenReturn(new TypedValue<>(TEST_PAYLOAD,
                                      DataType.builder().mediaType(MediaType.create("*", "*", defaultCharset())).build()));
-    return eventBuilder().message(message).build();
+    return eventBuilder().muleContext(muleContext).message(message).build();
   }
 
   protected OperationMessageProcessor setUpOperationMessageProcessor() throws Exception {

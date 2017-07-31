@@ -181,7 +181,7 @@ public class ExtendedExpressionLanguageAdapterTestCase extends AbstractWeaveExpr
   @Test
   @Description("Verifies that the payload can be modified under MVEL but not DW.")
   public void payloadMutation() throws Exception {
-    Event event = eventBuilder().message(of(1)).build();
+    Event event = eventBuilder().muleContext(muleContext).message(of(1)).build();
     Event.Builder builder1 = builder(event);
     String expression = "payload = 3";
     TypedValue result = expressionLanguageAdapter.evaluate(melify(expression),

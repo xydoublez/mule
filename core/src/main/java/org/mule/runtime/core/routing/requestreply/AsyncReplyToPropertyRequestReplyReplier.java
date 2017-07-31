@@ -14,8 +14,7 @@ import org.mule.runtime.core.privileged.routing.requestreply.AbstractReplyToProp
 
 import java.util.Optional;
 
-public class AsyncReplyToPropertyRequestReplyReplier extends AbstractReplyToPropertyRequestReplyReplier
-{
+public class AsyncReplyToPropertyRequestReplyReplier extends AbstractReplyToPropertyRequestReplyReplier {
 
   private MessageExchangePattern messageExchangePattern = REQUEST_RESPONSE;
 

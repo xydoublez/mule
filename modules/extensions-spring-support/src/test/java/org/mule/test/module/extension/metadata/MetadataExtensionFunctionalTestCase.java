@@ -149,7 +149,7 @@ public abstract class MetadataExtensionFunctionalTestCase<T extends ComponentMod
 
   @Before
   public void setup() throws Exception {
-    event = eventBuilder().message(of("")).build();
+    event = eventBuilder().muleContext(muleContext).message(of("")).build();
     metadataService = muleContext.getRegistry().lookupObject(MuleMetadataService.class);
     personType = getMetadata(PERSON_METADATA_KEY.getId());
   }

@@ -94,7 +94,7 @@ public class MessagingExceptionTestCase extends AbstractMuleContextTestCase {
     when(mockContext.getConfiguration()).thenReturn(mockConfiguration);
     when(mockContext.getTransformationService()).thenReturn(transformationService);
 
-    testEvent = eventBuilder().message(of(TEST_PAYLOAD)).build();
+    testEvent = eventBuilder().muleContext(muleContext).message(of(TEST_PAYLOAD)).build();
   }
 
   @After

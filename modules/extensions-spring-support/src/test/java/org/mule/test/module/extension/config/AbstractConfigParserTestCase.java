@@ -71,7 +71,7 @@ public abstract class AbstractConfigParserTestCase extends AbstractHeisenbergCon
 
   protected Event getHeisenbergEvent() throws Exception {
     WEAPON.setMicrogramsPerKilo(10L);
-    Event event = eventBuilder().message(of(""))
+    Event event = eventBuilder().muleContext(muleContext).message(of(""))
         .addVariable("lidia", LIDIA)
         .addVariable("myName", HeisenbergExtension.HEISENBERG)
         .addVariable("age", HeisenbergExtension.AGE)

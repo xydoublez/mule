@@ -113,7 +113,8 @@ public class DataWeaveExpressionLanguageAdaptorTestCase extends AbstractWeaveExp
 
   @Test
   public void splitByJson() throws Exception {
-    Event jsonMessage = eventBuilder().message(Message.builder().payload("[1,2,3]").mediaType(APPLICATION_JSON).build()).build();
+    Event jsonMessage = eventBuilder().muleContext(muleContext)
+        .message(Message.builder().payload("[1,2,3]").mediaType(APPLICATION_JSON).build()).build();
     Iterator<TypedValue<?>> payload = expressionLanguage.split("payload", jsonMessage, BindingContext.builder().build());
     assertThat(payload.hasNext(), is(true));
     assertThat(payload.next().getValue().toString(), is("1"));
@@ -127,7 +128,8 @@ public class DataWeaveExpressionLanguageAdaptorTestCase extends AbstractWeaveExp
   @Test
   public void expectedOutputShouldBeUsed() throws Exception {
     Event jsonMessage =
-        eventBuilder().message(Message.builder().payload("{\"student\": false}").mediaType(APPLICATION_JSON).build()).build();
+        eventBuilder().muleContext(muleContext)
+            .message(Message.builder().payload("{\"student\": false}").mediaType(APPLICATION_JSON).build()).build();
     TypedValue result = expressionLanguage.evaluate("payload.student", BOOLEAN, jsonMessage, BindingContext.builder().build());
     assertThat(result.getValue(), is(false));
   }
@@ -207,12 +209,11 @@ public class DataWeaveExpressionLanguageAdaptorTestCase extends AbstractWeaveExp
   @Test
   public void variablesCannotOverrideEventBindings() throws MuleException {
     Event event = spy(testEvent());
-    HashSet<String> variables = Sets.newHashSet(PAYLOAD, ATTRIBUTES, ERROR, VARS, FLOW);
-    when(event.getVariables().keySet()).thenReturn(variables);
     TypedValue<String> varValue = new TypedValue<>("", STRING);
-    when(event.getVariables()).thenReturn(ImmutableMap.<String, TypedValue<?>>builder()
-        .put(PAYLOAD, varValue).put(ATTRIBUTES, varValue).put(ERROR, varValue).put(VARIABLES, varValue).put(FLOW, varValue)
-        .build());
+    ImmutableMap<String, TypedValue<?>> variablesMap = ImmutableMap.<String, TypedValue<?>>builder()
+            .put(PAYLOAD, varValue).put(ATTRIBUTES, varValue).put(ERROR, varValue).put(VARIABLES, varValue).put(FLOW, varValue)
+            .build();
+    when(event.getVariables()).thenReturn(variablesMap);
     String flowName = "myFlowName";
 
     assertThat(expressionLanguage.evaluate(PAYLOAD, event, BindingContext.builder().build()).getValue(), is(TEST_PAYLOAD));

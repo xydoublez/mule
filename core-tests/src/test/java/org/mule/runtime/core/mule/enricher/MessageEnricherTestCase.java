@@ -124,7 +124,8 @@ public class MessageEnricherTestCase extends AbstractReactiveProcessorTestCase {
     enricher.addEnrichExpressionPair(new EnrichExpressionPair("#[mel:message.outboundProperties.myHeader]"));
     enricher.setEnrichmentMessageProcessor(event -> Event.builder(event)
         .message(InternalMessage.builder(event.getMessage()).payload("enriched").build()).build());
-    Event in = eventBuilder().message(InternalMessage.builder().payload("").addOutboundProperty("foo", "bar").build()).build();
+    Event in = eventBuilder().muleContext(muleContext)
+        .message(InternalMessage.builder().payload("").addOutboundProperty("foo", "bar").build()).build();
     Event out = process(enricher, in);
     assertThat(out.getCorrelationId(), equalTo(in.getCorrelationId()));
     assertThat(((InternalMessage) out.getMessage()).getOutboundProperty("foo"), equalTo("bar"));
@@ -137,7 +138,7 @@ public class MessageEnricherTestCase extends AbstractReactiveProcessorTestCase {
     enricher.addEnrichExpressionPair(new EnrichExpressionPair("#[mel:message.outboundProperties.myHeader]"));
     enricher.setEnrichmentMessageProcessor(event -> Event.builder(event)
         .message(InternalMessage.builder(event.getMessage()).payload("enriched").build()).build());
-    Event in = eventBuilder().message(of("")).addVariable("flowFoo", "bar").build();
+    Event in = eventBuilder().muleContext(muleContext).message(of("")).addVariable("flowFoo", "bar").build();
     in.getSession().setProperty("sessionFoo", "bar");
 
     Event out = process(enricher, in);

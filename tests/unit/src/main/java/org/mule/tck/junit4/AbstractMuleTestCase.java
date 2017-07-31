@@ -17,6 +17,7 @@ import static org.mule.runtime.core.api.util.StringMessageUtils.getBoilerPlate;
 import static org.mule.runtime.core.api.util.StringUtils.isBlank;
 import static org.mule.runtime.core.api.util.SystemUtils.parsePropertyDefinitions;
 import static org.mule.runtime.dsl.api.component.config.DefaultComponentLocation.fromSingleComponent;
+import static org.mule.tck.junit4.AbstractMuleContextTestCase.muleContext;
 import static org.mule.tck.util.MuleContextUtils.eventBuilder;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -289,12 +290,12 @@ public abstract class AbstractMuleTestCase {
    * @throws MuleException
    */
   protected Event.Builder getEventBuilder() throws MuleException {
-    return eventBuilder();
+    return eventBuilder().muleContext(muleContext);
   }
 
   protected Event nullPayloadEvent() throws MuleException {
     if (_nullPayloadEvent == null) {
-      _nullPayloadEvent = eventBuilder().message(of(null)).build();
+      _nullPayloadEvent = eventBuilder().muleContext(muleContext).message(of(null)).build();
     }
     return _nullPayloadEvent;
   }
