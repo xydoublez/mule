@@ -7,57 +7,34 @@
 package org.mule.transport.ftp;
 
 
-import static java.lang.Long.parseLong;
-import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCause;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.mule.tck.AbstractServiceAndFlowTestCase.ConfigVariant.FLOW;
-import org.mule.DefaultMuleMessage;
-import org.mule.api.MuleMessage;
-import org.mule.api.client.MuleClient;
-import org.mule.api.construct.FlowConstruct;
-import org.mule.api.endpoint.InboundEndpoint;
-import org.mule.api.lifecycle.CreateException;
-import org.mule.api.transport.Connector;
-import org.mule.client.SimpleOptions;
 import org.mule.tck.junit4.rule.SystemProperty;
 import org.mule.util.concurrent.Latch;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.net.ftp.FTPFile;
 import org.apache.ftpserver.ftplet.DefaultFtplet;
 import org.apache.ftpserver.ftplet.FtpException;
 import org.apache.ftpserver.ftplet.FtpRequest;
 import org.apache.ftpserver.ftplet.FtpSession;
 import org.apache.ftpserver.ftplet.Ftplet;
 import org.apache.ftpserver.ftplet.FtpletResult;
-import org.junit.After;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class FtpConnectionSocketTimeoutTestCase extends AbstractFtpServerTestCase
+public abstract class AbstractFtpConnectionSocketTimeoutTestCase extends AbstractFtpServerTestCase
 {
 
-    private static String CONNECTION_TIMEOUT = "1000";
-
-    private static int TEST_DELTA = 500;
-
-    private static int SERVER_DELTA = 1000;
-
-    private static long WAIT_TIMEOUT = parseLong(CONNECTION_TIMEOUT) + TEST_DELTA;
-
-    private static long SERVER_SLEEP = parseLong(CONNECTION_TIMEOUT) + SERVER_DELTA;
+    protected static String CONNECTION_TIMEOUT = "1000";
 
     private static String NOOP_COMMAND = "NOOP";
 
@@ -70,15 +47,12 @@ public class FtpConnectionSocketTimeoutTestCase extends AbstractFtpServerTestCas
 
     private String nameScenario;
 
-    private static Latch latch;
-
     private static Latch serverLatch;
 
-    private static Exception receiverException;
 
-    public FtpConnectionSocketTimeoutTestCase(Ftplet ftpLet, String nameScenario)
+    public AbstractFtpConnectionSocketTimeoutTestCase(Ftplet ftpLet, String nameScenario, String configResource)
     {
-        super(FLOW, "ftp-connection-timeout-config-flow.xml");
+        super(FLOW, configResource);
         setStartContext(false);
         this.ftplet = ftpLet;
         this.nameScenario = nameScenario;
@@ -87,8 +61,6 @@ public class FtpConnectionSocketTimeoutTestCase extends AbstractFtpServerTestCas
     @Override
     protected void doSetUp() throws Exception
     {
-        receiverException = null;
-        latch = new Latch();
         serverLatch = new Latch();
         super.doSetUp();
     }
@@ -103,32 +75,9 @@ public class FtpConnectionSocketTimeoutTestCase extends AbstractFtpServerTestCas
         return parameters;
     }
 
-    @Test
-    public void testDispatcherTimeoutConnection() throws Exception
-    {
-        muleContext.start();
-        MuleClient client = muleContext.getClient();
-        MuleMessage testMessage = new DefaultMuleMessage("test", new HashMap(), muleContext);
-        MuleMessage result = client.send("vm://in", testMessage, new SimpleOptions(WAIT_TIMEOUT));
-        assertThat(result, is(notNullValue()));
-        assertException(result.getExceptionPayload().getRootException());
-    }
 
-    @Test
-    public void testReceiverTimeout() throws Exception
-    {
-        muleContext.start();
-        latch.await();
-        assertException(getRootCause(receiverException));
-    }
 
-    @After
-    public void tearDown() throws Exception
-    {
-        serverLatch.countDown();
-    }
-
-    private void assertException(Throwable exception)
+    protected void assertException(Throwable exception)
     {
         assertThat("An timeout exception should be triggered in the " + nameScenario, exception, is(notNullValue()));
         assertThat("SocketTimeoutException should be triggered in the " + nameScenario, exception.getMessage(), containsString(ERROR_MESSAGE));
@@ -172,7 +121,7 @@ public class FtpConnectionSocketTimeoutTestCase extends AbstractFtpServerTestCas
     {
         try
         {
-            assertThat("Server Latch must not be released until the end of the test", serverLatch.await(SERVER_SLEEP, TimeUnit.MILLISECONDS), is(false));
+            serverLatch.await();
         }
         catch (InterruptedException e)
         {
@@ -181,36 +130,22 @@ public class FtpConnectionSocketTimeoutTestCase extends AbstractFtpServerTestCas
         }
     }
 
-    public static class TestFtpMessageReceiver extends FtpMessageReceiver
+    @Override
+    protected void doTearDown() throws Exception
     {
-
-        public TestFtpMessageReceiver(Connector connector, FlowConstruct flowConstruct, InboundEndpoint endpoint, long frequency) throws CreateException
-        {
-            super(connector, flowConstruct, endpoint, frequency);
-        }
-
-        @Override
-        protected FTPFile[] listFiles() throws Exception
-        {
-            FTPFile[] files;
-            try
-            {
-                files = super.listFiles();
-            }
-            catch (Exception e)
-            {
-                receiverException = e;
-                latch.countDown();
-                throw e;
-            }
-
-            return files;
-        }
+        serverLatch.countDown();
+        super.doTearDown();
     }
 
     @Override
     protected Ftplet createFtpLet()
     {
         return ftplet;
+    }
+
+    @Override
+    protected boolean testServerConnection()
+    {
+        return false;
     }
 }

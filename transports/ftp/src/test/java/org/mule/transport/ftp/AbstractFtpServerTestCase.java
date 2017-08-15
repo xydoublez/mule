@@ -100,14 +100,17 @@ public abstract class AbstractFtpServerTestCase extends AbstractServiceAndFlowTe
         ftplet = createFtpLet();
         super.doSetUp();
         this.ftpPort = dynamicPort.getNumber();
-        ftpClient = new FTPTestClient(this.ftpHost, this.ftpPort, this.ftpUser, this.ftpPassword);
         // make sure we start out with a clean ftp server base
         createFtpServerBaseDir();
 
         startServer();
-        if (!ftpClient.testConnection())
+        if (testServerConnection())
         {
-            throw new IOException("could not connect to ftp server");
+            ftpClient = new FTPTestClient(this.ftpHost, this.ftpPort, this.ftpUser, this.ftpPassword);
+            if (!ftpClient.testConnection())
+            {
+                throw new IOException("could not connect to ftp server");
+            }
         }
     }
 
@@ -117,7 +120,10 @@ public abstract class AbstractFtpServerTestCase extends AbstractServiceAndFlowTe
         // give Mule some time to disconnect from the FTP server
         Thread.sleep(500);
 
-        ftpClient.disconnect(); // we dont need the connection anymore for this test
+        if(testServerConnection())
+        {
+            ftpClient.disconnect(); // we dont need the connection anymore for this test
+        }
         stopServer();
 
         deleteFtpServerBaseDir();
@@ -215,5 +221,10 @@ public abstract class AbstractFtpServerTestCase extends AbstractServiceAndFlowTe
     protected Ftplet createFtpLet ()
     {
         return new MuleFtplet(this);
+    }
+
+    protected boolean testServerConnection()
+    {
+        return true;
     }
 }
