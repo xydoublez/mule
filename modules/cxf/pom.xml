@@ -282,6 +282,14 @@
                     <groupId>commons-logging</groupId>
                     <artifactId>commons-logging</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.sun.xml.bind</groupId>
+                    <artifactId>jaxb-impl</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.xml.bind</groupId>
+                    <artifactId>jaxb-xjc</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -325,6 +333,14 @@
                 <exclusion>
                     <groupId>org.apache.velocity</groupId>
                     <artifactId>velocity</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.xml.bind</groupId>
+                    <artifactId>jaxb-xjc</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.xml.bind</groupId>
+                    <artifactId>jaxb-impl</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -668,6 +684,14 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-xjc</artifactId>
+        </dependency>
 
         <!-- Unit tests -->
         <dependency>
@@ -802,6 +826,5 @@
             <version>${activemqVersion}</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 </project>
