@@ -13,9 +13,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mule.tck.SerializationTestUtils.addJavaSerializerToMockMuleContext;
 import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.core.internal.util.queue.DualRandomAccessFileQueueStoreDelegate;
 import org.mule.tck.MuleTestUtils;
 import org.mule.tck.junit4.AbstractMuleTestCase;
+import org.mule.tck.junit4.FlakinessDetectorTestRunner;
+import org.mule.tck.junit4.FlakyTest;
 import org.mule.tck.size.SmallTest;
 
 import java.io.File;
@@ -27,8 +28,10 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
 
 @SmallTest
+@RunWith(FlakinessDetectorTestRunner.class)
 public class DualRandomAccessFileQueueStoreDelegateTestCase extends AbstractMuleTestCase {
 
   private static final int MAXIMUM_NUMBER_OF_BYTES = 100;
@@ -58,6 +61,7 @@ public class DualRandomAccessFileQueueStoreDelegateTestCase extends AbstractMule
   }
 
   @Test
+  @FlakyTest(times = 100)
   public void readQueueFileMessagesInOrder() throws Exception {
     MuleTestUtils.testWithSystemProperty(DualRandomAccessFileQueueStoreDelegate.MAX_LENGTH_PER_FILE_PROPERTY_KEY,
                                          String.valueOf(MAXIMUM_NUMBER_OF_BYTES), new MuleTestUtils.TestCallback() {
@@ -71,6 +75,7 @@ public class DualRandomAccessFileQueueStoreDelegateTestCase extends AbstractMule
   }
 
   @Test
+  @FlakyTest(times = 100)
   public void readQueueFileMessagesInOrderWhenControlFileIsCorrupted() throws Exception {
     MuleTestUtils.testWithSystemProperty(DualRandomAccessFileQueueStoreDelegate.MAX_LENGTH_PER_FILE_PROPERTY_KEY,
                                          String.valueOf(MAXIMUM_NUMBER_OF_BYTES), new MuleTestUtils.TestCallback() {
