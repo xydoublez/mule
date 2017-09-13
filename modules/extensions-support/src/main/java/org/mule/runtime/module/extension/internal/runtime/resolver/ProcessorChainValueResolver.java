@@ -59,7 +59,7 @@ public final class ProcessorChainValueResolver implements ValueResolver<Chain> {
   @Override
   public Chain resolve(ValueResolvingContext context) throws MuleException {
     initialiseIfNeeded();
-    return new ImmutableProcessorChainExecutor(context.getEvent(), chain);
+    return new ImmutableProcessorChainExecutor(muleContext, context.getEvent(), chain);
   }
 
   /**

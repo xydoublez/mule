@@ -7,6 +7,7 @@
 package org.mule.runtime.module.extension.internal.runtime.operation;
 
 import static java.util.Optional.ofNullable;
+import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.metadata.MediaType;
 import org.mule.runtime.api.metadata.TypedValue;
@@ -34,6 +35,7 @@ public final class EventedResult<T, A> extends Result<T, A> {
   }
 
   public static <T, A> EventedResult<T, A> from(BaseEvent event) {
+    checkArgument(event != null, "Origin event for a new result cannot be null");
     return new EventedResult<>(event);
   }
 

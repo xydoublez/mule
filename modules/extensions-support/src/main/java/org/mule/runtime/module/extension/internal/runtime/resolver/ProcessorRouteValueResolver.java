@@ -61,7 +61,7 @@ public final class ProcessorRouteValueResolver implements ValueResolver<Chain> {
   @Override
   public Chain resolve(ValueResolvingContext context) throws MuleException {
     initialiser.runOnce();
-    return new ImmutableProcessorChainExecutor(context.getEvent(), chain);
+    return new ImmutableProcessorChainExecutor(muleContext, context.getEvent(), chain);
   }
 
   /**
