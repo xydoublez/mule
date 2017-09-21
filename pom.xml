@@ -5,7 +5,7 @@
     <groupId>org.mule</groupId>
     <artifactId>mule</artifactId>
     <packaging>pom</packaging>
-    <version>3.8.4</version>
+    <version>3.8.4.SP1-SNAPSHOT</version>
 
     <!-- Organization -->
     <organization>
@@ -107,6 +107,8 @@
     </modules>
 
     <properties>
+        <mule.base.version>3.8.4</mule.base.version>
+    
         <!-- Properties that can be overriden in submodules -->
         <skipExportTests>true</skipExportTests>
 
