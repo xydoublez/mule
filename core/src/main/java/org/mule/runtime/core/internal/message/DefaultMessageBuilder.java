@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -338,7 +339,7 @@ public class DefaultMessageBuilder
   /**
    * <code>MuleMessageImplementation</code> is a wrapper that contains a payload and properties associated with the payload.
    */
-  private static class MessageImplementation implements InternalMessage, DeserializationPostInitialisable {
+  private static class MessageImplementation implements InternalMessage {
 
     private static final String NOT_SET = "<not set>";
 
@@ -353,14 +354,14 @@ public class DefaultMessageBuilder
     /**
      * Collection of attachments that were attached to the incoming message
      */
-    private transient Map<String, DataHandler> inboundAttachments = new HashMap<>();
+    private Map<String, DataHandler> inboundAttachments = new HashMap<>();
 
     /**
      * Collection of attachments that will be sent out with this message
      */
-    private transient Map<String, DataHandler> outboundAttachments = new HashMap<>();
+    private Map<String, DataHandler> outboundAttachments = new HashMap<>();
 
-    private transient TypedValue typedValue;
+    private TypedValue typedValue;
     private TypedValue typedAttributes;
 
     private Map<String, TypedValue<Serializable>> inboundMap = new CaseInsensitiveMapWrapper<>();
@@ -475,136 +476,6 @@ public class DefaultMessageBuilder
     @Override
     public TypedValue getPayload() {
       return typedValue;
-    }
-
-    public static class SerializedDataHandler implements Serializable {
-
-      private static final long serialVersionUID = 1L;
-
-      private DataHandler handler;
-      private String contentType;
-      private Object contents;
-
-      public SerializedDataHandler(String name, DataHandler handler, MuleContext muleContext) throws IOException {
-        if (handler != null && !(handler instanceof Serializable)) {
-          contentType = handler.getContentType();
-          Object theContent = handler.getContent();
-          if (theContent instanceof Serializable) {
-            contents = theContent;
-          } else {
-            try {
-              DataType source = fromObject(theContent);
-              Transformer transformer = muleContext.getRegistry().lookupTransformer(source, DataType.BYTE_ARRAY);
-              if (transformer == null) {
-                throw new TransformerException(CoreMessages.noTransformerFoundForMessage(source, DataType.BYTE_ARRAY));
-              }
-              contents = transformer.transform(theContent);
-            } catch (TransformerException ex) {
-              String message = String.format(
-                                             "Unable to serialize the attachment %s, which is of type %s with contents of type %s",
-                                             name, handler.getClass(), theContent.getClass());
-              logger.error(message);
-              throw new IOException(message);
-            }
-          }
-        } else {
-          this.handler = handler;
-        }
-      }
-
-      public DataHandler getHandler() {
-        return contents != null ? new DataHandler(contents, contentType) : handler;
-      }
-    }
-
-    private void writeObject(ObjectOutputStream out) throws Exception {
-      out.defaultWriteObject();
-      serializeValue(out);
-      out.writeObject(serializeAttachments(inboundAttachments));
-      out.writeObject(serializeAttachments(outboundAttachments));
-    }
-
-    private Map<String, SerializedDataHandler> serializeAttachments(Map<String, DataHandler> attachments) throws IOException {
-      Map<String, SerializedDataHandler> toWrite;
-      if (attachments == null) {
-        toWrite = null;
-      } else {
-        toWrite = new HashMap<>(attachments.size());
-        for (Map.Entry<String, DataHandler> entry : attachments.entrySet()) {
-          String name = entry.getKey();
-          // TODO MULE-10013 remove this logic from here
-          toWrite
-              .put(name,
-                   new SerializedDataHandler(name, entry.getValue(), ((InternalEvent) getCurrentEvent()).getMuleContext()));
-        }
-      }
-
-      return toWrite;
-    }
-
-    protected void serializeValue(ObjectOutputStream out) throws Exception {
-      if (typedValue.getValue() == null || typedValue.getValue() instanceof Serializable) {
-        out.writeBoolean(true);
-        out.writeObject(typedValue.getValue());
-        out.writeObject(typedValue.getDataType());
-      } else {
-        out.writeBoolean(false);
-        // TODO MULE-10013 remove this logic from here
-        byte[] valueAsByteArray = (byte[]) ((InternalEvent) getCurrentEvent()).getMuleContext().getTransformationService()
-            .internalTransform(this, DataType.BYTE_ARRAY).getPayload().getValue();
-        out.writeInt(valueAsByteArray.length);
-        new DataOutputStream(out).write(valueAsByteArray);
-        out.writeObject(DataType.BYTE_ARRAY);
-      }
-    }
-
-    protected Object deserializeValue(ObjectInputStream in) throws Exception {
-      if (in.readBoolean()) {
-        return in.readObject();
-      } else {
-        int length = in.readInt();
-        byte[] valueAsByteArray = new byte[length];
-        new DataInputStream(in).readFully(valueAsByteArray);
-        return valueAsByteArray;
-      }
-    }
-
-    private Map<String, DataHandler> deserializeAttachments(Map<String, SerializedDataHandler> attachments) throws IOException {
-      Map<String, DataHandler> toReturn;
-      if (attachments == null) {
-        toReturn = emptyMap();
-      } else {
-        toReturn = new HashMap<>(attachments.size());
-        for (Map.Entry<String, SerializedDataHandler> entry : attachments.entrySet()) {
-          toReturn.put(entry.getKey(), entry.getValue().getHandler());
-        }
-      }
-
-      return toReturn;
-    }
-
-    private void readObject(ObjectInputStream in) throws Exception {
-      in.defaultReadObject();
-      typedValue = new TypedValue(deserializeValue(in), (DataType) in.readObject());
-      inboundAttachments = deserializeAttachments((Map<String, SerializedDataHandler>) in.readObject());
-      outboundAttachments = deserializeAttachments((Map<String, SerializedDataHandler>) in.readObject());
-    }
-
-    /**
-     * Invoked after deserialization. This is called when the marker interface {@link DeserializationPostInitialisable} is used.
-     * This will get invoked after the object has been deserialized passing in the current mulecontext.
-     *
-     * @param context the current muleContext instance
-     * @throws MuleException if there is an error initializing
-     */
-    public void initAfterDeserialisation(MuleContext context) throws MuleException {
-      if (this.inboundAttachments == null) {
-        this.inboundAttachments = new HashMap<>();
-      }
-
-      if (this.outboundAttachments == null) {
-        this.outboundAttachments = new HashMap<>();
-      }
     }
 
     @Override
