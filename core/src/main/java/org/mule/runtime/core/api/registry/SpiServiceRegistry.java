@@ -21,7 +21,7 @@ import java.util.ServiceLoader;
 public class SpiServiceRegistry extends AbstractServiceRegistry {
 
   @Override
-  protected synchronized <T> Collection<T> doLookupProviders(Class<T> providerClass, ClassLoader classLoader) {
+  protected <T> Collection<T> doLookupProviders(Class<T> providerClass, ClassLoader classLoader) {
     Iterator<T> iterator = ServiceLoader.load(providerClass, classLoader).iterator();
     if (iterator.hasNext()) {
       return copyOf(iterator);
