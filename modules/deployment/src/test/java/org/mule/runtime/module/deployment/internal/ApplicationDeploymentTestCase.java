@@ -1958,8 +1958,12 @@ public class ApplicationDeploymentTestCase extends AbstractDeploymentTestCase {
     final Application app = findApp(dslAppBuilder.getId(), 1);
 
     // Checks that the configuration's ID was properly configured
-    assertThat(app.getRegistry().lookupByName("myFlow").isPresent(), is(true));
     assertThat(app.getRegistry().lookupByName("defaultHelloConfig").isPresent(), is(true));
+    Optional<Object> myFlow = app.getRegistry().lookupByName("myFlow");
+    assertThat(myFlow.isPresent(), is(true));
+
+    //List<Processor> processors = ((DefaultFlowBuilder.DefaultFlow) myFlow.get()).getProcessors();
+    //assertThat(processors.size(), equalTo(1));
   }
 
   private ArtifactPluginFileBuilder createPrivilegedExtensionPlugin() {

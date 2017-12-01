@@ -141,6 +141,23 @@ public class DslComponentModelReader {
     return extractComponentDefinitionModel("zaraza", childObject, name, attributes, nameSpace,true).build();
   }
 
+  private ComponentModel createModel(VariableDeclaration variableDeclaration) {
+    System.out.println("var createModel: " + variableDeclaration);
+
+
+    EObject variableValue = variableDeclaration.eContents().get(0);
+    if (variableValue instanceof ExpressionStatement) {
+      // TODO(pablo.kraan): add support ofr DW expressions
+      Map<String, String> attributes = new HashMap<>();
+      attributes.put("variableName", variableDeclaration.getName());
+      String literalValue = ((ExpressionStatement) variableValue).getListeral();
+      attributes.put("value", literalValue);
+      return extractComponentDefinitionModel("zaraza", variableValue, "set-variable", attributes, CORE_PREFIX,false).build();
+    } else {
+      return null;
+    }
+  }
+
   private ComponentModel createModel(EObject eObject) {
     if (eObject instanceof FlowDefinition) {
       return createModel((FlowDefinition) eObject);
@@ -148,6 +165,10 @@ public class DslComponentModelReader {
 
     if (eObject instanceof GlobalDefinition) {
       return createModel((GlobalDefinition) eObject);
+    }
+
+    if (eObject instanceof VariableDeclaration) {
+      return createModel((VariableDeclaration) eObject);
     }
 
     throw new IllegalStateException("Cannot generate component model for: " + eObject.getClass().getName());
@@ -188,10 +209,10 @@ public class DslComponentModelReader {
         ExpressionStatementResolver expressionStatementResolver = new ExpressionStatementResolver();
         StatementResolutionContext statementResolutionContext = new StatementResolutionContext();
         expressionStatementResolver.resolveParamsCall(statementResolutionContext, builder, (ParamsCall) childObject);
+      } else {
+        ComponentModel childModel = createModel(childObject);
+        builder.addChildComponentModel(childModel);
       }
-      //ComponentModel childModel = createModel(childObject);
-      //builder.addChildComponentModel(childModel);
-      //builder.addParameter(childObject)
     }
 
     if (isRootElement) {

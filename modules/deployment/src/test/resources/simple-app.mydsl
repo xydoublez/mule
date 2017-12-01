@@ -1,4 +1,5 @@
 def defaultHelloConfig=hello::config(message: "Hello")
 
 flow myFlow() {
+   var literalVar = "Hola"
 }
