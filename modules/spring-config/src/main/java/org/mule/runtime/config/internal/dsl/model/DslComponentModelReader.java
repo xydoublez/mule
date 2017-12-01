@@ -29,6 +29,7 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.xtext.example.mydsl.myDsl.CommonStatement;
 import org.xtext.example.mydsl.myDsl.ExpressionStatement;
 import org.xtext.example.mydsl.myDsl.FlowDefinition;
+import org.xtext.example.mydsl.myDsl.FlowParams;
 import org.xtext.example.mydsl.myDsl.GlobalDefinition;
 import org.xtext.example.mydsl.myDsl.ParamsCall;
 import org.xtext.example.mydsl.myDsl.RouterConstruct;
@@ -53,7 +54,7 @@ public class DslComponentModelReader {
     builder.setIdentifier(ComponentIdentifier.builder().namespace(CORE_PREFIX).name("mule").build());
     // String namespace = CORE_PREFIX ;//configLine.getNamespace() == null ? CORE_PREFIX : configLine.getNamespace();
     // TODO(pablo.kraan): need config filename here
-    ComponentModel componentModel = builder.setConfigFileName(configFile.getFilename()).build();
+    builder.setConfigFileName(configFile.getFilename());
     // .setIdentifier(builder()
     // .namespace(namespace)
     // .name("mule")
@@ -79,6 +80,8 @@ public class DslComponentModelReader {
     // builder.markAsRootComponent();
     // }
 
+    ComponentModel componentModel;
+
     if (!resource.getContents().isEmpty()) {
       List<ComponentModel> componentModels = new ArrayList<>();
       for (EObject resourceContent : resource.getContents().get(0).eContents()) {
@@ -86,11 +89,9 @@ public class DslComponentModelReader {
         componentModels.add(model);
       }
       componentModels.stream().forEach(componentDefinitionModel -> builder.addChildComponentModel(componentDefinitionModel));
-
-      for (ComponentModel innerComponentModel : componentModel.getInnerComponents()) {
-        innerComponentModel.setParent(componentModel);
-      }
     }
+
+    componentModel = builder.build();
 
     return componentModel;
   }
@@ -103,11 +104,11 @@ public class DslComponentModelReader {
   private ComponentModel createModel(FlowDefinition flowDefinition) {
     System.out.println("flow createModel: " + flowDefinition);
 
-    Map<String, String> attributes = new HashMap<>();
-    attributes.put("name", flowDefinition.getName());
-
-    ComponentModel.Builder componentModelBuilder =
-      extractComponentDefinitionModel("zaraza", flowDefinition, "flow", attributes, CORE_PREFIX, true);
+    ComponentModel.Builder componentModelBuilder = new ComponentModel.Builder();
+    componentModelBuilder.setIdentifier(ComponentIdentifier.buildFromStringRepresentation("mule:flow"));
+    componentModelBuilder.setConfigFileName("fake");
+    componentModelBuilder.setLineNumber(123);
+    componentModelBuilder.addParameter("name", flowDefinition.getName(), false);
 
     EList<CommonStatement> statements = flowDefinition.getStatements();
     resolveStatements(componentModelBuilder, statements);
@@ -132,16 +133,21 @@ public class DslComponentModelReader {
         parentComponentModelBuilder.addChildComponentModel(foreachComponentBuilder.build());
       } else if (statement instanceof RouterConstruct) {
         RouterConstruct routerConstruct = (RouterConstruct) statement;
-        ParamsCall paramsCall = routerConstruct.getParams();
-        ComponentModel.Builder routerConstructModel = new ComponentModel.Builder();
-        routerConstructModel.setIdentifier(buildFromStringRepresentation(routerConstruct.getName().replace("::", ":")));
-        routerConstructModel.setLineNumber(23);
-        routerConstructModel.setConfigFileName("sdf");
+        ComponentModel.Builder routerConstructModelBuilder = new ComponentModel.Builder();
+        routerConstructModelBuilder.setIdentifier(buildFromStringRepresentation(routerConstruct.getName().replace("::", ":")));
+        routerConstructModelBuilder.setLineNumber(23);
+        routerConstructModelBuilder.setConfigFileName("sdf");
+
         for (ScopeConstruct scopeConstruct : routerConstruct.getRoutes()) {
           ComponentModel.Builder foreachComponentBuilder = processScope(scopeConstruct);
-          routerConstructModel.addChildComponentModel(foreachComponentBuilder.build());
+          routerConstructModelBuilder.addChildComponentModel(foreachComponentBuilder.build());
         }
-        parentComponentModelBuilder.addChildComponentModel(routerConstructModel.build());
+
+        ParamsCall paramsCall = routerConstruct.getParams();
+        ExpressionStatementResolver expressionStatementResolver = new ExpressionStatementResolver();
+        expressionStatementResolver.resolveParamsCall(new StatementResolutionContext(), routerConstructModelBuilder, paramsCall);
+
+        parentComponentModelBuilder.addChildComponentModel(routerConstructModelBuilder.build());
       } else {
         throw new IllegalStateException();
       }
@@ -150,13 +156,17 @@ public class DslComponentModelReader {
 
   private ComponentModel.Builder processScope(ScopeConstruct statement) {
     ScopeConstruct scopeConstruct = statement;
+    ComponentModel.Builder componentBuilder = new ComponentModel.Builder();
+    componentBuilder.setIdentifier(buildFromStringRepresentation(scopeConstruct.getName().replace("::", ":")));
+    componentBuilder.setLineNumber(23);
+    componentBuilder.setConfigFileName("sdf");
+    resolveStatements(componentBuilder, scopeConstruct.getStatements());
+
     ParamsCall paramsCall = scopeConstruct.getParams();
-    ComponentModel.Builder foreachComponentBuilder = new ComponentModel.Builder();
-    foreachComponentBuilder.setIdentifier(buildFromStringRepresentation(scopeConstruct.getName().replace("::", ":")));
-    foreachComponentBuilder.setLineNumber(23);
-    foreachComponentBuilder.setConfigFileName("sdf");
-    resolveStatements(foreachComponentBuilder, scopeConstruct.getStatements());
-    return foreachComponentBuilder;
+    ExpressionStatementResolver expressionStatementResolver = new ExpressionStatementResolver();
+    expressionStatementResolver.resolveParamsCall(new StatementResolutionContext(), componentBuilder, paramsCall);
+
+    return componentBuilder;
   }
 
   private ComponentModel createModel(GlobalDefinition globalDefinition) {
@@ -170,7 +180,7 @@ public class DslComponentModelReader {
     String nameSpace = split[0];
     String name = hyphenize(split[1]);
 
-    return extractComponentDefinitionModel("zaraza", childObject, name, attributes, nameSpace,true).build();
+    return extractComponentDefinitionModel("zaraza", childObject, name, attributes, nameSpace, true).build();
   }
 
   private ComponentModel createModel(VariableDeclaration variableDeclaration) {
@@ -205,13 +215,14 @@ public class DslComponentModelReader {
     }
 
     throw new IllegalStateException("Cannot generate component model for: " + eObject.getClass().getName());
-    //System.out.println("generic createModel: " + eObject);
-    //return extractComponentDefinitionModel("zaraza", eObject, "");
+    // System.out.println("generic createModel: " + eObject);
+    // return extractComponentDefinitionModel("zaraza", eObject, "");
   }
 
   public ComponentModel.Builder extractComponentDefinitionModel(String configFileName, EObject eObject, String elementIdentifier,
-                                                        Map<String, String> attributes, String namespace, boolean isRootElement) {
-    //String elementIdentifier = "";  // name of the tag (flow, logger, set-variable, etc)
+                                                                Map<String, String> attributes, String namespace,
+                                                                boolean isRootElement) {
+    // String elementIdentifier = ""; // name of the tag (flow, logger, set-variable, etc)
     String content = ""; // when a tag has content (like <description>This is the description</description>)
     int lineNumber = 0; // In the XML, should be the line number in the DSL (many elements can point to the same line)
 
@@ -252,11 +263,11 @@ public class DslComponentModelReader {
       builder.markAsRootComponent();
     }
 
-    //ComponentModel componentModel = builder.build();
-    //for (ComponentModel innerComponentModel : componentModel.getInnerComponents()) {
-    //  innerComponentModel.setParent(componentModel);
-    //}
-    //return componentModel;
+    // ComponentModel componentModel = builder.build();
+    // for (ComponentModel innerComponentModel : componentModel.getInnerComponents()) {
+    // innerComponentModel.setParent(componentModel);
+    // }
+    // return componentModel;
     return builder;
   }
 

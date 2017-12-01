@@ -85,14 +85,16 @@ public class ExpressionStatementResolver {
 
   public void resolveParamsCall(StatementResolutionContext statementResolutionContext,
                                  ComponentModel.Builder lineComponentModelBuilder, ParamsCall paramsCall) {
-    for (ParamCall paramCall : paramsCall.getParams()) {
-      ExpressionStatement paramExpressionStatement = paramCall.getExpressionStatement();
-      Either<String, String> resolvedStatement =
-          innerResolveComplexParamStatement(paramExpressionStatement, statementResolutionContext, true);
-      lineComponentModelBuilder.addParameter(paramCall.getName(),
-                                             resolvedStatement.isLeft() ? resolvedStatement.getLeft()
-                                                 : format("#[vars.%s]", resolvedStatement.getRight()),
-                                             false);
+    if (paramsCall != null) {
+      for (ParamCall paramCall : paramsCall.getParams()) {
+        ExpressionStatement paramExpressionStatement = paramCall.getExpressionStatement();
+        Either<String, String> resolvedStatement =
+                innerResolveComplexParamStatement(paramExpressionStatement, statementResolutionContext, true);
+        lineComponentModelBuilder.addParameter(paramCall.getName(),
+                                               resolvedStatement.isLeft() ? resolvedStatement.getLeft()
+                                                                          : format("#[vars.%s]", resolvedStatement.getRight()),
+                                               false);
+      }
     }
   }
 }
