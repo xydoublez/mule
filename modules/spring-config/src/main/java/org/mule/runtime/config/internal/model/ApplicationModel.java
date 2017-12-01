@@ -28,6 +28,7 @@ import static org.mule.runtime.config.api.dsl.CoreDslConstants.MULE_DOMAIN_IDENT
 import static org.mule.runtime.config.api.dsl.CoreDslConstants.MULE_EE_DOMAIN_IDENTIFIER;
 import static org.mule.runtime.config.api.dsl.CoreDslConstants.MULE_IDENTIFIER;
 import static org.mule.runtime.config.api.dsl.CoreDslConstants.MULE_ROOT_ELEMENT;
+import static org.mule.runtime.config.internal.MuleArtifactContext.MULE_DSL_FILE_EXTENSION;
 import static org.mule.runtime.config.internal.dsl.spring.BeanDefinitionFactory.SOURCE_TYPE;
 import static org.mule.runtime.config.internal.dsl.spring.ComponentModelHelper.resolveComponentType;
 import static org.mule.runtime.core.api.el.ExpressionManager.DEFAULT_EXPRESSION_PREFIX;
@@ -55,6 +56,7 @@ import org.mule.runtime.config.api.dsl.processor.ConfigFile;
 import org.mule.runtime.config.api.dsl.processor.ConfigLine;
 import org.mule.runtime.config.internal.dsl.model.ComponentLocationVisitor;
 import org.mule.runtime.config.internal.dsl.model.ComponentModelReader;
+import org.mule.runtime.config.internal.dsl.model.DslComponentModelReader;
 import org.mule.runtime.config.internal.dsl.model.ExtensionModelHelper;
 import org.mule.runtime.config.internal.dsl.model.config.CompositeConfigurationPropertiesProvider;
 import org.mule.runtime.config.internal.dsl.model.config.ConfigurationPropertiesComponent;
@@ -322,7 +324,11 @@ public class ApplicationModel {
     this.componentBuildingDefinitionRegistry = componentBuildingDefinitionRegistry;
     this.externalResourceProvider = externalResourceProvider;
     createConfigurationAttributeResolver(artifactConfig, parentConfigurationProperties, deploymentProperties);
-    convertConfigFileToComponentModel(artifactConfig);
+    if (isDslApp(artifactConfig)) {
+      convertDslConfigFileToComponentModel(artifactConfig);
+    } else {
+      convertConfigFileToComponentModel(artifactConfig);
+    }
     convertArtifactDeclarationToComponentModel(extensionModels, artifactDeclaration);
     resolveRegistrationNames();
     validateModel(componentBuildingDefinitionRegistry);
@@ -335,6 +341,11 @@ public class ApplicationModel {
     resolveComponentTypes();
     resolveTypedComponentIdentifier(extensionModelHelper);
     executeOnEveryMuleComponentTree(new ComponentLocationVisitor(extensionModelHelper));
+  }
+
+  private boolean isDslApp(ArtifactConfig artifactConfig) {
+    return artifactConfig.getConfigFiles().stream().filter(f -> f.getFilename().endsWith(MULE_DSL_FILE_EXTENSION)).findFirst()
+        .isPresent();
   }
 
   private void resolveTypedComponentIdentifier(ExtensionModelHelper extensionModelHelper) {
@@ -564,16 +575,18 @@ public class ApplicationModel {
     final Map<String, ConfigurationProperty> globalProperties = new HashMap<>();
 
     artifactConfig.getConfigFiles().stream().forEach(configFile -> {
-      configFile.getConfigLines().get(0).getChildren().stream().forEach(configLine -> {
-        if (GLOBAL_PROPERTY.equals(configLine.getIdentifier())) {
-          String key = configLine.getConfigAttributes().get("name").getValue();
-          String rawValue = configLine.getConfigAttributes().get("value").getValue();
-          globalProperties.put(key,
-                               new ConfigurationProperty(format("global-property - file: %s - lineNumber %s",
-                                                                configFile.getFilename(), configLine.getLineNumber()),
-                                                         key, rawValue));
-        }
-      });
+      if (!configFile.getConfigLines().isEmpty()) {
+        configFile.getConfigLines().get(0).getChildren().stream().forEach(configLine -> {
+          if (GLOBAL_PROPERTY.equals(configLine.getIdentifier())) {
+            String key = configLine.getConfigAttributes().get("name").getValue();
+            String rawValue = configLine.getConfigAttributes().get("value").getValue();
+            globalProperties.put(key,
+                                 new ConfigurationProperty(format("global-property - file: %s - lineNumber %s",
+                                                                  configFile.getFilename(), configLine.getLineNumber()),
+                                                           key, rawValue));
+          }
+        });
+      }
     });
     return new GlobalPropertyConfigurationPropertiesProvider(globalProperties);
   }
@@ -610,7 +623,25 @@ public class ApplicationModel {
         muleComponentModels.set(0, new ComponentModel.Builder(rootComponentModel).merge(componentModel).build());
       }
     });
+  }
 
+  private void convertDslConfigFileToComponentModel(ArtifactConfig artifactConfig) {
+    List<ConfigFile> configFiles = artifactConfig.getConfigFiles();
+    DslComponentModelReader componentModelReader =
+        new DslComponentModelReader(configurationProperties.getConfigurationPropertiesResolver());
+
+
+    configFiles.stream().forEach(configFile -> {
+      System.out.println("Extracting component model from: " + configFile);
+      ComponentModel componentModel = componentModelReader.extractComponentDefinitionModel(configFile);
+      if (muleComponentModels.isEmpty()) {
+        muleComponentModels.add(componentModel);
+      } else {
+        // Only one componentModel as Root should be set, therefore componentModel is merged
+        final ComponentModel rootComponentModel = muleComponentModels.get(0);
+        muleComponentModels.set(0, new ComponentModel.Builder(rootComponentModel).merge(componentModel).build());
+      }
+    });
   }
 
   private void validateModel(Optional<ComponentBuildingDefinitionRegistry> componentBuildingDefinitionRegistry)

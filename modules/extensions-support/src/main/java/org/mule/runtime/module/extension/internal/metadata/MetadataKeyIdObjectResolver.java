@@ -15,7 +15,6 @@ import static org.mule.metadata.java.api.utils.JavaTypeUtils.getType;
 import static org.mule.runtime.api.metadata.MetadataKeyBuilder.newKey;
 import static org.mule.runtime.api.metadata.resolving.FailureCode.INVALID_METADATA_KEY;
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
-import static org.mule.runtime.extension.api.dsql.DsqlParser.isDsqlQuery;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getFieldValue;
 
 import org.mule.metadata.api.model.BooleanType;
@@ -31,8 +30,6 @@ import org.mule.runtime.api.metadata.MetadataResolvingException;
 import org.mule.runtime.api.metadata.resolving.FailureCode;
 import org.mule.runtime.api.util.Reference;
 import org.mule.runtime.extension.api.annotation.metadata.MetadataKeyId;
-import org.mule.runtime.extension.api.dsql.DsqlParser;
-import org.mule.runtime.extension.api.dsql.DsqlQuery;
 import org.mule.runtime.extension.api.metadata.NullMetadataKey;
 import org.mule.runtime.extension.api.property.MetadataKeyIdModelProperty;
 import org.mule.runtime.extension.api.property.MetadataKeyPartModelProperty;
@@ -55,7 +52,7 @@ import java.util.Optional;
  */
 final class MetadataKeyIdObjectResolver {
 
-  private static final DsqlParser dsqlParser = DsqlParser.getInstance();
+  //private static final DsqlParser dsqlParser = DsqlParser.getInstance();
   private final ComponentModel component;
   private final List<ParameterModel> keyParts;
 
@@ -286,9 +283,9 @@ final class MetadataKeyIdObjectResolver {
     public void visitString(StringType stringType) {
       if (metadataKeyType.isEnum()) {
         keyValueHolder.set(Enum.valueOf(metadataKeyType, id));
-      } else if (getQueryModelProperty().isPresent() && isDsqlQuery(id)) {
-        DsqlQuery dsqlQuery = dsqlParser.parse(id);
-        keyValueHolder.set(dsqlQuery);
+      //} else if (getQueryModelProperty().isPresent() && isDsqlQuery(id)) {
+      //  DsqlQuery dsqlQuery = dsqlParser.parse(id);
+      //  keyValueHolder.set(dsqlQuery);
       } else {
         keyValueHolder.set(id);
       }

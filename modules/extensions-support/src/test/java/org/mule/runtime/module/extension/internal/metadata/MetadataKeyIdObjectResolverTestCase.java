@@ -12,10 +12,8 @@ import static java.util.Optional.of;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mule.runtime.module.extension.api.metadata.MultilevelMetadataKeyBuilder.newKey;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getField;
@@ -24,8 +22,6 @@ import org.mule.runtime.api.meta.model.ComponentModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterModel;
 import org.mule.runtime.api.metadata.MetadataKey;
 import org.mule.runtime.api.metadata.MetadataResolvingException;
-import org.mule.runtime.extension.api.dsql.DsqlQuery;
-import org.mule.runtime.extension.api.dsql.QueryTranslator;
 import org.mule.runtime.extension.api.property.MetadataKeyIdModelProperty;
 import org.mule.runtime.extension.api.property.MetadataKeyPartModelProperty;
 import org.mule.runtime.module.extension.internal.loader.java.property.DeclaringMemberModelProperty;
@@ -33,7 +29,6 @@ import org.mule.runtime.module.extension.internal.loader.java.property.QueryPara
 import org.mule.test.metadata.extension.LocationKey;
 
 import java.lang.reflect.Field;
-import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -166,23 +161,23 @@ public class MetadataKeyIdObjectResolverTestCase {
     assertThat(key, is(""));
   }
 
-  @Test
-  public void resolveDsql() throws MetadataResolvingException {
-    ParameterModel queryParam = mock(ParameterModel.class);
-    when(queryParam.getModelProperty(QueryParameterModelProperty.class))
-        .thenReturn(Optional.of(new QueryParameterModelProperty(QueryTranslator.class)));
-    mockMetadataKeyModelProp(queryParam, 1);
-    setParameters(queryParam);
-    setMetadataKeyIdModelProperty(String.class);
-
-    MetadataKey dsqlKey = newKey("dsql:SELECT id FROM Circle WHERE (diameter < 18)").build();
-    keyIdObjectResolver = new MetadataKeyIdObjectResolver(componentModel);
-    final Object resolvedKey = keyIdObjectResolver.resolve(dsqlKey);
-    assertThat(resolvedKey, is(instanceOf(DsqlQuery.class)));
-    DsqlQuery query = (DsqlQuery) resolvedKey;
-    assertThat(query.getFields(), hasSize(1));
-    assertThat(query.getType().getName(), is("Circle"));
-  }
+  //@Test
+  //public void resolveDsql() throws MetadataResolvingException {
+  //  ParameterModel queryParam = mock(ParameterModel.class);
+  //  when(queryParam.getModelProperty(QueryParameterModelProperty.class))
+  //      .thenReturn(Optional.of(new QueryParameterModelProperty(QueryTranslator.class)));
+  //  mockMetadataKeyModelProp(queryParam, 1);
+  //  setParameters(queryParam);
+  //  setMetadataKeyIdModelProperty(String.class);
+  //
+  //  MetadataKey dsqlKey = newKey("dsql:SELECT id FROM Circle WHERE (diameter < 18)").build();
+  //  keyIdObjectResolver = new MetadataKeyIdObjectResolver(componentModel);
+  //  final Object resolvedKey = keyIdObjectResolver.resolve(dsqlKey);
+  //  assertThat(resolvedKey, is(instanceOf(DsqlQuery.class)));
+  //  DsqlQuery query = (DsqlQuery) resolvedKey;
+  //  assertThat(query.getFields(), hasSize(1));
+  //  assertThat(query.getType().getName(), is("Circle"));
+  //}
 
   @Test
   public void failToResolveWithNotInstantiableKey() throws MetadataResolvingException {

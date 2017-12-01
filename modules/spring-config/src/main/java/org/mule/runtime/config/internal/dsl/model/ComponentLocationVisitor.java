@@ -172,11 +172,13 @@ public class ComponentLocationVisitor implements Consumer<ComponentModel> {
       }
     } else {
       DefaultComponentLocation parentComponentLocation = componentModel.getParent().getComponentLocation();
-      componentLocation =
-          parentComponentLocation.appendLocationPart(findNonProcessorPath(componentModel), typedComponentIdentifier,
-                                                     componentModel.getConfigFileName(), componentModel.getLineNumber());
+      // TODO(pablo.kraan): need the component location!!
+      //componentLocation =
+      //    parentComponentLocation.appendLocationPart(findNonProcessorPath(componentModel), typedComponentIdentifier,
+      //                                               componentModel.getConfigFileName(), componentModel.getLineNumber());
     }
-    componentModel.setComponentLocation(componentLocation);
+    // TODO(pablo.kraan): fix this!!
+    componentModel.setComponentLocation(null);
   }
 
   private boolean isBatchAggregator(ComponentModel componentModel) {

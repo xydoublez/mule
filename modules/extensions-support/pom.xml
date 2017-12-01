@@ -24,11 +24,11 @@
             <groupId>org.mule.runtime</groupId>
             <artifactId>mule-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.mule.runtime</groupId>
-            <artifactId>mule-extensions-api-dsql</artifactId>
-            <version>${muleExtensionsApiVersion}</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.mule.runtime</groupId>-->
+            <!--<artifactId>mule-extensions-api-dsql</artifactId>-->
+            <!--<version>${muleExtensionsApiVersion}</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>org.mule.runtime</groupId>
             <artifactId>mule-extensions-api</artifactId>

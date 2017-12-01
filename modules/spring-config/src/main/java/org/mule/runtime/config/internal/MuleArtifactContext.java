@@ -8,6 +8,7 @@ package org.mule.runtime.config.internal;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -131,6 +132,8 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
   private static final Logger LOGGER = LoggerFactory.getLogger(MuleArtifactContext.class);
 
   public static final String INNER_BEAN_PREFIX = "(inner bean)";
+  // TODO(pablo.kraan): change this when the DSL name changes to mule
+  public static final String MULE_DSL_FILE_EXTENSION = ".mydsl";
 
   protected final ComponentBuildingDefinitionRegistry componentBuildingDefinitionRegistry =
       new ComponentBuildingDefinitionRegistry();
@@ -290,7 +293,20 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
 
     ImmutableList.Builder<ConfigFile> resolvedConfigFilesBuilder =
         ImmutableList.<ConfigFile>builder().addAll(alreadyResolvedConfigFiles);
+    configFilesToResolve.stream().filter(fileNameInputStreamPair -> fileNameInputStreamPair.getFirst().endsWith(
+                                                                                                                MULE_DSL_FILE_EXTENSION))
+        .forEach(fileNameInputStreamPair -> {
+          ConfigFile configFile = new ConfigFile(fileNameInputStreamPair.getFirst(), emptyList());
+          resolvedConfigFilesBuilder.add(configFile);
+          try {
+            fileNameInputStreamPair.getSecond().close();
+          } catch (IOException e) {
+            throw new MuleRuntimeException(e);
+          }
+        });
+
     configFilesToResolve.stream()
+        .filter(fileNameInputStreamPair -> fileNameInputStreamPair.getFirst().endsWith(".xml"))
         .filter(fileNameInputStreamPair -> !alreadyResolvedConfigFiles.stream()
             .anyMatch(configFile -> configFile.getFilename().equals(fileNameInputStreamPair.getFirst())))
         .forEach(fileNameInputStreamPair -> {
@@ -312,6 +328,9 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
     ImmutableSet.Builder<String> importedFiles = ImmutableSet.builder();
     for (ConfigFile configFile : resolvedConfigFilesBuilder.build()) {
       List<ConfigLine> rootConfigLines = configFile.getConfigLines();
+      if (rootConfigLines.isEmpty()) {
+        continue;
+      }
       ConfigLine muleRootElementConfigLine = rootConfigLines.get(0);
       importedFiles.addAll(muleRootElementConfigLine.getChildren().stream()
           .filter(configLine -> configLine.getNamespace().equals(CORE_PREFIX)
