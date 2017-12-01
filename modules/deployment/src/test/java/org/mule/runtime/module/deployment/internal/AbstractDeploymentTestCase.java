@@ -1086,17 +1086,20 @@ public abstract class AbstractDeploymentTestCase extends AbstractMuleTestCase {
     prober.check(new FileExists(appFolder));
   }
 
-  protected void executeApplicationFlow(String flowName) throws Exception {
+  protected CoreEvent executeApplicationFlow(String flowName) throws Exception {
+    CoreEvent[] result = new CoreEvent[1];
     ClassLoader appClassLoader = deploymentService.getApplications().get(0).getArtifactClassLoader().getClassLoader();
     withContextClassLoader(appClassLoader, () -> {
       final FlowRunner flowRunner = new FlowRunner(deploymentService.getApplications().get(0).getRegistry(), flowName);
-      CoreEvent result = flowRunner.withPayload(TEST_MESSAGE).run();
+      result[0] = flowRunner.withPayload(TEST_MESSAGE).run();
       flowRunner.dispose();
 
       assertThat(currentThread().getContextClassLoader(), sameInstance(appClassLoader));
 
-      return result;
+      return result[0];
     });
+
+    return result[0];
   }
 
   protected void assertNoZombiePresent(Map<String, Map<URI, Long>> zombieMap) {

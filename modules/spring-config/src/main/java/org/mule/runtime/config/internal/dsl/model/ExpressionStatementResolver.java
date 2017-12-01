@@ -49,7 +49,8 @@ public class ExpressionStatementResolver {
                                                                    StatementResolutionContext statementResolutionContext,
                                                                    boolean assignTargetValue) {
     if (expressionStatement.getListeral() != null) {
-      return Either.left(expressionStatement.getListeral());
+      // Removes additional quotes
+      return Either.left(expressionStatement.getListeral().substring(1, expressionStatement.getListeral().length()-1));
     }
     if (expressionStatement.getExpression() != null) {
       String expression = expressionStatement.getExpression().getExpression();

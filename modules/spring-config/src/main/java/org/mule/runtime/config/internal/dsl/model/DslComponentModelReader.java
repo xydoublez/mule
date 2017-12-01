@@ -182,8 +182,9 @@ public class DslComponentModelReader {
       // TODO(pablo.kraan): add support ofr DW expressions
       Map<String, String> attributes = new HashMap<>();
       attributes.put("variableName", variableDeclaration.getName());
+      // Removes additional quotes
       String literalValue = ((ExpressionStatement) variableValue).getListeral();
-      attributes.put("value", literalValue);
+      attributes.put("value", literalValue.substring(1, literalValue.length()-1));
       return extractComponentDefinitionModel("zaraza", variableValue, "set-variable", attributes, CORE_PREFIX,false).build();
     } else {
       return null;

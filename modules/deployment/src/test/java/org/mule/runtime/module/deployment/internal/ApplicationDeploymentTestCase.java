@@ -59,6 +59,7 @@ import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleFatalException;
 import org.mule.runtime.core.api.config.MuleConfiguration;
 import org.mule.runtime.core.api.config.MuleProperties;
+import org.mule.runtime.core.api.event.CoreEvent;
 import org.mule.runtime.core.api.extension.ExtensionManager;
 import org.mule.runtime.core.internal.config.StartupContext;
 import org.mule.runtime.deployment.model.api.application.Application;
@@ -1961,9 +1962,9 @@ public class ApplicationDeploymentTestCase extends AbstractDeploymentTestCase {
     assertThat(app.getRegistry().lookupByName("defaultHelloConfig").isPresent(), is(true));
     Optional<Object> myFlow = app.getRegistry().lookupByName("myFlow");
     assertThat(myFlow.isPresent(), is(true));
+    CoreEvent coreEvent = executeApplicationFlow("myFlow");
 
-    //List<Processor> processors = ((DefaultFlowBuilder.DefaultFlow) myFlow.get()).getProcessors();
-    //assertThat(processors.size(), equalTo(1));
+    assertThat(coreEvent.getVariables().get("literalVar").getValue(), equalTo("Hola"));
   }
 
   private ArtifactPluginFileBuilder createPrivilegedExtensionPlugin() {
