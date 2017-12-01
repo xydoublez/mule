@@ -7,6 +7,7 @@
 
 package org.mule.runtime.config.internal.dsl.model;
 
+import static org.mule.runtime.api.component.ComponentIdentifier.buildFromStringRepresentation;
 import static org.mule.runtime.api.component.ComponentIdentifier.builder;
 import static org.mule.runtime.api.util.NameUtils.hyphenize;
 import static org.mule.runtime.config.internal.dsl.processor.xml.XmlCustomAttributeHandler.to;
@@ -30,6 +31,8 @@ import org.xtext.example.mydsl.myDsl.ExpressionStatement;
 import org.xtext.example.mydsl.myDsl.FlowDefinition;
 import org.xtext.example.mydsl.myDsl.GlobalDefinition;
 import org.xtext.example.mydsl.myDsl.ParamsCall;
+import org.xtext.example.mydsl.myDsl.RouterConstruct;
+import org.xtext.example.mydsl.myDsl.ScopeConstruct;
 import org.xtext.example.mydsl.myDsl.VariableDeclaration;
 import org.xtext.example.mydsl.myDsl.impl.ConstructCallImpl;
 
@@ -107,6 +110,11 @@ public class DslComponentModelReader {
       extractComponentDefinitionModel("zaraza", flowDefinition, "flow", attributes, CORE_PREFIX, true);
 
     EList<CommonStatement> statements = flowDefinition.getStatements();
+    resolveStatements(componentModelBuilder, statements);
+    return componentModelBuilder.build();
+  }
+
+  private void resolveStatements(ComponentModel.Builder parentComponentModelBuilder, EList<CommonStatement> statements) {
     for (CommonStatement statement : statements) {
 
       if (statement instanceof VariableDeclaration) {
@@ -117,14 +125,38 @@ public class DslComponentModelReader {
         expressionStatementResolver.resolveComplexStatement((ExpressionStatement) statement, statementResolutionContext);
         statementResolutionContext.getComponentModels();
         for (ComponentModel componentModel : statementResolutionContext.getComponentModels()) {
-          componentModelBuilder.addChildComponentModel(componentModel);
+          parentComponentModelBuilder.addChildComponentModel(componentModel);
         }
+      } else if (statement instanceof ScopeConstruct) {
+        ComponentModel.Builder foreachComponentBuilder = processScope((ScopeConstruct) statement);
+        parentComponentModelBuilder.addChildComponentModel(foreachComponentBuilder.build());
+      } else if (statement instanceof RouterConstruct) {
+        RouterConstruct routerConstruct = (RouterConstruct) statement;
+        ParamsCall paramsCall = routerConstruct.getParams();
+        ComponentModel.Builder routerConstructModel = new ComponentModel.Builder();
+        routerConstructModel.setIdentifier(buildFromStringRepresentation(routerConstruct.getName().replace("::", ":")));
+        routerConstructModel.setLineNumber(23);
+        routerConstructModel.setConfigFileName("sdf");
+        for (ScopeConstruct scopeConstruct : routerConstruct.getRoutes()) {
+          ComponentModel.Builder foreachComponentBuilder = processScope(scopeConstruct);
+          routerConstructModel.addChildComponentModel(foreachComponentBuilder.build());
+        }
+        parentComponentModelBuilder.addChildComponentModel(routerConstructModel.build());
       } else {
         throw new IllegalStateException();
       }
     }
+  }
 
-    return componentModelBuilder.build();
+  private ComponentModel.Builder processScope(ScopeConstruct statement) {
+    ScopeConstruct scopeConstruct = statement;
+    ParamsCall paramsCall = scopeConstruct.getParams();
+    ComponentModel.Builder foreachComponentBuilder = new ComponentModel.Builder();
+    foreachComponentBuilder.setIdentifier(buildFromStringRepresentation(scopeConstruct.getName().replace("::", ":")));
+    foreachComponentBuilder.setLineNumber(23);
+    foreachComponentBuilder.setConfigFileName("sdf");
+    resolveStatements(foreachComponentBuilder, scopeConstruct.getStatements());
+    return foreachComponentBuilder;
   }
 
   private ComponentModel createModel(GlobalDefinition globalDefinition) {
