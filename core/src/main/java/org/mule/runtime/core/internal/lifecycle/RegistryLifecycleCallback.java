@@ -10,7 +10,6 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.slf4j.LoggerFactory.getLogger;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.lifecycle.LifecycleException;
@@ -24,12 +23,12 @@ import org.mule.runtime.core.internal.lifecycle.phases.ContainerManagedLifecycle
 import org.mule.runtime.core.internal.lifecycle.phases.LifecyclePhase;
 import org.mule.runtime.core.internal.registry.Registry;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.slf4j.Logger;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
 
 /**
  * An implementation of {@link LifecycleCallback} for applying {@link Registry} lifecycles
@@ -52,6 +51,8 @@ public class RegistryLifecycleCallback<T> implements LifecycleCallback<T>, HasLi
     try {
       registryLifecycleManager.muleContext.withLifecycleLock((CheckedRunnable) () -> doOnTransition(phaseName, object));
     } catch (RuntimeException e) {
+      // TODO(pablo.kraan): this is fucking wrong, I got a classCastException:
+      //Caused by: java.lang.ClassCastException: org.springframework.beans.factory.BeanCreationException cannot be cast to org.mule.runtime.api.exception.MuleException
       throw (MuleException) e.getCause();
     }
   }

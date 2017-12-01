@@ -48,11 +48,6 @@ public class ExpressionStatementResolver {
   private Either<String, String> innerResolveComplexParamStatement(ExpressionStatement expressionStatement,
                                                                    StatementResolutionContext statementResolutionContext,
                                                                    boolean assignTargetValue) {
-    ComponentModel.Builder lineComponentModelBuilder = new ComponentModel.Builder();
-    lineComponentModelBuilder.setConfigFileName("fake");
-    lineComponentModelBuilder.setLineNumber(34);
-    ParamsCall paramsCall;
-
     if (expressionStatement.getListeral() != null) {
       return Either.left(expressionStatement.getListeral());
     }
@@ -60,6 +55,12 @@ public class ExpressionStatementResolver {
       String expression = expressionStatement.getExpression().getExpression();
       return Either.left(format("#[%s]", expression));
     }
+
+    ComponentModel.Builder lineComponentModelBuilder = new ComponentModel.Builder();
+    lineComponentModelBuilder.setConfigFileName("fake");
+    lineComponentModelBuilder.setLineNumber(34);
+    ParamsCall paramsCall;
+
     if (expressionStatement.getOperationCall() != null) {
       OperationCallType operationCall = expressionStatement.getOperationCall();
       lineComponentModelBuilder
@@ -71,6 +72,18 @@ public class ExpressionStatementResolver {
       paramsCall = processorCall.getParamsCall();
     }
 
+    resolveParamsCall(statementResolutionContext, lineComponentModelBuilder, paramsCall);
+
+    String auxVarName = statementResolutionContext.generateNextAuxVarName();
+    if (assignTargetValue) {
+      lineComponentModelBuilder.addParameter("target", auxVarName, false);
+    }
+    statementResolutionContext.addComponentModel(lineComponentModelBuilder.build());
+    return Either.right(auxVarName);
+  }
+
+  public void resolveParamsCall(StatementResolutionContext statementResolutionContext,
+                                 ComponentModel.Builder lineComponentModelBuilder, ParamsCall paramsCall) {
     for (ParamCall paramCall : paramsCall.getParams()) {
       ExpressionStatement paramExpressionStatement = paramCall.getExpressionStatement();
       Either<String, String> resolvedStatement =
@@ -80,12 +93,5 @@ public class ExpressionStatementResolver {
                                                  : format("#[vars.%s]", resolvedStatement.getRight()),
                                              false);
     }
-    String auxVarName = statementResolutionContext.generateNextAuxVarName();
-    if (assignTargetValue) {
-      lineComponentModelBuilder.addParameter("target", auxVarName, false);
-    }
-    statementResolutionContext.addComponentModel(lineComponentModelBuilder.build());
-    return Either.right(auxVarName);
   }
-
 }

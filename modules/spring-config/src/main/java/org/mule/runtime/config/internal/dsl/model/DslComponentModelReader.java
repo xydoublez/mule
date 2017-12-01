@@ -8,14 +8,11 @@
 package org.mule.runtime.config.internal.dsl.model;
 
 import static org.mule.runtime.api.component.ComponentIdentifier.builder;
-import static org.mule.runtime.config.api.dsl.CoreDslConstants.MULE_DOMAIN_ROOT_ELEMENT;
-import static org.mule.runtime.config.api.dsl.CoreDslConstants.MULE_ROOT_ELEMENT;
+import static org.mule.runtime.api.util.NameUtils.hyphenize;
 import static org.mule.runtime.config.internal.dsl.processor.xml.XmlCustomAttributeHandler.to;
-import static org.mule.runtime.config.internal.model.ApplicationModel.POLICY_ROOT_ELEMENT;
 import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.config.api.dsl.processor.ConfigFile;
-import org.mule.runtime.config.api.dsl.processor.ConfigLine;
 import org.mule.runtime.config.internal.dsl.model.config.ConfigurationPropertiesResolver;
 import org.mule.runtime.config.internal.dsl.xtext.XtextParser;
 import org.mule.runtime.config.internal.model.ComponentModel;
@@ -31,7 +28,10 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.xtext.example.mydsl.myDsl.CommonStatement;
 import org.xtext.example.mydsl.myDsl.ExpressionStatement;
 import org.xtext.example.mydsl.myDsl.FlowDefinition;
+import org.xtext.example.mydsl.myDsl.GlobalDefinition;
+import org.xtext.example.mydsl.myDsl.ParamsCall;
 import org.xtext.example.mydsl.myDsl.VariableDeclaration;
+import org.xtext.example.mydsl.myDsl.impl.ConstructCallImpl;
 
 public class DslComponentModelReader {
 
@@ -97,18 +97,14 @@ public class DslComponentModelReader {
   // return resolvedValue instanceof String ? (String) resolvedValue : (resolvedValue != null ? resolvedValue.toString() : null);
   // }
 
-  private boolean isConfigurationTopComponent(ConfigLine parent) {
-    return (parent.getIdentifier().equals(MULE_ROOT_ELEMENT) || parent.getIdentifier().equals(MULE_DOMAIN_ROOT_ELEMENT) ||
-        parent.getIdentifier().equals(POLICY_ROOT_ELEMENT));
-  }
-
   private ComponentModel createModel(FlowDefinition flowDefinition) {
     System.out.println("flow createModel: " + flowDefinition);
 
     Map<String, String> attributes = new HashMap<>();
     attributes.put("name", flowDefinition.getName());
 
-    ComponentModel.Builder componentModelBuilder = extractComponentDefinitionModel("zaraza", flowDefinition, "flow", attributes);
+    ComponentModel.Builder componentModelBuilder =
+      extractComponentDefinitionModel("zaraza", flowDefinition, "flow", attributes, CORE_PREFIX, true);
 
     EList<CommonStatement> statements = flowDefinition.getStatements();
     for (CommonStatement statement : statements) {
@@ -131,23 +127,41 @@ public class DslComponentModelReader {
     return componentModelBuilder.build();
   }
 
-  private ComponentModel createModel(EObject eObject) {
-    // if (eObject instanceof FlowDefinition) {
-    return createModel((FlowDefinition) eObject);
-    // }
+  private ComponentModel createModel(GlobalDefinition globalDefinition) {
+    System.out.println("global def createModel: " + globalDefinition);
 
-    // System.out.println("generic createModel: " + eObject);
-    // return extractComponentDefinitionModel("zaraza", eObject, "");
+    Map<String, String> attributes = new HashMap<>();
+    attributes.put("name", globalDefinition.getName());
+
+    EObject childObject = globalDefinition.eContents().get(0);
+    String[] split = ((ConstructCallImpl) childObject).getName().split("::");
+    String nameSpace = split[0];
+    String name = hyphenize(split[1]);
+
+    return extractComponentDefinitionModel("zaraza", childObject, name, attributes, nameSpace,true).build();
+  }
+
+  private ComponentModel createModel(EObject eObject) {
+    if (eObject instanceof FlowDefinition) {
+      return createModel((FlowDefinition) eObject);
+    }
+
+    if (eObject instanceof GlobalDefinition) {
+      return createModel((GlobalDefinition) eObject);
+    }
+
+    throw new IllegalStateException("Cannot generate component model for: " + eObject.getClass().getName());
+    //System.out.println("generic createModel: " + eObject);
+    //return extractComponentDefinitionModel("zaraza", eObject, "");
   }
 
   public ComponentModel.Builder extractComponentDefinitionModel(String configFileName, EObject eObject, String elementIdentifier,
-                                                                Map<String, String> attributes) {
-    // String elementIdentifier = ""; // name of the tag (flow, logger, set-variable, etc)
+                                                        Map<String, String> attributes, String namespace, boolean isRootElement) {
+    //String elementIdentifier = "";  // name of the tag (flow, logger, set-variable, etc)
     String content = ""; // when a tag has content (like <description>This is the description</description>)
     int lineNumber = 0; // In the XML, should be the line number in the DSL (many elements can point to the same line)
 
     // TODO(pablo.kraan): need the real name space
-    String namespace = CORE_PREFIX; // configLine.getNamespace() == null ? CORE_PREFIX : configLine.getNamespace();
 
     ComponentModel.Builder builder = new ComponentModel.Builder()
         .setIdentifier(builder()
@@ -169,22 +183,26 @@ public class DslComponentModelReader {
       builder.addParameter(attributeName, attributes.get(attributeName), false);
     }
 
-    // for (SimpleConfigAttribute simpleConfigAttribute : configLine.getConfigAttributes().values()) {
-    // builder.addParameter(simpleConfigAttribute.getName(), resolveValueIfIsPlaceHolder(simpleConfigAttribute.getValue()),
-    // simpleConfigAttribute.isValueFromSchema());
-    // }
+    for (EObject childObject : eObject.eContents()) {
+      if (childObject instanceof ParamsCall) {
+        ExpressionStatementResolver expressionStatementResolver = new ExpressionStatementResolver();
+        StatementResolutionContext statementResolutionContext = new StatementResolutionContext();
+        expressionStatementResolver.resolveParamsCall(statementResolutionContext, builder, (ParamsCall) childObject);
+      }
+      //ComponentModel childModel = createModel(childObject);
+      //builder.addChildComponentModel(childModel);
+      //builder.addParameter(childObject)
+    }
 
-    // TODO(pablo.kraan): here it must process the children
-    // List<ComponentModel> componentModels = configLine.getChildren().stream()
-    // .map(childConfigLine -> extractComponentDefinitionModel(childConfigLine, configFileName))
-    // .collect(Collectors.toList());
-    // componentModels.stream().forEach(componentDefinitionModel -> builder.addChildComponentModel(componentDefinitionModel));
+    if (isRootElement) {
+      builder.markAsRootComponent();
+    }
 
-    // TODO(pablo.kraan): add this condition
-    // ConfigLine parent = configLine.getParent();
-    // if (parent != null && isConfigurationTopComponent(parent)) {
-    builder.markAsRootComponent();
-    // }
+    //ComponentModel componentModel = builder.build();
+    //for (ComponentModel innerComponentModel : componentModel.getInnerComponents()) {
+    //  innerComponentModel.setParent(componentModel);
+    //}
+    //return componentModel;
     return builder;
   }
 

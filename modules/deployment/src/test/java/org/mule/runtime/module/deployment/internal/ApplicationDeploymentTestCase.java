@@ -9,6 +9,7 @@ package org.mule.runtime.module.deployment.internal;
 
 import static java.io.File.separator;
 import static java.lang.String.format;
+import static java.lang.System.getProperty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.io.FileUtils.copyFile;
@@ -65,6 +66,7 @@ import org.mule.runtime.deployment.model.api.application.ApplicationStatus;
 import org.mule.runtime.deployment.model.internal.application.MuleApplicationClassLoaderFactory;
 import org.mule.runtime.deployment.model.internal.nativelib.DefaultNativeLibraryFinderFactory;
 import org.mule.runtime.extension.api.loader.xml.XmlExtensionModelLoader;
+import org.mule.runtime.module.artifact.api.descriptor.BundleDescriptor;
 import org.mule.runtime.module.artifact.builder.TestArtifactDescriptor;
 import org.mule.runtime.module.deployment.impl.internal.builder.ApplicationFileBuilder;
 import org.mule.runtime.module.deployment.impl.internal.builder.ArtifactPluginFileBuilder;
@@ -1938,8 +1940,13 @@ public class ApplicationDeploymentTestCase extends AbstractDeploymentTestCase {
   public void deploysAppWithDslConfig() throws Exception {
     // TODO(pablo.kraan): change this when the DSL name changes to mule (and the resource file too)
     String appConfig = "simple-app.mydsl";
+
+    installEchoService();
+    installFooService();
+
     ApplicationFileBuilder dslAppBuilder = new ApplicationFileBuilder("dsl-app")
         .usingResource(appConfig, appConfig)
+        .dependingOn(helloExtensionV1Plugin)
         .deployedWith(PROPERTY_CONFIG_RESOURCES, appConfig);
 
     addPackedAppFromBuilder(dslAppBuilder);
@@ -1952,6 +1959,7 @@ public class ApplicationDeploymentTestCase extends AbstractDeploymentTestCase {
 
     // Checks that the configuration's ID was properly configured
     assertThat(app.getRegistry().lookupByName("myFlow").isPresent(), is(true));
+    assertThat(app.getRegistry().lookupByName("defaultHelloConfig").isPresent(), is(true));
   }
 
   private ArtifactPluginFileBuilder createPrivilegedExtensionPlugin() {
@@ -2021,4 +2029,41 @@ public class ApplicationDeploymentTestCase extends AbstractDeploymentTestCase {
     } catch (AssertionError expected) {
     }
   }
+
+  /**
+   * Obtains the file corresponding to a given Maven artifact on the local repo
+   *
+   * @param descriptor describes which artifact must be returned.
+   * @return the file corresponding to the given artifact
+   * @throws IllegalArgumentException if the file does not exists in the local Maven repository
+   */
+  public static File findMavenArtifact(BundleDescriptor descriptor) {
+    File artifact = new File(getMavenLocalRepository(), Paths
+      .get(descriptor.getGroupId().replace(".", "/"), descriptor.getArtifactId(), descriptor.getVersion(),
+           descriptor.getArtifactFileName() + "." + descriptor.getType())
+      .toString());
+
+    if (!artifact.exists()) {
+      throw new IllegalArgumentException(format("Maven artifact %s does not exists in the local Maven repository", descriptor));
+    }
+
+    return artifact;
+  }
+
+  private static final String M_2_REPO = "/.m2/repository";
+  private static final String USER_HOME = "user.home";
+
+  private static File getMavenLocalRepository() {
+    String buildDirectory = getProperty("localRepository");
+    if (buildDirectory == null) {
+      buildDirectory = getProperty(USER_HOME) + M_2_REPO;
+    }
+
+    File mavenLocalRepositoryLocation = new File(buildDirectory);
+    if (!mavenLocalRepositoryLocation.exists()) {
+      throw new IllegalArgumentException("Maven repository location couldn't be found, please check your configuration");
+    }
+    return mavenLocalRepositoryLocation;
+  }
+
 }

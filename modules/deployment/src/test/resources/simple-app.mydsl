@@ -1,5 +1,4 @@
-flow myFlow(source: http::listener(config: "httpConfig", path: "/file")) {
+def defaultHelloConfig=hello::config(message: "Hello")
 
-	file::read(path: file::read(path: file::read(path: #["someExp"])));
-	http::listener(url: "http");
+flow myFlow() {
 }
