@@ -1,12 +1,9 @@
 def defaultHelloConfig=hello::config(message: "Hello")
 
 flow myFlow() {
-   var literalVar = "Hola"
+    var literalVar = "Hola"
 
-	file::read(path: file::read(path: file::read(path: #["someExp"])));
-	http::listener(url: "http");
+	logger(message: "hola");
 
-    foreach(collection: myOp()) {
-        file::read();
-    }
+
 }

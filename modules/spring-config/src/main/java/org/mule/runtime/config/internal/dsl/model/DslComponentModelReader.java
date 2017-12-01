@@ -7,12 +7,12 @@
 
 package org.mule.runtime.config.internal.dsl.model;
 
-import static org.mule.runtime.api.component.ComponentIdentifier.buildFromStringRepresentation;
 import static org.mule.runtime.api.component.ComponentIdentifier.builder;
 import static org.mule.runtime.api.util.NameUtils.hyphenize;
 import static org.mule.runtime.config.internal.dsl.processor.xml.XmlCustomAttributeHandler.to;
 import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
 import org.mule.runtime.api.component.ComponentIdentifier;
+import org.mule.runtime.api.util.NameUtils;
 import org.mule.runtime.config.api.dsl.processor.ConfigFile;
 import org.mule.runtime.config.internal.dsl.model.config.ConfigurationPropertiesResolver;
 import org.mule.runtime.config.internal.dsl.xtext.XtextParser;
@@ -29,7 +29,6 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.xtext.example.mydsl.myDsl.CommonStatement;
 import org.xtext.example.mydsl.myDsl.ExpressionStatement;
 import org.xtext.example.mydsl.myDsl.FlowDefinition;
-import org.xtext.example.mydsl.myDsl.FlowParams;
 import org.xtext.example.mydsl.myDsl.GlobalDefinition;
 import org.xtext.example.mydsl.myDsl.ParamsCall;
 import org.xtext.example.mydsl.myDsl.RouterConstruct;
@@ -96,6 +95,14 @@ public class DslComponentModelReader {
     return componentModel;
   }
 
+  public static ComponentIdentifier getComponentIdentifierByName(String name) {
+    ComponentIdentifier.Builder builder = ComponentIdentifier.builder();
+    String[] parts = name.split("::");
+    builder.namespace(parts.length > 1 ? parts[0] : CORE_PREFIX);
+    builder.name(NameUtils.hyphenize(parts.length > 1 ? parts[1] : parts[0]));
+    return builder.build();
+  }
+
   // private String resolveValueIfIsPlaceHolder(String value) {
   // Object resolvedValue = configurationPropertiesResolver.resolveValue(value);
   // return resolvedValue instanceof String ? (String) resolvedValue : (resolvedValue != null ? resolvedValue.toString() : null);
@@ -108,6 +115,7 @@ public class DslComponentModelReader {
     componentModelBuilder.setIdentifier(ComponentIdentifier.buildFromStringRepresentation("mule:flow"));
     componentModelBuilder.setConfigFileName("fake");
     componentModelBuilder.setLineNumber(123);
+    componentModelBuilder.markAsRootComponent();
     componentModelBuilder.addParameter("name", flowDefinition.getName(), false);
 
     EList<CommonStatement> statements = flowDefinition.getStatements();
@@ -117,9 +125,8 @@ public class DslComponentModelReader {
 
   private void resolveStatements(ComponentModel.Builder parentComponentModelBuilder, EList<CommonStatement> statements) {
     for (CommonStatement statement : statements) {
-
       if (statement instanceof VariableDeclaration) {
-
+        parentComponentModelBuilder.addChildComponentModel(createModel(statement));
       } else if (statement instanceof ExpressionStatement) {
         ExpressionStatementResolver expressionStatementResolver = new ExpressionStatementResolver();
         StatementResolutionContext statementResolutionContext = new StatementResolutionContext();
@@ -134,7 +141,7 @@ public class DslComponentModelReader {
       } else if (statement instanceof RouterConstruct) {
         RouterConstruct routerConstruct = (RouterConstruct) statement;
         ComponentModel.Builder routerConstructModelBuilder = new ComponentModel.Builder();
-        routerConstructModelBuilder.setIdentifier(buildFromStringRepresentation(routerConstruct.getName().replace("::", ":")));
+        routerConstructModelBuilder.setIdentifier(getComponentIdentifierByName(routerConstruct.getName()));
         routerConstructModelBuilder.setLineNumber(23);
         routerConstructModelBuilder.setConfigFileName("sdf");
 
@@ -157,7 +164,7 @@ public class DslComponentModelReader {
   private ComponentModel.Builder processScope(ScopeConstruct statement) {
     ScopeConstruct scopeConstruct = statement;
     ComponentModel.Builder componentBuilder = new ComponentModel.Builder();
-    componentBuilder.setIdentifier(buildFromStringRepresentation(scopeConstruct.getName().replace("::", ":")));
+    componentBuilder.setIdentifier(getComponentIdentifierByName(scopeConstruct.getName()));
     componentBuilder.setLineNumber(23);
     componentBuilder.setConfigFileName("sdf");
     resolveStatements(componentBuilder, scopeConstruct.getStatements());
@@ -194,8 +201,8 @@ public class DslComponentModelReader {
       attributes.put("variableName", variableDeclaration.getName());
       // Removes additional quotes
       String literalValue = ((ExpressionStatement) variableValue).getListeral();
-      attributes.put("value", literalValue.substring(1, literalValue.length()-1));
-      return extractComponentDefinitionModel("zaraza", variableValue, "set-variable", attributes, CORE_PREFIX,false).build();
+      attributes.put("value", literalValue.substring(1, literalValue.length() - 1));
+      return extractComponentDefinitionModel("zaraza", variableValue, "set-variable", attributes, CORE_PREFIX, false).build();
     } else {
       return null;
     }
