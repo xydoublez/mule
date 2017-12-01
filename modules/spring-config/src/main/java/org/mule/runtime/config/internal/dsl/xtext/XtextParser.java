@@ -43,11 +43,11 @@ public class XtextParser {
       throw new IllegalArgumentException();
     }
 
-    //Resource resource = resourceSet.getResource(URI.createURI(resourceUri.toString()), true);
+    Resource resource = resourceSet.getResource(URI.createURI(resourceUri.toString()), true);
     ///Users/pablokraan/devel/workspaces/mule-uber2/mule/modules/deployment/src/test/resources/simple-app.mydsl
-    URI fileURI = URI
-        .createFileURI("/Users/pablokraan/devel/workspaces/mule-uber2/mule/modules/deployment/src/test/resources/simple-app.mydsl");
-    Resource resource = resourceSet.getResource(fileURI, true);
+    //URI fileURI = URI
+    //    .createFileURI("/Users/pablokraan/devel/workspaces/mule-uber2/mule/modules/deployment/src/test/resources/simple-app.mydsl");
+    //Resource resource = resourceSet.getResource(fileURI, true);
 
 
 

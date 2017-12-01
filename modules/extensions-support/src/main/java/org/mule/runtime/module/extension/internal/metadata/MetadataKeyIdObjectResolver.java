@@ -283,9 +283,9 @@ final class MetadataKeyIdObjectResolver {
     public void visitString(StringType stringType) {
       if (metadataKeyType.isEnum()) {
         keyValueHolder.set(Enum.valueOf(metadataKeyType, id));
-      //} else if (getQueryModelProperty().isPresent() && isDsqlQuery(id)) {
-      //  DsqlQuery dsqlQuery = dsqlParser.parse(id);
-      //  keyValueHolder.set(dsqlQuery);
+        //} else if (getQueryModelProperty().isPresent() && isDsqlQuery(id)) {
+        //  DsqlQuery dsqlQuery = dsqlParser.parse(id);
+        //  keyValueHolder.set(dsqlQuery);
       } else {
         keyValueHolder.set(id);
       }

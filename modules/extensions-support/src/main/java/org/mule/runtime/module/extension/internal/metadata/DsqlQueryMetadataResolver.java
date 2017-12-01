@@ -91,7 +91,7 @@ final class DsqlQueryMetadataResolver implements OutputTypeResolver {
     //
     //  return builder.build();
     //} else {
-      return nativeOutputResolver.getOutputType(context, query);
+    return nativeOutputResolver.getOutputType(context, query);
     //}
   }
 }

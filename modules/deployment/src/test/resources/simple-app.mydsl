@@ -1,2 +1,5 @@
 flow myFlow(source: http::listener(config: "httpConfig", path: "/file")) {
+
+	file::read(path: file::read(path: file::read(path: #["someExp"])));
+	http::listener(url: "http");
 }
