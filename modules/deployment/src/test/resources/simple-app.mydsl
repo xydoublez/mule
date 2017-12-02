@@ -3,7 +3,9 @@ def defaultHelloConfig=hello::config(message: "Hello")
 flow myFlow() {
     var literalVar = "Hola"
 
+    var targetVar=hello::printMessage(configRef: "defaultHelloConfig")
+
+    hello::printMessage(configRef: "defaultHelloConfig", target: "out")
+
 	logger(message: "hola");
-
-
 }

@@ -1965,6 +1965,8 @@ public class ApplicationDeploymentTestCase extends AbstractDeploymentTestCase {
     CoreEvent coreEvent = executeApplicationFlow("myFlow");
 
     assertThat(coreEvent.getVariables().get("literalVar").getValue(), equalTo("Hola"));
+    assertThat(coreEvent.getVariables().get("targetVar").getValue(), equalTo("Hello"));
+    assertThat(coreEvent.getVariables().get("out").getValue(), equalTo("Hello"));
   }
 
   private ArtifactPluginFileBuilder createPrivilegedExtensionPlugin() {
@@ -2044,9 +2046,9 @@ public class ApplicationDeploymentTestCase extends AbstractDeploymentTestCase {
    */
   public static File findMavenArtifact(BundleDescriptor descriptor) {
     File artifact = new File(getMavenLocalRepository(), Paths
-      .get(descriptor.getGroupId().replace(".", "/"), descriptor.getArtifactId(), descriptor.getVersion(),
-           descriptor.getArtifactFileName() + "." + descriptor.getType())
-      .toString());
+        .get(descriptor.getGroupId().replace(".", "/"), descriptor.getArtifactId(), descriptor.getVersion(),
+             descriptor.getArtifactFileName() + "." + descriptor.getType())
+        .toString());
 
     if (!artifact.exists()) {
       throw new IllegalArgumentException(format("Maven artifact %s does not exists in the local Maven repository", descriptor));

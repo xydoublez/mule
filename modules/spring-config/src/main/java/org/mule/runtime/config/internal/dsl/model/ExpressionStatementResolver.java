@@ -8,8 +8,11 @@ package org.mule.runtime.config.internal.dsl.model;
 
 import static java.lang.String.format;
 import static org.mule.runtime.api.component.ComponentIdentifier.buildFromStringRepresentation;
+import static org.mule.runtime.api.util.NameUtils.hyphenize;
 import org.mule.runtime.config.internal.model.ComponentModel;
 import org.mule.runtime.core.api.functional.Either;
+
+import java.util.function.Supplier;
 
 import org.xtext.example.mydsl.myDsl.ExpressionStatement;
 import org.xtext.example.mydsl.myDsl.OperationCallType;
@@ -20,15 +23,24 @@ import org.xtext.example.mydsl.myDsl.ProcessorCall;
 public class ExpressionStatementResolver {
 
 
+  private static final String QUALIFIED_NAME_SEPARATOR = "::";
+
   /**
    * Resolves complex statement like ProcessorCall or OperationCall
-   * 
+   *
    * @param expressionStatement
    * @param statementResolutionContext
    */
   public void resolveComplexStatement(ExpressionStatement expressionStatement,
                                       StatementResolutionContext statementResolutionContext) {
     innerResolveComplexParamStatement(expressionStatement, statementResolutionContext, false);
+  }
+
+  public Either<String, String> innerResolveComplexParamStatement(ExpressionStatement expressionStatement,
+                                                                  StatementResolutionContext statementResolutionContext,
+                                                                  boolean assignTargetValue) {
+    return innerResolveComplexParamStatement(expressionStatement, statementResolutionContext, assignTargetValue,
+                                             () -> statementResolutionContext.generateNextAuxVarName());
   }
 
   /**
@@ -42,15 +54,17 @@ public class ExpressionStatementResolver {
    * @param statementResolutionContext resolution context
    * @param assignTargetValue if true it will automatically add the generated variable name as a target parameter, otherwise it
    *        won't
+   * @param variableNameSupplier
    * @return the auxiliary variable name associated with the statement at the right position or the value to assign to the
    *         parameter in the left.
    */
-  private Either<String, String> innerResolveComplexParamStatement(ExpressionStatement expressionStatement,
-                                                                   StatementResolutionContext statementResolutionContext,
-                                                                   boolean assignTargetValue) {
+  public Either<String, String> innerResolveComplexParamStatement(ExpressionStatement expressionStatement,
+                                                                  StatementResolutionContext statementResolutionContext,
+                                                                  boolean assignTargetValue,
+                                                                  Supplier<String> variableNameSupplier) {
     if (expressionStatement.getListeral() != null) {
       // Removes additional quotes
-      return Either.left(expressionStatement.getListeral().substring(1, expressionStatement.getListeral().length()-1));
+      return Either.left(expressionStatement.getListeral().substring(1, expressionStatement.getListeral().length() - 1));
     }
     if (expressionStatement.getExpression() != null) {
       String expression = expressionStatement.getExpression().getExpression();
@@ -65,17 +79,25 @@ public class ExpressionStatementResolver {
     if (expressionStatement.getOperationCall() != null) {
       OperationCallType operationCall = expressionStatement.getOperationCall();
       lineComponentModelBuilder
-          .setIdentifier(buildFromStringRepresentation(operationCall.getOperation().getName().replace("::", ":")));
+          .setIdentifier(buildFromStringRepresentation(operationCall.getOperation().getName().replace(QUALIFIED_NAME_SEPARATOR,
+                                                                                                      ":")));
       paramsCall = operationCall.getParamsCall();
     } else {
       ProcessorCall processorCall = expressionStatement.getProcessorCall();
-      lineComponentModelBuilder.setIdentifier(buildFromStringRepresentation(processorCall.getName().replace("::", ":")));
+      String componentIdentifier = processorCall.getName();
+      if (componentIdentifier.contains(QUALIFIED_NAME_SEPARATOR)) {
+        String[] split = componentIdentifier.split(QUALIFIED_NAME_SEPARATOR);
+        String nameSpace = split[0];
+        String name = hyphenize(split[1]);
+        componentIdentifier = nameSpace + ":" + name;
+      }
+      lineComponentModelBuilder.setIdentifier(buildFromStringRepresentation(componentIdentifier));
       paramsCall = processorCall.getParamsCall();
     }
 
     resolveParamsCall(statementResolutionContext, lineComponentModelBuilder, paramsCall);
 
-    String auxVarName = statementResolutionContext.generateNextAuxVarName();
+    String auxVarName = variableNameSupplier.get();
     if (assignTargetValue) {
       lineComponentModelBuilder.addParameter("target", auxVarName, false);
     }
@@ -84,15 +106,15 @@ public class ExpressionStatementResolver {
   }
 
   public void resolveParamsCall(StatementResolutionContext statementResolutionContext,
-                                 ComponentModel.Builder lineComponentModelBuilder, ParamsCall paramsCall) {
+                                ComponentModel.Builder lineComponentModelBuilder, ParamsCall paramsCall) {
     if (paramsCall != null) {
       for (ParamCall paramCall : paramsCall.getParams()) {
         ExpressionStatement paramExpressionStatement = paramCall.getExpressionStatement();
         Either<String, String> resolvedStatement =
-                innerResolveComplexParamStatement(paramExpressionStatement, statementResolutionContext, true);
-        lineComponentModelBuilder.addParameter(paramCall.getName(),
+            innerResolveComplexParamStatement(paramExpressionStatement, statementResolutionContext, true);
+        lineComponentModelBuilder.addParameter(hyphenize(paramCall.getName()),
                                                resolvedStatement.isLeft() ? resolvedStatement.getLeft()
-                                                                          : format("#[vars.%s]", resolvedStatement.getRight()),
+                                                   : format("#[vars.%s]", resolvedStatement.getRight()),
                                                false);
       }
     }
