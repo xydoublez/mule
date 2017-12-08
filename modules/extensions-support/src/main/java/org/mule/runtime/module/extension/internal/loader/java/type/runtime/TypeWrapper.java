@@ -104,12 +104,12 @@ public class TypeWrapper implements Type {
 
   @Override
   public boolean isAssignableFrom(Class<?> clazz) {
-    return aClass.isAssignableFrom(clazz);
+    return aClass != null && aClass.isAssignableFrom(clazz);
   }
 
   @Override
   public boolean isAssignableTo(Class<?> clazz) {
-    return clazz.isAssignableFrom(aClass);
+    return aClass != null && clazz.isAssignableFrom(aClass);
   }
 
   @Override

@@ -231,7 +231,7 @@ public class DynamicMetadataDeclarationEnricher implements DeclarationEnricher {
      * @param baseDeclaration the {@link ParameterDeclarer} associated to the parsed parameter
      */
     private void parseMetadataAnnotations(ExtensionParameter element, BaseDeclaration baseDeclaration) {
-      element.getValueFromAnnotation(MetadataKeyPart.class)
+      element.getValueFromAnnotation(MetadataKeyId.class)
           .ifPresent(valueFetcher -> baseDeclaration.addModelProperty(new MetadataKeyPartModelProperty(1)));
 
       element.getValueFromAnnotation(MetadataKeyPart.class)
