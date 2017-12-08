@@ -95,9 +95,9 @@ public class MethodElementAST implements MethodElement {
         .collect(toList());
   }
 
-    /**
-   * {@inheritDoc}
-   */
+  /**
+  * {@inheritDoc}
+  */
   @Override
   public ASTType getReturnType() {
     return new ASTType(method.getReturnType(), processingEnvironment);
