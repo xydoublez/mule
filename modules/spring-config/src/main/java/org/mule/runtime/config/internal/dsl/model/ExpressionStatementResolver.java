@@ -60,7 +60,7 @@ public class ExpressionStatementResolver {
    * @return the auxiliary variable name associated with the statement at the right position or the value to assign to the
    *         parameter in the left.
    */
-  private Either<String, String> innerResolveComplexParamStatement(ExpressionStatement expressionStatement,
+  public Either<String, String> innerResolveComplexParamStatement(ExpressionStatement expressionStatement,
                                                                    StatementResolutionContext statementResolutionContext,
                                                                    boolean assignTargetValue,
                                                                    Supplier<String> variableNameSupplier) {

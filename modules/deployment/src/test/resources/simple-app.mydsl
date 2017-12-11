@@ -9,13 +9,13 @@ flow myFlow(source: http::listener()) {
 
     var myVar = "Como estas";
 
-    var targetVar=hello::printMessage(configRef: "defaultHelloConfig")
+    var targetVar=hello::printMessage(config: "defaultHelloConfig");
 
 /*	foreach {
 		 hello::printMessage(config: defaultHelloConfig);
 	}*/
 
-    hello::printMessage(configRef: "defaultHelloConfig", target: "out")
+    hello::printMessage(config: "defaultHelloConfig", target: "out");
 
     logger(message: "hola");
 

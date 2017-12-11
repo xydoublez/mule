@@ -1969,7 +1969,7 @@ public class ApplicationDeploymentTestCase extends AbstractDeploymentTestCase {
     assertThat(coreEvent.getVariables().get("literalVar").getValue(), equalTo("Hola"));
     assertThat(coreEvent.getVariables().get("targetVar").getValue(), equalTo("Hello"));
     assertThat(coreEvent.getVariables().get("out").getValue(), equalTo("Hello"));
-    assertThat(app.getRegistry().lookupByName("myObject"), IsInstanceOf.instanceOf(AtomicInteger.class));
+    assertThat(app.getRegistry().lookupByName("myObject").get(), IsInstanceOf.instanceOf(AtomicInteger.class));
   }
 
   private ArtifactPluginFileBuilder createPrivilegedExtensionPlugin() {
