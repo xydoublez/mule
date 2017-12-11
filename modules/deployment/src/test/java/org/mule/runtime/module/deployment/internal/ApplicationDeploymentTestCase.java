@@ -87,10 +87,12 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import io.qameta.allure.Description;
 import io.qameta.allure.Issue;
+import org.hamcrest.core.IsInstanceOf;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -1967,6 +1969,7 @@ public class ApplicationDeploymentTestCase extends AbstractDeploymentTestCase {
     assertThat(coreEvent.getVariables().get("literalVar").getValue(), equalTo("Hola"));
     assertThat(coreEvent.getVariables().get("targetVar").getValue(), equalTo("Hello"));
     assertThat(coreEvent.getVariables().get("out").getValue(), equalTo("Hello"));
+    assertThat(app.getRegistry().lookupByName("myObject"), IsInstanceOf.instanceOf(AtomicInteger.class));
   }
 
   private ArtifactPluginFileBuilder createPrivilegedExtensionPlugin() {

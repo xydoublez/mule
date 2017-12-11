@@ -12,7 +12,6 @@ import static org.mule.runtime.api.util.NameUtils.hyphenize;
 import static org.mule.runtime.config.internal.dsl.processor.xml.XmlCustomAttributeHandler.to;
 import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
 import org.mule.runtime.api.component.ComponentIdentifier;
-import org.mule.runtime.api.util.NameUtils;
 import org.mule.runtime.config.api.dsl.processor.ConfigFile;
 import org.mule.runtime.config.internal.dsl.model.config.ConfigurationPropertiesResolver;
 import org.mule.runtime.config.internal.dsl.xtext.XtextParser;
@@ -20,6 +19,7 @@ import org.mule.runtime.config.internal.model.ComponentModel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -27,14 +27,14 @@ import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.xtext.example.mydsl.myDsl.CommonStatement;
+import org.xtext.example.mydsl.myDsl.ConstructStatement;
 import org.xtext.example.mydsl.myDsl.ExpressionStatement;
 import org.xtext.example.mydsl.myDsl.FlowDefinition;
 import org.xtext.example.mydsl.myDsl.GlobalDefinition;
+import org.xtext.example.mydsl.myDsl.OperationDefinition;
 import org.xtext.example.mydsl.myDsl.ParamsCall;
-import org.xtext.example.mydsl.myDsl.RouterConstruct;
-import org.xtext.example.mydsl.myDsl.ScopeConstruct;
 import org.xtext.example.mydsl.myDsl.VariableDeclaration;
-import org.xtext.example.mydsl.myDsl.impl.ConstructCallImpl;
+import org.xtext.example.mydsl.myDsl.impl.ParameterConstructCallImpl;
 
 public class DslComponentModelReader {
 
@@ -74,7 +74,7 @@ public class DslComponentModelReader {
     ComponentIdentifier.Builder builder = ComponentIdentifier.builder();
     String[] parts = name.split("::");
     builder.namespace(parts.length > 1 ? parts[0] : CORE_PREFIX);
-    builder.name(NameUtils.hyphenize(parts.length > 1 ? parts[1] : parts[0]));
+    builder.name(hyphenize(parts.length > 1 ? parts[1] : parts[0]));
     return builder.build();
   }
 
@@ -98,7 +98,22 @@ public class DslComponentModelReader {
     return componentModelBuilder.build();
   }
 
-  private void resolveStatements(ComponentModel.Builder parentComponentModelBuilder, EList<CommonStatement> statements) {
+  private ComponentModel createModel(OperationDefinition operationDefinition) {
+    System.out.println("operation createModel: " + operationDefinition);
+
+    ComponentModel.Builder componentModelBuilder = new ComponentModel.Builder();
+    componentModelBuilder.setIdentifier(ComponentIdentifier.buildFromStringRepresentation("mule:operation"));
+    componentModelBuilder.setConfigFileName("fake");
+    componentModelBuilder.setLineNumber(123);
+    componentModelBuilder.markAsRootComponent();
+    componentModelBuilder.addParameter("name", operationDefinition.getName(), false);
+
+    EList<CommonStatement> statements = operationDefinition.getStatements();
+    resolveStatements(componentModelBuilder, statements);
+    return componentModelBuilder.build();
+  }
+
+  private void resolveStatements(ComponentModel.Builder parentComponentModelBuilder, List<CommonStatement> statements) {
     for (CommonStatement statement : statements) {
       if (statement instanceof VariableDeclaration) {
         parentComponentModelBuilder.addChildComponentModel(createModel(statement));
@@ -110,41 +125,34 @@ public class DslComponentModelReader {
         for (ComponentModel componentModel : statementResolutionContext.getComponentModels()) {
           parentComponentModelBuilder.addChildComponentModel(componentModel);
         }
-      } else if (statement instanceof ScopeConstruct) {
-        ComponentModel.Builder foreachComponentBuilder = processScope((ScopeConstruct) statement);
-        parentComponentModelBuilder.addChildComponentModel(foreachComponentBuilder.build());
-      } else if (statement instanceof RouterConstruct) {
-        RouterConstruct routerConstruct = (RouterConstruct) statement;
-        ComponentModel.Builder routerConstructModelBuilder = new ComponentModel.Builder();
-        routerConstructModelBuilder.setIdentifier(getComponentIdentifierByName(routerConstruct.getName()));
-        routerConstructModelBuilder.setLineNumber(23);
-        routerConstructModelBuilder.setConfigFileName("sdf");
-
-        for (ScopeConstruct scopeConstruct : routerConstruct.getRoutes()) {
-          ComponentModel.Builder foreachComponentBuilder = processScope(scopeConstruct);
-          routerConstructModelBuilder.addChildComponentModel(foreachComponentBuilder.build());
-        }
-
-        ParamsCall paramsCall = routerConstruct.getParams();
-        ExpressionStatementResolver expressionStatementResolver = new ExpressionStatementResolver();
-        expressionStatementResolver.resolveParamsCall(new StatementResolutionContext(), routerConstructModelBuilder, paramsCall);
-
-        parentComponentModelBuilder.addChildComponentModel(routerConstructModelBuilder.build());
+      } else if (statement instanceof ConstructStatement) {
+        ComponentModel.Builder scopeComponentBuilder = processConstructStatement((ConstructStatement) statement);
+        parentComponentModelBuilder.addChildComponentModel(scopeComponentBuilder.build());
       } else {
         throw new IllegalStateException();
       }
     }
   }
 
-  private ComponentModel.Builder processScope(ScopeConstruct statement) {
-    ScopeConstruct scopeConstruct = statement;
+  private ComponentModel.Builder processConstructStatement(ConstructStatement statement) {
     ComponentModel.Builder componentBuilder = new ComponentModel.Builder();
-    componentBuilder.setIdentifier(getComponentIdentifierByName(scopeConstruct.getName()));
+    componentBuilder.setIdentifier(getComponentIdentifierByName(statement.getName()));
     componentBuilder.setLineNumber(23);
     componentBuilder.setConfigFileName("sdf");
-    resolveStatements(componentBuilder, scopeConstruct.getStatements());
+    List<CommonStatement> statementsToResolve = new LinkedList<>();
+    if (statement.getName().equals("try")) {
+      // It should always be "do"
+      ConstructStatement doStatement = (ConstructStatement) statement.getStatements().get(0);
+      statementsToResolve.addAll(doStatement.getStatements());
+      if (statement.getStatements().size() > 1) {
+        statementsToResolve.addAll(statement.getStatements().subList(1, statement.getStatements().size() - 1));
+      }
+    } else {
+      statementsToResolve.addAll(statement.getStatements());
+    }
+    resolveStatements(componentBuilder, statementsToResolve);
 
-    ParamsCall paramsCall = scopeConstruct.getParams();
+    ParamsCall paramsCall = statement.getParams();
     ExpressionStatementResolver expressionStatementResolver = new ExpressionStatementResolver();
     expressionStatementResolver.resolveParamsCall(new StatementResolutionContext(), componentBuilder, paramsCall);
 
@@ -158,9 +166,9 @@ public class DslComponentModelReader {
     attributes.put("name", globalDefinition.getName());
 
     EObject childObject = globalDefinition.eContents().get(0);
-    String[] split = ((ConstructCallImpl) childObject).getName().split("::");
-    String nameSpace = split[0];
-    String name = hyphenize(split[1]);
+    String[] split = ((ParameterConstructCallImpl) childObject).getName().split("::");
+    String nameSpace = split.length > 1 ? split[0] : CORE_PREFIX;
+    String name = split.length > 1 ? hyphenize(split[1]) : hyphenize(split[0]);
 
     return extractComponentDefinitionModel("zaraza", childObject, name, attributes, nameSpace, true).build();
   }
@@ -171,11 +179,11 @@ public class DslComponentModelReader {
 
     ExpressionStatement variableValue = (ExpressionStatement) variableDeclaration.eContents().get(0);
     // TODO(pablo.kraan): add support of DW expressions
-    if (variableValue.getListeral() != null) {
+    if (variableValue.getLiteral() != null) {
       Map<String, String> attributes = new HashMap<>();
       attributes.put("variableName", variableDeclaration.getName());
       // Removes additional quotes
-      String literalValue = variableValue.getListeral();
+      String literalValue = variableValue.getLiteral();
       attributes.put("value", literalValue.substring(1, literalValue.length() - 1));
       return extractComponentDefinitionModel("zaraza", variableValue, "set-variable", attributes, CORE_PREFIX, false).build();
     } else if (variableValue.getProcessorCall() != null) {
@@ -201,6 +209,10 @@ public class DslComponentModelReader {
 
     if (eObject instanceof VariableDeclaration) {
       return createModel((VariableDeclaration) eObject);
+    }
+
+    if (eObject instanceof OperationDefinition) {
+      return createModel((OperationDefinition) eObject);
     }
 
     throw new IllegalStateException("Cannot generate component model for: " + eObject.getClass().getName());

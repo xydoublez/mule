@@ -8,9 +8,10 @@ package org.mule.runtime.config.internal.dsl.model;
 
 import static java.lang.String.format;
 import static org.mule.runtime.api.component.ComponentIdentifier.buildFromStringRepresentation;
-import static org.mule.runtime.api.util.NameUtils.hyphenize;
+import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.config.internal.model.ComponentModel;
 import org.mule.runtime.core.api.functional.Either;
+import org.mule.runtime.extension.api.util.NameUtils;
 
 import java.util.function.Supplier;
 
@@ -19,6 +20,7 @@ import org.xtext.example.mydsl.myDsl.OperationCallType;
 import org.xtext.example.mydsl.myDsl.ParamCall;
 import org.xtext.example.mydsl.myDsl.ParamsCall;
 import org.xtext.example.mydsl.myDsl.ProcessorCall;
+import org.xtext.example.mydsl.myDsl.Symbol;
 
 public class ExpressionStatementResolver {
 
@@ -58,17 +60,29 @@ public class ExpressionStatementResolver {
    * @return the auxiliary variable name associated with the statement at the right position or the value to assign to the
    *         parameter in the left.
    */
-  public Either<String, String> innerResolveComplexParamStatement(ExpressionStatement expressionStatement,
-                                                                  StatementResolutionContext statementResolutionContext,
-                                                                  boolean assignTargetValue,
-                                                                  Supplier<String> variableNameSupplier) {
-    if (expressionStatement.getListeral() != null) {
+  private Either<String, String> innerResolveComplexParamStatement(ExpressionStatement expressionStatement,
+                                                                   StatementResolutionContext statementResolutionContext,
+                                                                   boolean assignTargetValue,
+                                                                   Supplier<String> variableNameSupplier) {
+    if (expressionStatement.getLiteral() != null) {
       // Removes additional quotes
-      return Either.left(expressionStatement.getListeral().substring(1, expressionStatement.getListeral().length() - 1));
+        return Either.left(expressionStatement.getLiteral().substring(1, expressionStatement.getLiteral().length() - 1));
     }
     if (expressionStatement.getExpression() != null) {
       String expression = expressionStatement.getExpression().getExpression();
       return Either.left(format("#[%s]", expression));
+    }
+    if (expressionStatement.getSymbol() != null) {
+      // A symbol may be a variable or parameter or a global definition name
+      Symbol symbol = expressionStatement.getSymbol();
+      if (symbol.getParamDeclaration() != null) {
+        return Either.right(symbol.getParamDeclaration().getName());
+      } else if (symbol.getVarDeclaration() != null) {
+        return Either.right(symbol.getVarDeclaration().getName());
+      } else if (symbol.getGlobalDefinition() != null) {
+        return Either.left(symbol.getGlobalDefinition().getName());
+      }
+      throw new RuntimeException("symbol not implemented");
     }
 
     ComponentModel.Builder lineComponentModelBuilder = new ComponentModel.Builder();
@@ -79,19 +93,13 @@ public class ExpressionStatementResolver {
     if (expressionStatement.getOperationCall() != null) {
       OperationCallType operationCall = expressionStatement.getOperationCall();
       lineComponentModelBuilder
-          .setIdentifier(buildFromStringRepresentation(operationCall.getOperation().getName().replace(QUALIFIED_NAME_SEPARATOR,
-                                                                                                      ":")));
+          .setIdentifier(fixComponentIdentifier(buildFromStringRepresentation(operationCall.getOperation().getName()
+              .replace(QUALIFIED_NAME_SEPARATOR, ":"))));
       paramsCall = operationCall.getParamsCall();
     } else {
       ProcessorCall processorCall = expressionStatement.getProcessorCall();
-      String componentIdentifier = processorCall.getName();
-      if (componentIdentifier.contains(QUALIFIED_NAME_SEPARATOR)) {
-        String[] split = componentIdentifier.split(QUALIFIED_NAME_SEPARATOR);
-        String nameSpace = split[0];
-        String name = hyphenize(split[1]);
-        componentIdentifier = nameSpace + ":" + name;
-      }
-      lineComponentModelBuilder.setIdentifier(buildFromStringRepresentation(componentIdentifier));
+      lineComponentModelBuilder
+          .setIdentifier(fixComponentIdentifier(buildFromStringRepresentation(processorCall.getName().replace(QUALIFIED_NAME_SEPARATOR, ":"))));
       paramsCall = processorCall.getParamsCall();
     }
 
@@ -105,6 +113,17 @@ public class ExpressionStatementResolver {
     return Either.right(auxVarName);
   }
 
+  /**
+   * hyphenizes the operation name
+   *
+   * @param componentIdentifier
+   * @return
+   */
+  private ComponentIdentifier fixComponentIdentifier(ComponentIdentifier componentIdentifier) {
+    return ComponentIdentifier.builder().namespace(componentIdentifier.getNamespace())
+        .name(NameUtils.hyphenize(componentIdentifier.getName())).build();
+  }
+
   public void resolveParamsCall(StatementResolutionContext statementResolutionContext,
                                 ComponentModel.Builder lineComponentModelBuilder, ParamsCall paramsCall) {
     if (paramsCall != null) {
@@ -112,11 +131,18 @@ public class ExpressionStatementResolver {
         ExpressionStatement paramExpressionStatement = paramCall.getExpressionStatement();
         Either<String, String> resolvedStatement =
             innerResolveComplexParamStatement(paramExpressionStatement, statementResolutionContext, true);
-        lineComponentModelBuilder.addParameter(hyphenize(paramCall.getName()),
+        lineComponentModelBuilder.addParameter(fixParamName(paramCall.getName()),
                                                resolvedStatement.isLeft() ? resolvedStatement.getLeft()
                                                    : format("#[vars.%s]", resolvedStatement.getRight()),
                                                false);
       }
     }
+  }
+
+  private String fixParamName(String paramName) {
+    if (paramName.equals("config")) {
+      return "config-ref";
+    }
+    return paramName;
   }
 }

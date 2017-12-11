@@ -1,11 +1,46 @@
 def defaultHelloConfig=hello::config(message: "Hello")
 
-flow myFlow() {
-    var literalVar = "Hola"
+def defaultHelloConfig2=hello::config(message: "Bye")
+
+def myObject = object(class: "java.util.concurrent.atomic.AtomicInteger")
+
+flow myFlow(source: http::listener()) {
+    var literalVar = "Hola";
+
+    var myVar = "Como estas";
 
     var targetVar=hello::printMessage(configRef: "defaultHelloConfig")
 
+/*	foreach {
+		 hello::printMessage(config: defaultHelloConfig);
+	}*/
+
     hello::printMessage(configRef: "defaultHelloConfig", target: "out")
 
-	logger(message: "hola");
+    logger(message: "hola");
+
+	try {
+		do {
+			scatterGather {
+				route {
+					hello::printMessage(config: defaultHelloConfig);
+				}
+				route {
+					hello::printMessage(config: defaultHelloConfig);
+				}
+			}
+
+			choice {
+			    when(expression: "#[var.myVar == 'Como estas']") {
+			        hello::printMessage(config: defaultHelloConfig2);
+			    }
+			}
+		}
+		onErrorContinue {
+			hello::printMessage(config: defaultHelloConfig);
+		}
+		onErrorPropagate {
+			hello::printMessage(config: defaultHelloConfig);
+		}
+	}
 }
