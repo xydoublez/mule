@@ -2,8 +2,10 @@
 <mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xmlns:heisenberg="http://www.mulesoft.org/schema/mule/heisenberg"
       xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:test="http://www.mulesoft.org/schema/mule/test"
       xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-               http://www.mulesoft.org/schema/mule/heisenberg http://www.mulesoft.org/schema/mule/heisenberg/current/mule-heisenberg.xsd">
+               http://www.mulesoft.org/schema/mule/heisenberg http://www.mulesoft.org/schema/mule/heisenberg/current/mule-heisenberg.xsd
+                http://www.mulesoft.org/schema/mule/test http://www.mulesoft.org/schema/mule/test/current/mule-test.xsd">
 
     <configuration-properties file="heisenberg.properties"/>
 
@@ -64,6 +66,18 @@
             </heisenberg:other>
         </heisenberg:two-routes-router>
         <logger/>
+    </flow>
+
+    <flow name="choiceInsideRouter">
+        <heisenberg:two-routes-router processorName="mule:set-payload">
+            <heisenberg:when message="myString" execute="#[vars.executeWhen]">
+                <choice>
+                    <when expression="#[payload == 'ok']">
+                        <test:processor/>
+                    </when>
+                </choice>
+            </heisenberg:when>
+        </heisenberg:two-routes-router>
     </flow>
 
     <flow name="twoRoutesRouterNone">
