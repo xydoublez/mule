@@ -19,13 +19,9 @@ import static org.junit.Assert.fail;
 
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.event.Event;
-import org.mule.runtime.api.exception.MuleException;
-import org.mule.runtime.api.lifecycle.InitialisationException;
-import org.mule.runtime.api.lifecycle.Lifecycle;
 import org.mule.runtime.api.util.Reference;
 import org.mule.runtime.api.util.concurrent.Latch;
 import org.mule.runtime.core.api.event.CoreEvent;
-import org.mule.runtime.core.api.processor.Processor;
 import org.mule.tck.junit4.rule.SystemProperty;
 import org.mule.test.heisenberg.extension.model.Ricin;
 import org.mule.test.module.extension.AbstractExtensionFunctionalTestCase;
@@ -35,8 +31,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -195,55 +189,6 @@ public class RoutersExecutionTestCase extends AbstractExtensionFunctionalTestCas
     assertThat(internalEvent.getMessage().getPayload().getValue(), is(nullValue()));
     assertThat(internalEvent.getVariables().get("before"), is(nullValue()));
     assertThat(internalEvent.getVariables().get("after"), is(nullValue()));
-  }
-
-  public static class LifecycleCheckerMessageProcessor implements Processor, Lifecycle {
-
-    private static boolean initialized;
-    private static boolean disposed;
-    private static boolean started;
-    private static boolean stopped;
-
-    @Override
-    public CoreEvent process(CoreEvent event) throws MuleException {
-      return event;
-    }
-
-    @Override
-    public void dispose() {
-      disposed = true;
-    }
-
-    @Override
-    public void initialise() throws InitialisationException {
-      initialized = true;
-    }
-
-    @Override
-    public void start() throws MuleException {
-      started = true;
-    }
-
-    @Override
-    public void stop() throws MuleException {
-      stopped = true;
-    }
-
-    public static boolean isInitialized() {
-      return initialized;
-    }
-
-    public static boolean isDisposed() {
-      return disposed;
-    }
-
-    public static boolean isStarted() {
-      return started;
-    }
-
-    public static boolean isStopped() {
-      return stopped;
-    }
   }
 
 }
