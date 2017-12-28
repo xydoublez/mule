@@ -7,6 +7,8 @@
 
 package org.mule.functional.junit4;
 
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.junit.Assert.assertThat;
 import static org.mule.runtime.core.api.event.EventContextFactory.create;
 import static org.mule.tck.MuleTestUtils.getTestFlow;
 
@@ -94,8 +96,7 @@ public abstract class MuleArtifactFunctionalTestCase extends ArtifactFunctionalT
     super.doTearDown();
 
     if (eventContextService != null) {
-      // MULE-14151 Force a cleanup of stale contexts. This should be changed to an empty assertion
-      eventContextService.getCurrentlyActiveFlowStacks();
+      assertThat(eventContextService.getCurrentlyActiveFlowStacks(), hasSize(0));
     }
   }
 }

@@ -34,20 +34,18 @@ public class DefaultEventContextService implements EventContextService {
 
   private static Logger LOGGER = getLogger(DefaultEventContextService.class);
 
-  private final ReferenceQueue<DefaultEventContext> queue = new ReferenceQueue<>();
-  private Set<WeakReference<DefaultEventContext>> currentContexts = newKeySet(512);
+  private Set<DefaultEventContext> currentContexts = newKeySet(512);
 
   @Override
   public List<FlowStackEntry> getCurrentlyActiveFlowStacks() {
     List<FlowStackEntry> flowStacks = new ArrayList<>();
 
-    Set<WeakReference<DefaultEventContext>> gcdContexts = new HashSet<>();
+    Set<DefaultEventContext> gcdContexts = new HashSet<>();
 
-    for (WeakReference<DefaultEventContext> contextRef : currentContexts) {
-      DefaultEventContext context = contextRef.get();
+    for (DefaultEventContext context : currentContexts) {
 
       if (context == null) {
-        gcdContexts.add(contextRef);
+        gcdContexts.add(context);
       } else {
         flowStacks.add(new DefaultFlowStackEntry(context));
         context.forEachChild(childContext -> flowStacks.add(new DefaultFlowStackEntry(childContext)));
@@ -60,18 +58,11 @@ public class DefaultEventContextService implements EventContextService {
   }
 
   public void addContext(DefaultEventContext context) {
-    currentContexts.add(new WeakReference<>(context, queue));
+    currentContexts.add(context);
   }
 
   public void removeContext(DefaultEventContext context) {
-    // MULE-14151 This is a temporary workaround until all possible causes of the logged warning are fixed.
-    Reference<? extends DefaultEventContext> polled = queue.poll();
-    while (polled != null) {
-      LOGGER.warn("EventContext with id {} was not terminated.", polled.get().getId());
-      currentContexts.remove(polled);
-
-      polled = queue.poll();
-    }
+    currentContexts.remove(context);
   }
 
   private static final class DefaultFlowStackEntry implements FlowStackEntry {
