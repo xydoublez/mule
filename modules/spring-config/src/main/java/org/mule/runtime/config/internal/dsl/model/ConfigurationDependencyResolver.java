@@ -127,6 +127,7 @@ public class ConfigurationDependencyResolver implements BeanDependencyResolver {
     if (applicationModel.findTopLevelNamedElement(name).isPresent()) {
       otherDependencies.add(name);
     } else {
+      //TODO (gfernandes) support checking if the reference is present on domain (parent ApplicationModel)
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug(String.format("Ignoring dependency %s because it does not exists", name));
       }
