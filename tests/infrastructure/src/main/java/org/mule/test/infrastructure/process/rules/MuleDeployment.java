@@ -17,10 +17,17 @@ import static org.apache.commons.lang3.ArrayUtils.addAll;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.mule.runtime.module.repository.internal.RepositoryServiceFactory.MULE_REMOTE_REPOSITORIES_PROPERTY;
 import static org.mule.test.infrastructure.process.MuleStatusProbe.isNotRunning;
+
 import org.mule.runtime.core.privileged.util.MapUtils;
 import org.mule.tck.probe.JUnitProbe;
 import org.mule.tck.probe.PollingProber;
 import org.mule.test.infrastructure.process.MuleProcessController;
+
+import org.apache.commons.io.FilenameUtils;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,19 +40,14 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import io.qameta.allure.Attachment;
-import org.apache.commons.io.FilenameUtils;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * JUnit rule to deploy a Mule application for testing in a local Mule server. Usage:
  * <p>
- * 
+ *
  * <pre>
  * public class MuleApplicationTestCase {
- * 
+ *
  *   &#064;ClassRule
  *   public static MuleDeployment deployment =
  *       builder().withApplications(&quot;/path/to/application.zip&quot;).withProperty("-M-Dproperty", "value").timeout(120).deploy();
@@ -121,9 +123,13 @@ public class MuleDeployment extends MuleInstallation {
       deployment = new MuleDeployment(zippedDistribution);
     }
 
+    Builder(File muleHome) {
+      deployment = new MuleDeployment(muleHome);
+    }
+
     /**
      * Deploys and starts the Mule instance with the specified configuration.
-     * 
+     *
      * @return
      */
     public MuleDeployment deploy() {
@@ -132,7 +138,7 @@ public class MuleDeployment extends MuleInstallation {
 
     /**
      * Specifies the deployment timeout for each deployed artifact.
-     * 
+     *
      * @param seconds
      * @return
      */
@@ -143,7 +149,7 @@ public class MuleDeployment extends MuleInstallation {
 
     /**
      * Specifies a system property to be passed in the command line when starting Mule.
-     * 
+     *
      * @param property
      * @param value
      * @return
@@ -168,7 +174,7 @@ public class MuleDeployment extends MuleInstallation {
 
     /**
      * Specifies a Map of system properties to be passed in the command line when starting Mule.
-     * 
+     *
      * @param properties
      * @return
      */
@@ -191,7 +197,7 @@ public class MuleDeployment extends MuleInstallation {
 
     /**
      * Specifies application folders or ZIP files to be deployed to the apps folder.
-     * 
+     *
      * @param applications
      * @return
      */
@@ -213,7 +219,7 @@ public class MuleDeployment extends MuleInstallation {
 
     /**
      * Specifies domains to be deployed to the domains folder.
-     * 
+     *
      * @param domains
      * @return
      */
@@ -235,7 +241,7 @@ public class MuleDeployment extends MuleInstallation {
 
     /**
      * Adds libraries to lib/user folder.
-     * 
+     *
      * @param libraries
      * @return
      */
@@ -254,6 +260,10 @@ public class MuleDeployment extends MuleInstallation {
     return new Builder(zippedDistribution);
   }
 
+  public static MuleDeployment.Builder builder(File muleHome) {
+    return new Builder(muleHome);
+  }
+
 
   protected MuleDeployment() {
     super();
@@ -261,6 +271,10 @@ public class MuleDeployment extends MuleInstallation {
 
   protected MuleDeployment(String zippedDistribution) {
     super(zippedDistribution);
+  }
+
+  protected MuleDeployment(File muleHome) {
+    super(muleHome);
   }
 
   private String[] toArray(Map<String, String> map) {
@@ -280,8 +294,8 @@ public class MuleDeployment extends MuleInstallation {
 
       @Override
       public void evaluate() throws Throwable {
+        before();
         try {
-          before();
           base.evaluate();
         } finally {
           after();
@@ -290,6 +304,7 @@ public class MuleDeployment extends MuleInstallation {
     };
   }
 
+  @Override
   protected void before() throws Throwable {
     super.before();
     prober = new PollingProber(deploymentTimeout, POLL_DELAY_MILLIS);
@@ -406,6 +421,7 @@ public class MuleDeployment extends MuleInstallation {
     });
   }
 
+  @Override
   protected void after() {
     if (STOP_ON_EXIT) {
       stopMule();
@@ -432,7 +448,7 @@ public class MuleDeployment extends MuleInstallation {
 
   /***
    * Utility method to generate System properties attachment for the Allure report
-   * 
+   *
    * @return a formatted String of the Mule system properties of the given instance.
    */
   @Attachment(value = "Properties")
@@ -442,7 +458,7 @@ public class MuleDeployment extends MuleInstallation {
 
   /***
    * Utility method to generate Runtime server log attachment for the Allure report
-   * 
+   *
    * @return a ByteArray representation of the log.
    */
   @Attachment(value = "Server log ", type = "text/plain", fileExtension = ".log")
@@ -457,7 +473,7 @@ public class MuleDeployment extends MuleInstallation {
 
   /***
    * Utility method to generate Application log attachment for the Allure report
-   * 
+   *
    * @param appName the application name
    * @return a ByteArray representation of the log.
    */

@@ -12,11 +12,6 @@ import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.moveDirectory;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import org.apache.commons.lang3.StringUtils;
 import org.junit.rules.ExternalResource;
 import org.junit.runner.Description;
@@ -24,13 +19,18 @@ import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 /**
  * This is a JUnit rule to install Mule Runtime during tests. Usage:
  * <p>
- * 
+ *
  * <pre>
  * public class MuleRuntimeInstallationTest {
- * 
+ *
  *   &#064;Rule
  *   public MuleInstallation installation = new MuleInstallation(&quot;/path/to/packed/distribution.zip&quot;);
  *
@@ -69,6 +69,10 @@ public class MuleInstallation extends ExternalResource {
     }
   }
 
+  public MuleInstallation(File muleHome) {
+    this.muleHome = muleHome;
+  }
+
   public String getMuleHome() {
     return muleHome.getAbsolutePath();
   }
@@ -81,8 +85,10 @@ public class MuleInstallation extends ExternalResource {
 
   @Override
   protected void before() throws Throwable {
-    logger.info("Unpacking Mule Distribution: " + distribution);
-    muleHome = new DistroUnzipper(distribution, WORKING_DIRECTORY.resolve(location).toFile()).unzip().muleHome();
+    if (muleHome == null) {
+      logger.info("Unpacking Mule Distribution: " + distribution);
+      muleHome = new DistroUnzipper(distribution, WORKING_DIRECTORY.resolve(location).toFile()).unzip().muleHome();
+    }
   }
 
   @Override

@@ -7,15 +7,12 @@
 
 package org.mule.test.infrastructure.maven;
 
+import static java.io.File.separator;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
-import org.mule.runtime.module.artifact.api.descriptor.BundleDescriptor;
+import static java.util.Collections.singletonList;
 
-import java.io.File;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import org.mule.runtime.module.artifact.api.descriptor.BundleDescriptor;
 
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
@@ -25,6 +22,11 @@ import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.InvokerLogger;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.apache.maven.shared.invoker.SystemOutLogger;
+
+import java.io.File;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -37,8 +39,8 @@ public class MavenTestUtils {
   private static final String MAVEN_ARTIFACTS_DIRECTORY =
       MavenTestUtils.class.getClassLoader().getResource("artifacts").getPath();
 
-  private static final List<String> INSTALL_GOALS = Collections.singletonList("install");
-  private static final List<String> CLEAN_GOALS = Collections.singletonList("clean");
+  private static final List<String> INSTALL_GOALS = singletonList("install");
+  private static final List<String> CLEAN_GOALS = singletonList("clean");
 
   private static final InvokerLogger LOGGER = new SystemOutLogger();
 
@@ -49,7 +51,7 @@ public class MavenTestUtils {
   /**
    * Runs the Maven install goal using the project on the given directory for the artifact defined by the given descriptor. After
    * the artifact has been installed, performs the Maven clean goal to delete the intermediate resources.
-   * 
+   *
    * @param baseDirectory directory on which the POM resides.
    * @param descriptor the artifact descriptor for the project being built.
    * @return the installed artifact on the Maven repository.
@@ -69,12 +71,15 @@ public class MavenTestUtils {
    */
   public static File findMavenArtifact(BundleDescriptor descriptor) {
     File artifact = new File(getMavenLocalRepository(), Paths
-        .get(descriptor.getGroupId(), descriptor.getArtifactId(), descriptor.getVersion(),
+        .get(descriptor.getGroupId().replaceAll("\\.", "\\" + separator),
+             descriptor.getArtifactId().replaceAll("\\.", "\\" + separator),
+             descriptor.getVersion(),
              descriptor.getArtifactFileName() + "." + descriptor.getType())
         .toString());
 
     if (!artifact.exists()) {
-      throw new IllegalArgumentException(format("Maven artifact %s does not exists in the local Maven repository", descriptor));
+      throw new IllegalArgumentException(format("Maven artifact %s does not exists in the local Maven repository. Searched in '%s'",
+                                                descriptor, artifact.getAbsolutePath()));
     }
 
     return artifact;
