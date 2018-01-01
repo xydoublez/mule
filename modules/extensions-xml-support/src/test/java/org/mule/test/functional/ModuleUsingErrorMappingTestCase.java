@@ -116,6 +116,12 @@ public class ModuleUsingErrorMappingTestCase extends AbstractXmlExtensionMuleArt
   }
 
   @Test
+  @Description("Verifies that a mapped error via global error handler works using flow ref.")
+  public void globalMappingWithDefaultErrorHandlerTimeoutThruFlowRef() throws Exception {
+    verifySuccessExpression("globalMappingWithDefaultErrorHandlerTimeoutThruFlowRef", TIMEOUT_ERROR_MESSAGE);
+  }
+
+  @Test
   @Description("Verifies that a mapped error via global error handler works using subflows.")
   public void globalMappingWithDefaultErrorHandlerTimeoutThruSubflow() throws Exception {
     verifySuccessExpression("globalMappingWithDefaultErrorHandlerTimeoutThruSubflow", TIMEOUT_ERROR_MESSAGE);

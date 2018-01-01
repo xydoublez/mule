@@ -141,6 +141,17 @@
         <module-using-errormapping:fail-by-security config-ref="petstoreconfig" petNames="#[vars.names]"/>
     </flow>
 
+    <flow name="globalMappingWithDefaultErrorHandlerTimeoutThruFlowRef">
+        <flow-ref name="aFlowRef" />
+    </flow>
+
+    <flow name="aFlowRef">
+        <module-using-errormapping:fail-by-timeout config-ref="petstoreconfig" petNames="#[vars.names]"/>
+        <error-handler>
+            <on-error-propagate/>
+        </error-handler>
+    </flow>
+
     <flow name="globalMappingWithDefaultErrorHandlerTimeoutThruSubflow">
         <flow-ref name="aSubFlow" />
     </flow>
