@@ -12,14 +12,12 @@ import org.mule.runtime.api.metadata.DataType;
 import org.mule.runtime.api.security.SecurityContext;
 import org.mule.runtime.core.privileged.event.BaseEventContext;
 import org.mule.runtime.core.api.event.CoreEvent;
-import org.mule.runtime.core.api.message.GroupCorrelation;
 import org.mule.runtime.core.internal.event.DefaultEventBuilder;
 import org.mule.runtime.core.privileged.connector.ReplyToHandler;
 import org.mule.runtime.core.privileged.event.MuleSession;
 import org.mule.runtime.core.privileged.event.PrivilegedEvent;
 
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Contains accessors to the fields of the event only accessible from within the Mule Runtime.
@@ -154,9 +152,6 @@ public interface InternalEvent extends PrivilegedEvent {
 
     @Override
     Builder removeVariable(String key);
-
-    @Override
-    Builder groupCorrelation(Optional<GroupCorrelation> groupCorrelation);
 
     @Override
     Builder error(org.mule.runtime.api.message.Error error);

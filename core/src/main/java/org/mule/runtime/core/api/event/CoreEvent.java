@@ -9,10 +9,10 @@ package org.mule.runtime.core.api.event;
 import org.mule.runtime.api.event.Event;
 import org.mule.runtime.api.event.EventContext;
 import org.mule.runtime.api.message.Error;
+import org.mule.runtime.api.message.GroupCorrelation;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.metadata.DataType;
 import org.mule.runtime.core.api.context.notification.FlowCallStack;
-import org.mule.runtime.core.api.message.GroupCorrelation;
 import org.mule.runtime.api.security.SecurityContext;
 import org.mule.runtime.core.internal.event.DefaultEventBuilder;
 import org.mule.runtime.core.internal.message.InternalEvent;
@@ -141,7 +141,7 @@ public interface CoreEvent extends Serializable, Event {
      * @param groupCorrelation the object containing the group correlation information to set on the produced event
      * @return the builder instance
      */
-    Builder groupCorrelation(Optional<org.mule.runtime.api.message.GroupCorrelation> groupCorrelation);
+    Builder groupCorrelation(Optional<GroupCorrelation> groupCorrelation);
 
     /**
      * Sets an error related to the produced event.
