@@ -6,7 +6,7 @@
  */
 package org.mule.runtime.module.extension.internal.runtime.parameter;
 
-import org.mule.runtime.core.api.message.GroupCorrelation;
+import org.mule.runtime.api.message.GroupCorrelation;
 import org.mule.runtime.extension.api.runtime.parameter.CorrelationInfo;
 
 /**
@@ -53,7 +53,7 @@ public class ImmutableCorrelationInfo implements CorrelationInfo {
   }
 
   @Override
-  public org.mule.runtime.api.message.GroupCorrelation getGroupCorrelation() {
+  public GroupCorrelation getGroupCorrelation() {
     return groupCorrelation;
   }
 }
