@@ -10,15 +10,17 @@ import static java.util.OptionalInt.empty;
 
 import org.mule.runtime.api.message.Message;
 
-import java.io.Serializable;
 import java.util.OptionalInt;
 
 /**
  * Immutable container for correlation properties relative to a {@link Message}.
+ *
+ * @deprecated use {@link org.mule.runtime.api.message.GroupCorrelation} instead
  * 
  * @since 4.0
  */
-public class GroupCorrelation implements Serializable {
+@Deprecated
+public class GroupCorrelation extends org.mule.runtime.api.message.GroupCorrelation {
 
   private static final long serialVersionUID = -5687080761804624442L;
   public static final String NOT_SET = "<not set>";
@@ -63,15 +65,4 @@ public class GroupCorrelation implements Serializable {
     return groupSize > 0 ? OptionalInt.of(groupSize) : empty();
   }
 
-  @Override
-  public String toString() {
-    StringBuilder buf = new StringBuilder(120);
-
-    // format message for multi-line output, single-line is not readable
-    buf.append("{");
-    buf.append("sequence=").append(getSequence());
-    buf.append("; groupSize=").append(getGroupSize().isPresent() ? getGroupSize().getAsInt() : NOT_SET);
-    buf.append('}');
-    return buf.toString();
-  }
 }
