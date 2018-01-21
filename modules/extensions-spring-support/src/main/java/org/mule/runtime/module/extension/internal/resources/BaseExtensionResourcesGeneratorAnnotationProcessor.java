@@ -166,6 +166,21 @@ public abstract class BaseExtensionResourcesGeneratorAnnotationProcessor extends
 
   }
 
+  /**
+   * During compile-time, some model validations will be performed over the plugin being compiled
+   * that are different from the ones executed at execution-time for the same plugin
+   * (being the runtime validations a subset of the ones executed at compile-time).
+   *
+   * Ir order to skip the compile-time-only validations and load the plugin as if it was loaded
+   * on an application deploy, the user can flag the compilation as a "runtime simulation".
+   * For example, a plugin that has been developed using a 1.0 version of the SDK and fails its compilation
+   * when moving to the 1.1 version of the SDK, should never fail when using the "runtime simulation" loading mode
+   * (otherwise runtime backwards compatibility would've been broken).
+   *
+   * This simulation mode should be treated as an internal, test-only configuration.
+   *
+   * @return {@code true} if {@code modelLoader.runtimeMode} configuration property was provided
+   */
   private boolean simulateRuntimeLoading() {
     String runtimeMode = System.getProperty(EXTENSION_LOADING_MODE_SYSTEM_PROPERTY);
     return runtimeMode != null && !runtimeMode.trim().isEmpty() ? Boolean.valueOf(runtimeMode) : false;
