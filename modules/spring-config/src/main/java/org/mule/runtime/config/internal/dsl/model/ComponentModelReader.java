@@ -13,6 +13,7 @@ import static org.mule.runtime.config.internal.dsl.processor.xml.XmlCustomAttrib
 import static org.mule.runtime.config.internal.dsl.processor.xml.XmlCustomAttributeHandler.to;
 import static org.mule.runtime.config.internal.model.ApplicationModel.POLICY_ROOT_ELEMENT;
 import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
+
 import org.mule.runtime.config.api.dsl.processor.ConfigLine;
 import org.mule.runtime.config.api.dsl.processor.SimpleConfigAttribute;
 import org.mule.runtime.config.internal.dsl.model.config.ConfigurationPropertiesResolver;
@@ -47,7 +48,10 @@ public class ComponentModelReader {
         .setTextContent(resolveValueIfIsPlaceHolder(configLine.getTextContent()))
         .setConfigFileName(configFileName)
         .setLineNumber(configLine.getLineNumber());
-    to(builder).addNode(from(configLine).getNode());
+    if (from(configLine).getNode() != null) {
+      // this is only available when the config is an xml
+      to(builder).addNode(from(configLine).getNode());
+    }
     for (SimpleConfigAttribute simpleConfigAttribute : configLine.getConfigAttributes().values()) {
       builder.addParameter(simpleConfigAttribute.getName(), resolveValueIfIsPlaceHolder(simpleConfigAttribute.getValue()),
                            simpleConfigAttribute.isValueFromSchema());

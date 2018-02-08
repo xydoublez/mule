@@ -90,13 +90,7 @@ import org.mule.runtime.core.internal.context.MuleContextWithRegistries;
 import org.mule.runtime.core.internal.registry.DefaultRegistry;
 import org.mule.runtime.core.internal.registry.MuleRegistryHelper;
 import org.mule.runtime.core.internal.registry.TransformerResolver;
-import org.mule.runtime.deployment.model.api.domain.Domain;
 
-import amf.AMF;
-import amf.Core;
-import amf.model.domain.DomainElement;
-import amf.plugins.document.Vocabularies;
-import amf.validation.AMFValidationReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -133,7 +127,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
+
+import amf.Core;
+import amf.model.domain.DomainElement;
+import amf.plugins.document.Vocabularies;
 
 /**
  * <code>MuleArtifactContext</code> is a simple extension application context that allows resources to be loaded from the
@@ -354,7 +351,11 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
 
             // Parse me, Dan!!
 
-            ConfigLine mainConfigLine = new ConfigLine.Builder().setNamespace(CORE_PREFIX).setIdentifier("mule")
+            ConfigLine.Builder mainConfigLineBuilder = new ConfigLine.Builder();
+            ConfigLine.Builder flow1Builder = new ConfigLine.Builder();
+            ConfigLine.Builder flow2Builder = new ConfigLine.Builder();
+
+            ConfigLine mainConfigLine = mainConfigLineBuilder.setNamespace(CORE_PREFIX).setIdentifier("mule")
                 .addCustomAttribute("NAMESPACE_URI", "http://www.mulesoft.org/schema/mule/core")
                 .addConfigAttribute("xmlns", "http://www.mulesoft.org/schema/mule/core", false)
                 .addConfigAttribute("xsi:schemaLocation",
@@ -363,10 +364,9 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
                                     false)
                 .addConfigAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance", false)
                 .setLineNumber(1)
-                .addChild(new ConfigLine.Builder()
+                .addChild(flow1Builder
                     .setNamespace(CORE_PREFIX)
                     .setIdentifier("flow")
-                    .addConfigAttribute("initialState", "started", true)
                     .addConfigAttribute("name", "my-first-flow", false)
                     .setLineNumber(22)
                     .addChild(new ConfigLine.Builder()
@@ -375,12 +375,13 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
                         .addConfigAttribute("level", "INFO", true)
                         .addConfigAttribute("message", "Hi There", false)
                         .setLineNumber(24)
+                        .setParent(() -> flow1Builder.build())
                         .build())
+                    .setParent(() -> mainConfigLineBuilder.build())
                     .build())
-                .addChild(new ConfigLine.Builder()
+                .addChild(flow2Builder
                     .setNamespace(CORE_PREFIX)
                     .setIdentifier("flow")
-                    .addConfigAttribute("initialState", "started", true)
                     .addConfigAttribute("name", "my-second-flow", false)
                     .setLineNumber(29)
                     .addChild(new ConfigLine.Builder()
@@ -389,34 +390,41 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
                         .addConfigAttribute("level", "INFO", true)
                         .addConfigAttribute("message", "Hi There", false)
                         .setLineNumber(30)
+                        .setParent(() -> flow2Builder.build())
                         .build())
                     .addChild(new ConfigLine.Builder()
                         .setNamespace(CORE_PREFIX)
                         .setIdentifier("set-variable")
-                        .addConfigAttribute("variable", "hello", false)
+                        .addConfigAttribute("variableName", "hello", false)
                         .addConfigAttribute("value", "world", false)
                         .setLineNumber(34)
+                        .setParent(() -> flow2Builder.build())
                         .build())
                     .addChild(new ConfigLine.Builder()
                         .setNamespace(CORE_PREFIX)
                         .setIdentifier("set-variable")
-                        .addConfigAttribute("variable", "myVar", false)
+                        .addConfigAttribute("variableName", "myVar", false)
                         .addConfigAttribute("value", "myVarValue", false)
                         .setLineNumber(37)
+                        .setParent(() -> flow2Builder.build())
                         .build())
                     .addChild(new ConfigLine.Builder()
                         .setNamespace(CORE_PREFIX)
                         .setIdentifier("remove-variable")
-                        .addConfigAttribute("variable", "myVar", false)
+                        .addConfigAttribute("variableName", "myVar", false)
                         .setLineNumber(30)
+                        .setParent(() -> flow2Builder.build())
                         .build())
                     .addChild(new ConfigLine.Builder()
                         .setNamespace(CORE_PREFIX)
                         .setIdentifier("set-payload")
                         .addConfigAttribute("value", "wadus", false)
                         .setLineNumber(30)
+                        .setParent(() -> flow2Builder.build())
                         .build())
+                    .setParent(() -> mainConfigLineBuilder.build())
                     .build())
+                .setParent(() -> null)
                 .build();
 
             configFile = new ConfigFile(fileNameInputStreamPair.getFirst(), asList(mainConfigLine));

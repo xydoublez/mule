@@ -109,7 +109,7 @@ public class ApplicationFileBuilder extends DeployableFileBuilder<ApplicationFil
   /**
    * Adds a property into the application properties file.
    *
-   * @param propertyName name fo the property to add. Non empty
+   * @param propertyName name of the property to add. Non empty
    * @param propertyValue value of the property to add. Non null.
    * @return the same builder instance
    */
