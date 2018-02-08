@@ -1,0 +1,45 @@
+#%MULE 0.1
+
+configuration-properties:
+  - file: "my-app.properties"
+  - file: "my-other-app.properties"
+
+imports:
+  - file: "my-other-file.yaml"
+  - file: "lalala.yaml"
+
+objects:
+  JwtTokenSigner:
+    class: "about.github.auth.JwtTokenSigner"
+    properties: |
+      issuer: "${github.app.id}"
+      certificate: "${github.app.certificate}"
+      tokenTtl: "${github.token.ttl}"
+  MyOtherBean:
+    class: "my.other.bean"
+
+flows:
+  my-first-flow:
+    flow-steps:
+      - processor: logger
+        level: INFO
+        message: Hi There
+
+  my-second-flow:
+    flow-steps:
+      # Logger
+      - level: INFO
+        message: Hi There
+      # Set Payload
+      - set-variable: hello
+        variable-value: world
+      # Set Variable
+      - set-variable: myVar
+        variable-value: myVarValue
+      # Remove Variable
+      - remove-variable: myVar
+      # Set payload
+      - set-payload: |
+          {
+           "value":"wadus"
+          }

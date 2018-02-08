@@ -41,6 +41,7 @@ import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.genericBeanDefinition;
 import static org.springframework.context.annotation.AnnotationConfigUtils.CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME;
 import static org.springframework.context.annotation.AnnotationConfigUtils.REQUIRED_ANNOTATION_PROCESSOR_BEAN_NAME;
+
 import org.mule.runtime.api.artifact.Registry;
 import org.mule.runtime.api.component.Component;
 import org.mule.runtime.api.component.ComponentIdentifier;
@@ -90,18 +91,6 @@ import org.mule.runtime.core.internal.registry.DefaultRegistry;
 import org.mule.runtime.core.internal.registry.MuleRegistryHelper;
 import org.mule.runtime.core.internal.registry.TransformerResolver;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -126,6 +115,18 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.w3c.dom.Document;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * <code>MuleArtifactContext</code> is a simple extension application context that allows resources to be loaded from the
@@ -300,13 +301,94 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
         .filter(fileNameInputStreamPair -> !alreadyResolvedConfigFiles.stream()
             .anyMatch(configFile -> configFile.getFilename().equals(fileNameInputStreamPair.getFirst())))
         .forEach(fileNameInputStreamPair -> {
-          Document document =
-              xmlConfigurationDocumentLoader.loadDocument(muleContext.getExtensionManager() == null ? emptySet()
-                  : muleContext.getExtensionManager().getExtensions(),
-                                                          fileNameInputStreamPair.getFirst(),
-                                                          fileNameInputStreamPair.getSecond());
-          ConfigLine mainConfigLine = xmlApplicationParser.parse(document.getDocumentElement()).get();
-          ConfigFile configFile = new ConfigFile(fileNameInputStreamPair.getFirst(), asList(mainConfigLine));
+          ConfigFile configFile = null;
+
+          String configFileName = fileNameInputStreamPair.getFirst().toLowerCase();
+          System.out.println(configFileName);
+
+          if (configFileName.endsWith(".xml")) {
+            Document document =
+                xmlConfigurationDocumentLoader.loadDocument(muleContext.getExtensionManager() == null ? emptySet()
+                    : muleContext.getExtensionManager().getExtensions(),
+                                                            fileNameInputStreamPair.getFirst(),
+                                                            fileNameInputStreamPair.getSecond());
+            ConfigLine mainConfigLine = xmlApplicationParser.parse(document.getDocumentElement()).get();
+            configFile = new ConfigFile(fileNameInputStreamPair.getFirst(), asList(mainConfigLine));
+          } else if (configFileName.endsWith(".yaml")) {
+            // Parse me, Dan!!
+
+            ConfigLine mainConfigLine = new ConfigLine.Builder().setNamespace(CORE_PREFIX).setIdentifier("mule")
+                .addCustomAttribute("NAMESPACE_URI", "http://www.mulesoft.org/schema/mule/core")
+                .addConfigAttribute("xmlns", "http://www.mulesoft.org/schema/mule/core", false)
+                .addConfigAttribute("xsi:schemaLocation",
+                                    "http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd"
+                                        + "",
+                                    false)
+                .addConfigAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance", false)
+                .setLineNumber(1)
+                .addChild(new ConfigLine.Builder()
+                    .setNamespace(CORE_PREFIX)
+                    .setIdentifier("flow")
+                    .addConfigAttribute("initialState", "started", true)
+                    .addConfigAttribute("name", "my-first-flow", false)
+                    .setLineNumber(22)
+                    .addChild(new ConfigLine.Builder()
+                        .setNamespace(CORE_PREFIX)
+                        .setIdentifier("logger")
+                        .addConfigAttribute("level", "INFO", true)
+                        .addConfigAttribute("message", "Hi There", false)
+                        .setLineNumber(24)
+                        .build())
+                    .build())
+                .addChild(new ConfigLine.Builder()
+                    .setNamespace(CORE_PREFIX)
+                    .setIdentifier("flow")
+                    .addConfigAttribute("initialState", "started", true)
+                    .addConfigAttribute("name", "my-second-flow", false)
+                    .setLineNumber(29)
+                    .addChild(new ConfigLine.Builder()
+                        .setNamespace(CORE_PREFIX)
+                        .setIdentifier("logger")
+                        .addConfigAttribute("level", "INFO", true)
+                        .addConfigAttribute("message", "Hi There", false)
+                        .setLineNumber(30)
+                        .build())
+                    .addChild(new ConfigLine.Builder()
+                        .setNamespace(CORE_PREFIX)
+                        .setIdentifier("set-variable")
+                        .addConfigAttribute("variable", "hello", false)
+                        .addConfigAttribute("value", "world", false)
+                        .setLineNumber(34)
+                        .build())
+                    .addChild(new ConfigLine.Builder()
+                        .setNamespace(CORE_PREFIX)
+                        .setIdentifier("set-variable")
+                        .addConfigAttribute("variable", "myVar", false)
+                        .addConfigAttribute("value", "myVarValue", false)
+                        .setLineNumber(37)
+                        .build())
+                    .addChild(new ConfigLine.Builder()
+                        .setNamespace(CORE_PREFIX)
+                        .setIdentifier("remove-variable")
+                        .addConfigAttribute("variable", "myVar", false)
+                        .setLineNumber(30)
+                        .build())
+                    .addChild(new ConfigLine.Builder()
+                        .setNamespace(CORE_PREFIX)
+                        .setIdentifier("set-payload")
+                        .addConfigAttribute("value", "wadus", false)
+                        .setLineNumber(30)
+                        .build())
+                    .build())
+                .build();
+
+            configFile = new ConfigFile(fileNameInputStreamPair.getFirst(), asList(mainConfigLine));
+          }
+
+          if (configFile == null) {
+            throw new MuleRuntimeException(createStaticMessage("No parser found for config file '%s'",
+                                                               fileNameInputStreamPair.getFirst()));
+          }
           resolvedConfigFilesBuilder.add(configFile);
           try {
             fileNameInputStreamPair.getSecond().close();

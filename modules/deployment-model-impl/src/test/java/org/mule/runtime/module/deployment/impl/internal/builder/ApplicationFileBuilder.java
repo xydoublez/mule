@@ -100,7 +100,8 @@ public class ApplicationFileBuilder extends DeployableFileBuilder<ApplicationFil
   public ApplicationFileBuilder definedBy(String configFile) {
     checkImmutable();
     checkArgument(!StringUtils.isEmpty(configFile), "Config file cannot be empty");
-    this.resources.add(new ZipResource(configFile, DEFAULT_CONFIGURATION_RESOURCE));
+    this.resources.add(new ZipResource(configFile, configFile));
+    this.deployProperties.put(PROPERTY_CONFIG_RESOURCES, configFile);
 
     return this;
   }
