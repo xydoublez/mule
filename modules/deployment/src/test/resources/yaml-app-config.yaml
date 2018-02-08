@@ -21,8 +21,7 @@ objects:
 flows:
   my-first-flow:
     flow-steps:
-      - processor: logger
-        level: INFO
+      - level: INFO
         message: Hi There
 
   my-second-flow:
