@@ -36,7 +36,22 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-aop</artifactId>
         </dependency>
-        
+        <dependency>
+            <groupId>org.mule.amf</groupId>
+            <artifactId>amf-client_2.12</artifactId>
+            <version>1.2.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mule.amf</groupId>
+            <artifactId>amf-core_2.12</artifactId>
+            <version>1.2.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mule.amf</groupId>
+            <artifactId>amf-vocabularies_2.12</artifactId>
+            <version>1.2.0-SNAPSHOT</version>
+        </dependency>
+
         <!-- Add logging libraries required by spring -->
         <dependency>
             <groupId>org.mule.runtime</groupId>

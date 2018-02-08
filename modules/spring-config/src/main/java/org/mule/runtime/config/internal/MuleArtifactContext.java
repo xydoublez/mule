@@ -90,7 +90,13 @@ import org.mule.runtime.core.internal.context.MuleContextWithRegistries;
 import org.mule.runtime.core.internal.registry.DefaultRegistry;
 import org.mule.runtime.core.internal.registry.MuleRegistryHelper;
 import org.mule.runtime.core.internal.registry.TransformerResolver;
+import org.mule.runtime.deployment.model.api.domain.Domain;
 
+import amf.AMF;
+import amf.Core;
+import amf.model.domain.DomainElement;
+import amf.plugins.document.Vocabularies;
+import amf.validation.AMFValidationReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -127,6 +133,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 /**
  * <code>MuleArtifactContext</code> is a simple extension application context that allows resources to be loaded from the
@@ -227,6 +234,18 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
     validateAllConfigElementHaveParsers();
 
     this.dependencyResolver = new ConfigurationDependencyResolver(applicationModel, componentBuildingDefinitionRegistry);
+
+    amf.plugins.document.WebApi.register();
+    amf.plugins.document.Vocabularies.register();
+    amf.plugins.features.AMFValidation.register();
+
+    try {
+      amf.Core.init().get();
+      amf.Core.registerNamespace("mule", "http://mulesoft.com/vocabularies/mule#");
+      Vocabularies.registerDialect("https://mulesoft-labs.github.io/semantic-mule-amf/mule-dialect.yaml").get();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static Optional<Set<ExtensionModel>> getExtensionModels(ExtensionManager extensionManager) {
@@ -315,6 +334,24 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
             ConfigLine mainConfigLine = xmlApplicationParser.parse(document.getDocumentElement()).get();
             configFile = new ConfigFile(fileNameInputStreamPair.getFirst(), asList(mainConfigLine));
           } else if (configFileName.endsWith(".yaml")) {
+
+            amf.model.document.Document document = null;
+            try {
+              document = (amf.model.document.Document) Core.parser("RAML 1.0", "application/yaml")
+                  .parseStringAsync(IOUtils.toString(fileNameInputStreamPair.getSecond())).get();
+            } catch (Exception e) {
+              e.printStackTrace();
+            }
+            DomainElement domainElement = document.encodes();
+            List<DomainElement> flows = domainElement.getObjectByPropertyId("http://mulesoft.com/vocabularies/mule#flows");
+            for (DomainElement flow : flows) {
+              System.out.println("FLOWS: " + flows);
+              for (DomainElement flowSteps : flow.getObjectByPropertyId("http://mulesoft.com/vocabularies/mule#flowStep")) {
+                System.out.println("FLOW STEPS: " + flowSteps);
+              }
+            }
+
+
             // Parse me, Dan!!
 
             ConfigLine mainConfigLine = new ConfigLine.Builder().setNamespace(CORE_PREFIX).setIdentifier("mule")
