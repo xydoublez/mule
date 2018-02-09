@@ -233,9 +233,9 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
 
     this.dependencyResolver = new ConfigurationDependencyResolver(applicationModel, componentBuildingDefinitionRegistry);
 
-    amf.plugins.document.WebApi.register();
+    // amf.plugins.document.WebApi.register();
     amf.plugins.document.Vocabularies.register();
-    amf.plugins.features.AMFValidation.register();
+    // amf.plugins.features.AMFValidation.register();
 
     try {
       amf.Core.init().get();
