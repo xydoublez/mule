@@ -92,6 +92,7 @@ import org.mule.runtime.core.internal.registry.DefaultRegistry;
 import org.mule.runtime.core.internal.registry.MuleRegistryHelper;
 import org.mule.runtime.core.internal.registry.TransformerResolver;
 
+import amf.model.domain.DomainEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -124,6 +125,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -169,6 +171,29 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
     }
   });
   protected List<ConfigurableObjectProvider> objectProviders = new ArrayList<>();
+
+  private static Map<String, String> amfTypeMap = new HashMap();
+  private static Map<String, String> amfPropertyMap = new HashMap();
+
+  static {
+    amfTypeMap.put("LoggerProcessor", "logger");
+    amfTypeMap.put("SetVariableProcessor", "set-variable");
+    amfTypeMap.put("SetPayloadProcessor", "set-payload");
+    amfTypeMap.put("RemoveVariableProcessor", "remove-variable");
+
+    amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#processor-logger-level", "level");
+    amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#processor-logger-category", "category");
+    amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#processor-logger-message", "message");
+    amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#processor-logger-level", "level");
+    amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#processor-set-variable-value", "value");
+    amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#processor-set-variable-variable-name", "variableName");
+    amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#processor-remove-variable-value", "value");
+    amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#processor-remove-variable-variable-name", "variableName");
+    amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#processor-set-payload-value", "value");
+
+
+
+  }
 
   /**
    * Parses configuration files creating a spring ApplicationContext which is used as a parent registry using the SpringRegistry
@@ -370,8 +395,6 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
 
             List<DomainElement> flows = domainElement.getObjectByPropertyId("http://mulesoft.com/vocabularies/mule#flows");
             for (DomainElement flow : flows) {
-              System.out.println("FLOWS: " + flows);
-
               ConfigLine.Builder flowBuilder = new ConfigLine.Builder()
                   .setNamespace(CORE_PREFIX)
                   .setIdentifier("flow")
@@ -380,23 +403,18 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
                                       false)
                   .setParent(() -> mainConfigLineBuilder.build());
 
-              for (DomainElement flowSteps : flow.getObjectByPropertyId("http://mulesoft.com/vocabularies/mule#flow-steps")) {
-                System.out.println("FLOW STEPS: " + flowSteps);
-
-                // flowBuilder.addChild(new ConfigLine.Builder()
-                // .setNamespace(CORE_PREFIX)
-                // .setIdentifier("logger")
-                // .addConfigAttribute("level", "INFO", false)
-                // .addConfigAttribute("message", "Hi There", false)
-                // .setParent(() -> flowBuilder.build())
-                // .build());
+              for (DomainElement flowStep : flow.getObjectByPropertyId("http://mulesoft.com/vocabularies/mule#flow-steps")) {
+                ConfigLine.Builder configLineBuilder = new ConfigLine.Builder();
+                configLineBuilder.setNamespace(CORE_PREFIX);
+                configLineBuilder.setIdentifier(amfTypeMap.get(((DomainEntity) flowStep).element().definition().shortName()));
+                flowStep.element().fields().fields().foreach(fieldTuple -> configLineBuilder
+                    .addConfigAttribute(amfPropertyMap.get(fieldTuple.field().toString()), fieldTuple.value().toString(), false));
+                configLineBuilder.setParent(() -> flowBuilder.build());
+                flowBuilder.addChild(configLineBuilder.build());
               }
-
               mainConfigLineBuilder.addChild(flowBuilder.build());
             }
-
-            ConfigLine mainConfigLine = mainConfigLineBuilder.build();
-            configFile = new ConfigFile(configFileName, asList(mainConfigLine));
+            configFile = new ConfigFile(fileNameInputStreamPair.getFirst(), asList(mainConfigLineBuilder.build()));
           }
 
           if (configFile == null) {

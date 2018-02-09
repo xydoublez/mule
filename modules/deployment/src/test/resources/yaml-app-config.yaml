@@ -31,10 +31,12 @@ flows:
         message: Hi There
       # Set Payload
       - set-variable: hello
-        variable-value: world
+        variable-name: world
+        value: world
       # Set Variable
       - set-variable: myVar
-        variable-value: myVarValue
+        variable-name: world
+        value: myVarValue
       # Remove Variable
       - remove-variable: myVar
       # Set payload
