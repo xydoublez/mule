@@ -340,22 +340,8 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
               e.printStackTrace();
             }
             DomainElement domainElement = document.encodes();
-            List<DomainElement> flows = domainElement.getObjectByPropertyId("http://mulesoft.com/vocabularies/mule#flows");
-            for (DomainElement flow : flows) {
-              System.out.println("FLOWS: " + flows);
-              for (DomainElement flowSteps : flow.getObjectByPropertyId("http://mulesoft.com/vocabularies/mule#flowStep")) {
-                System.out.println("FLOW STEPS: " + flowSteps);
-              }
-            }
 
-
-            // Parse me, Dan!!
-
-            ConfigLine.Builder mainConfigLineBuilder = new ConfigLine.Builder();
-            ConfigLine.Builder flow1Builder = new ConfigLine.Builder();
-            ConfigLine.Builder flow2Builder = new ConfigLine.Builder();
-
-            ConfigLine mainConfigLine = mainConfigLineBuilder.setNamespace(CORE_PREFIX).setIdentifier("mule")
+            ConfigLine.Builder mainConfigLineBuilder = new ConfigLine.Builder().setNamespace(CORE_PREFIX).setIdentifier("mule")
                 .addCustomAttribute("NAMESPACE_URI", "http://www.mulesoft.org/schema/mule/core")
                 .addConfigAttribute("xmlns", "http://www.mulesoft.org/schema/mule/core", false)
                 .addConfigAttribute("xsi:schemaLocation",
@@ -363,7 +349,43 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
                                         + "",
                                     false)
                 .addConfigAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance", false)
-                .setLineNumber(1)
+                .setLineNumber(1);
+
+
+            List<DomainElement> flows = domainElement.getObjectByPropertyId("http://mulesoft.com/vocabularies/mule#flows");
+            for (DomainElement flow : flows) {
+              System.out.println("FLOWS: " + flows);
+
+              ConfigLine.Builder flowBuilder = new ConfigLine.Builder()
+                  .setNamespace(CORE_PREFIX)
+                  .setIdentifier("flow")
+                  .addConfigAttribute("name", flow.getScalarByPropertyId("http://mulesoft.com/vocabularies/mule#name").toString(),
+                                      false)
+                  .setParent(() -> mainConfigLineBuilder.build());
+
+              for (DomainElement flowSteps : flow.getObjectByPropertyId("http://mulesoft.com/vocabularies/mule#flow-steps")) {
+                System.out.println("FLOW STEPS: " + flowSteps);
+
+                flowBuilder.addChild(new ConfigLine.Builder()
+                    .setNamespace(CORE_PREFIX)
+                    // .setIdentifier("logger")
+                    // .addConfigAttribute("level", "INFO", false)
+                    // .addConfigAttribute("message", "Hi There", false)
+                    .setParent(() -> flowBuilder.build())
+                    .build());
+              }
+
+              mainConfigLineBuilder.addChild(flowBuilder.build());
+            }
+
+            ConfigLine mainConfigLine = mainConfigLineBuilder.build();
+
+            // Parse me, Dan!!
+
+            ConfigLine.Builder flow2Builder = new ConfigLine.Builder();
+            ConfigLine.Builder flow1Builder = new ConfigLine.Builder();
+
+            mainConfigLine = mainConfigLineBuilder
                 .addChild(flow1Builder
                     .setNamespace(CORE_PREFIX)
                     .setIdentifier("flow")
