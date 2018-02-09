@@ -7,15 +7,16 @@
 package org.mule.runtime.config.api.dsl.processor;
 
 import static com.google.common.collect.ImmutableMap.copyOf;
+import static java.lang.String.format;
 import static org.mule.runtime.api.util.Preconditions.checkState;
+
+import org.w3c.dom.Node;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import org.w3c.dom.Node;
 
 /**
  * A configuration line represents the data within a line in a configuration file
@@ -84,6 +85,10 @@ public class ConfigLine {
   }
 
   public ConfigLine getParent() {
+    if (parent == null) {
+      throw new NullPointerException(format("No parent set for ConfigLine '%s:%s', '%s'.", getNamespace(), getIdentifier(),
+                                            getConfigAttributes().get("name")));
+    }
     return parent.getConfigLine();
   }
 

@@ -54,6 +54,7 @@ import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.util.Pair;
 import org.mule.runtime.app.declaration.api.ArtifactDeclaration;
 import org.mule.runtime.config.api.XmlConfigurationDocumentLoader;
+import org.mule.runtime.config.api.dsl.MuleConfigContent;
 import org.mule.runtime.config.api.dsl.model.ComponentBuildingDefinitionRegistry;
 import org.mule.runtime.config.api.dsl.model.ResourceProvider;
 import org.mule.runtime.config.api.dsl.processor.ArtifactConfig;
@@ -320,22 +321,22 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
           ConfigFile configFile = null;
 
           String configFileName = fileNameInputStreamPair.getFirst().toLowerCase();
-          System.out.println(configFileName);
+          InputStream configStream = fileNameInputStreamPair.getSecond();
 
           if (configFileName.endsWith(".xml")) {
             Document document =
                 xmlConfigurationDocumentLoader.loadDocument(muleContext.getExtensionManager() == null ? emptySet()
                     : muleContext.getExtensionManager().getExtensions(),
-                                                            fileNameInputStreamPair.getFirst(),
-                                                            fileNameInputStreamPair.getSecond());
+                                                            configFileName,
+                                                            configStream);
             ConfigLine mainConfigLine = xmlApplicationParser.parse(document.getDocumentElement()).get();
-            configFile = new ConfigFile(fileNameInputStreamPair.getFirst(), asList(mainConfigLine));
+            configFile = new ConfigFile(configFileName, asList(mainConfigLine));
           } else if (configFileName.endsWith(".yaml")) {
-
+            String configBody = IOUtils.toString(configStream);
             amf.model.document.Document document = null;
             try {
               document = (amf.model.document.Document) Core.parser("RAML 1.0", "application/yaml")
-                  .parseStringAsync(IOUtils.toString(fileNameInputStreamPair.getSecond())).get();
+                  .parseStringAsync(configBody).get();
             } catch (Exception e) {
               e.printStackTrace();
             }
@@ -349,8 +350,23 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
                                         + "",
                                     false)
                 .addConfigAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance", false)
-                .setLineNumber(1);
+                .setLineNumber(1)
+                .setParent(() -> null);
 
+            ConfigLine.Builder configContentsBuilder = new ConfigLine.Builder();
+            configContentsBuilder
+                .setNamespace(CORE_PREFIX)
+                .setIdentifier("object")
+                .addConfigAttribute("name", "configContents", false)
+                .addConfigAttribute("class", MuleConfigContent.class.getName(), false)
+                .addChild(new ConfigLine.Builder()
+                    .setNamespace(CORE_PREFIX)
+                    .setIdentifier("property")
+                    .addConfigAttribute("key", "body", false)
+                    .addConfigAttribute("value", configBody, false)
+                    .setParent(() -> configContentsBuilder.build())
+                    .build())
+                .setParent(() -> mainConfigLineBuilder.build());
 
             List<DomainElement> flows = domainElement.getObjectByPropertyId("http://mulesoft.com/vocabularies/mule#flows");
             for (DomainElement flow : flows) {
@@ -359,106 +375,37 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
               ConfigLine.Builder flowBuilder = new ConfigLine.Builder()
                   .setNamespace(CORE_PREFIX)
                   .setIdentifier("flow")
-                  .addConfigAttribute("name", flow.getScalarByPropertyId("http://mulesoft.com/vocabularies/mule#name").toString(),
+                  .addConfigAttribute("name",
+                                      flow.getScalarByPropertyId("http://mulesoft.com/vocabularies/mule#name").get(0).toString(),
                                       false)
                   .setParent(() -> mainConfigLineBuilder.build());
 
               for (DomainElement flowSteps : flow.getObjectByPropertyId("http://mulesoft.com/vocabularies/mule#flow-steps")) {
                 System.out.println("FLOW STEPS: " + flowSteps);
 
-                flowBuilder.addChild(new ConfigLine.Builder()
-                    .setNamespace(CORE_PREFIX)
-                    // .setIdentifier("logger")
-                    // .addConfigAttribute("level", "INFO", false)
-                    // .addConfigAttribute("message", "Hi There", false)
-                    .setParent(() -> flowBuilder.build())
-                    .build());
+                // flowBuilder.addChild(new ConfigLine.Builder()
+                // .setNamespace(CORE_PREFIX)
+                // .setIdentifier("logger")
+                // .addConfigAttribute("level", "INFO", false)
+                // .addConfigAttribute("message", "Hi There", false)
+                // .setParent(() -> flowBuilder.build())
+                // .build());
               }
 
               mainConfigLineBuilder.addChild(flowBuilder.build());
             }
 
             ConfigLine mainConfigLine = mainConfigLineBuilder.build();
-
-            // Parse me, Dan!!
-
-            ConfigLine.Builder flow2Builder = new ConfigLine.Builder();
-            ConfigLine.Builder flow1Builder = new ConfigLine.Builder();
-
-            mainConfigLine = mainConfigLineBuilder
-                .addChild(flow1Builder
-                    .setNamespace(CORE_PREFIX)
-                    .setIdentifier("flow")
-                    .addConfigAttribute("name", "my-first-flow", false)
-                    .setLineNumber(22)
-                    .addChild(new ConfigLine.Builder()
-                        .setNamespace(CORE_PREFIX)
-                        .setIdentifier("logger")
-                        .addConfigAttribute("level", "INFO", true)
-                        .addConfigAttribute("message", "Hi There", false)
-                        .setLineNumber(24)
-                        .setParent(() -> flow1Builder.build())
-                        .build())
-                    .setParent(() -> mainConfigLineBuilder.build())
-                    .build())
-                .addChild(flow2Builder
-                    .setNamespace(CORE_PREFIX)
-                    .setIdentifier("flow")
-                    .addConfigAttribute("name", "my-second-flow", false)
-                    .setLineNumber(29)
-                    .addChild(new ConfigLine.Builder()
-                        .setNamespace(CORE_PREFIX)
-                        .setIdentifier("logger")
-                        .addConfigAttribute("level", "INFO", true)
-                        .addConfigAttribute("message", "Hi There", false)
-                        .setLineNumber(30)
-                        .setParent(() -> flow2Builder.build())
-                        .build())
-                    .addChild(new ConfigLine.Builder()
-                        .setNamespace(CORE_PREFIX)
-                        .setIdentifier("set-variable")
-                        .addConfigAttribute("variableName", "hello", false)
-                        .addConfigAttribute("value", "world", false)
-                        .setLineNumber(34)
-                        .setParent(() -> flow2Builder.build())
-                        .build())
-                    .addChild(new ConfigLine.Builder()
-                        .setNamespace(CORE_PREFIX)
-                        .setIdentifier("set-variable")
-                        .addConfigAttribute("variableName", "myVar", false)
-                        .addConfigAttribute("value", "myVarValue", false)
-                        .setLineNumber(37)
-                        .setParent(() -> flow2Builder.build())
-                        .build())
-                    .addChild(new ConfigLine.Builder()
-                        .setNamespace(CORE_PREFIX)
-                        .setIdentifier("remove-variable")
-                        .addConfigAttribute("variableName", "myVar", false)
-                        .setLineNumber(30)
-                        .setParent(() -> flow2Builder.build())
-                        .build())
-                    .addChild(new ConfigLine.Builder()
-                        .setNamespace(CORE_PREFIX)
-                        .setIdentifier("set-payload")
-                        .addConfigAttribute("value", "wadus", false)
-                        .setLineNumber(30)
-                        .setParent(() -> flow2Builder.build())
-                        .build())
-                    .setParent(() -> mainConfigLineBuilder.build())
-                    .build())
-                .setParent(() -> null)
-                .build();
-
-            configFile = new ConfigFile(fileNameInputStreamPair.getFirst(), asList(mainConfigLine));
+            configFile = new ConfigFile(configFileName, asList(mainConfigLine));
           }
 
           if (configFile == null) {
             throw new MuleRuntimeException(createStaticMessage("No parser found for config file '%s'",
-                                                               fileNameInputStreamPair.getFirst()));
+                                                               configFileName));
           }
           resolvedConfigFilesBuilder.add(configFile);
           try {
-            fileNameInputStreamPair.getSecond().close();
+            configStream.close();
           } catch (IOException e) {
             throw new MuleRuntimeException(e);
           }
