@@ -39,6 +39,9 @@ flows:
 
   my-second-flow:
     flow-steps:
+      # HTTP Listener
+      - path: myPathWhatever
+        config-ref: myHttpListenerConfig
       # Logger
       - level: INFO
         message: Hi There
