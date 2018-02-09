@@ -180,6 +180,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
     amfTypeMap.put("SetVariableProcessor", "set-variable");
     amfTypeMap.put("SetPayloadProcessor", "set-payload");
     amfTypeMap.put("RemoveVariableProcessor", "remove-variable");
+    amfTypeMap.put("HttpListener", "listener");
 
     amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#processor-logger-level", "level");
     amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#processor-logger-category", "category");
@@ -190,6 +191,8 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
     amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#processor-remove-variable-value", "value");
     amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#processor-remove-variable-variable-name", "variableName");
     amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#processor-set-payload-value", "value");
+    amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#http-listener-path", "path");
+    amfPropertyMap.put("http://mulesoft.com/vocabularies/mule#http-listener-config-ref", "config-ref");
 
 
 
@@ -436,20 +439,15 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
                   .addConfigAttribute("name", flowName, false)
                   .setParent(() -> mainConfigLineBuilder.build());
 
-              // Fixes http listener source
-              ConfigLine.Builder httpSourceConfigBuilder = new ConfigLine.Builder();
-              httpSourceConfigBuilder
-                  .setNamespace("http")
-                  .setIdentifier("listener")
-                  .addConfigAttribute("config-ref", "lisConfig", false)
-                  .addConfigAttribute("path", "/" + flowName, false)
-                  .setParent(() -> flowBuilder.build());
-              flowBuilder.addChild(httpSourceConfigBuilder.build());
-
               for (DomainElement flowStep : flow.getObjectByPropertyId("http://mulesoft.com/vocabularies/mule#flow-steps")) {
                 ConfigLine.Builder configLineBuilder = new ConfigLine.Builder();
-                configLineBuilder.setNamespace(CORE_PREFIX);
-                configLineBuilder.setIdentifier(amfTypeMap.get(((DomainEntity) flowStep).element().definition().shortName()));
+                String className = ((DomainEntity) flowStep).element().definition().shortName();
+                if (className.equals("HttpListener")) {
+                  configLineBuilder.setNamespace("http");
+                } else {
+                  configLineBuilder.setNamespace(CORE_PREFIX);
+                }
+                configLineBuilder.setIdentifier(amfTypeMap.get(className));
                 flowStep.element().fields().fields().foreach(fieldTuple -> configLineBuilder
                     .addConfigAttribute(amfPropertyMap.get(fieldTuple.field().toString()), fieldTuple.value().toString(), false));
                 configLineBuilder.setParent(() -> flowBuilder.build());

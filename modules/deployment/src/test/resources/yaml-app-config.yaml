@@ -8,16 +8,6 @@ imports:
   - file: "my-other-file.yaml"
   - file: "lalala.yaml"
 
-objects:
-  JwtTokenSigner:
-    class: "about.github.auth.JwtTokenSigner"
-    properties: |
-      issuer: "${github.app.id}"
-      certificate: "${github.app.certificate}"
-      tokenTtl: "${github.token.ttl}"
-  MyOtherBean:
-    class: "my.other.bean"
-
 module-configurations:
   http:
     listener:
