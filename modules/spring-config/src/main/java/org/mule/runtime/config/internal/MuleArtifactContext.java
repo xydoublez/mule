@@ -393,6 +393,35 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
                     .build())
                 .setParent(() -> mainConfigLineBuilder.build());
 
+            ConfigLine.Builder httpRequesterConfigBuilder = new ConfigLine.Builder();
+            httpRequesterConfigBuilder
+                .setNamespace("http")
+                .setIdentifier("request-config")
+                .addConfigAttribute("name", "reqConfig", false)
+                .addChild(new ConfigLine.Builder()
+                    .setNamespace("http")
+                    .setIdentifier("request-connection")
+                    .addConfigAttribute("host", "www.mulesoft.com", false)
+                    .addConfigAttribute("port", "80", false)
+                    .setParent(() -> httpRequesterConfigBuilder.build())
+                    .build())
+                .setParent(() -> mainConfigLineBuilder.build());
+
+            ConfigLine.Builder httpListenerConfigBuilder = new ConfigLine.Builder();
+            httpListenerConfigBuilder
+                .setNamespace("http")
+                .setIdentifier("listener-config")
+                .addConfigAttribute("name", "lisConfig", false)
+                .addChild(new ConfigLine.Builder()
+                    .setNamespace("http")
+                    .setIdentifier("listener-connection")
+                    .addConfigAttribute("host", "localhost", false)
+                    .addConfigAttribute("port", "${http.port}", false)
+                    .addConfigAttribute("protocol", "HTTP", false)
+                    .setParent(() -> httpListenerConfigBuilder.build())
+                    .build())
+                .setParent(() -> mainConfigLineBuilder.build());
+
             List<DomainElement> flows = domainElement.getObjectByPropertyId("http://mulesoft.com/vocabularies/mule#flows");
             for (DomainElement flow : flows) {
               ConfigLine.Builder flowBuilder = new ConfigLine.Builder()
