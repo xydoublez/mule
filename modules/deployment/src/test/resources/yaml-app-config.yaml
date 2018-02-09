@@ -18,6 +18,19 @@ objects:
   MyOtherBean:
     class: "my.other.bean"
 
+module-configurations:
+  http:
+    listener:
+      myHttpListenerConfig:
+        basePath: /
+        host: 0.0.0.0
+        port: ${http.port}
+    requester:
+      myHttpRequesterConfig:
+        basePath: /
+        host: www.mulesoft.com
+        port: 80
+
 flows:
   my-first-flow:
     flow-steps:
