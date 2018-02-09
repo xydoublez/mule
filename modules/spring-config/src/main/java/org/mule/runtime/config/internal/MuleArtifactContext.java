@@ -54,7 +54,7 @@ import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.util.Pair;
 import org.mule.runtime.app.declaration.api.ArtifactDeclaration;
 import org.mule.runtime.config.api.XmlConfigurationDocumentLoader;
-import org.mule.runtime.config.api.dsl.MuleConfigContent;
+import org.mule.runtime.config.api.dsl.DefaultMuleConfigContent;
 import org.mule.runtime.config.api.dsl.model.ComponentBuildingDefinitionRegistry;
 import org.mule.runtime.config.api.dsl.model.ResourceProvider;
 import org.mule.runtime.config.api.dsl.processor.ArtifactConfig;
@@ -92,7 +92,6 @@ import org.mule.runtime.core.internal.registry.DefaultRegistry;
 import org.mule.runtime.core.internal.registry.MuleRegistryHelper;
 import org.mule.runtime.core.internal.registry.TransformerResolver;
 
-import amf.model.domain.DomainEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -133,6 +132,7 @@ import java.util.Set;
 
 import amf.Core;
 import amf.model.domain.DomainElement;
+import amf.model.domain.DomainEntity;
 import amf.plugins.document.Vocabularies;
 
 /**
@@ -370,8 +370,10 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
             ConfigLine.Builder mainConfigLineBuilder = new ConfigLine.Builder().setNamespace(CORE_PREFIX).setIdentifier("mule")
                 .addCustomAttribute("NAMESPACE_URI", "http://www.mulesoft.org/schema/mule/core")
                 .addConfigAttribute("xmlns", "http://www.mulesoft.org/schema/mule/core", false)
+                .addConfigAttribute("xmlns:http", "http://www.mulesoft.org/schema/mule/http", false)
                 .addConfigAttribute("xsi:schemaLocation",
                                     "http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd"
+                                        + "http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd"
                                         + "",
                                     false)
                 .addConfigAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance", false)
@@ -383,7 +385,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
                 .setNamespace(CORE_PREFIX)
                 .setIdentifier("object")
                 .addConfigAttribute("name", "configContents", false)
-                .addConfigAttribute("class", MuleConfigContent.class.getName(), false)
+                .addConfigAttribute("class", DefaultMuleConfigContent.class.getName(), false)
                 .addChild(new ConfigLine.Builder()
                     .setNamespace(CORE_PREFIX)
                     .setIdentifier("property")
@@ -392,6 +394,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
                     .setParent(() -> configContentsBuilder.build())
                     .build())
                 .setParent(() -> mainConfigLineBuilder.build());
+            mainConfigLineBuilder.addChild(configContentsBuilder.build());
 
             ConfigLine.Builder httpRequesterConfigBuilder = new ConfigLine.Builder();
             httpRequesterConfigBuilder
@@ -406,6 +409,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
                     .setParent(() -> httpRequesterConfigBuilder.build())
                     .build())
                 .setParent(() -> mainConfigLineBuilder.build());
+            mainConfigLineBuilder.addChild(httpRequesterConfigBuilder.build());
 
             ConfigLine.Builder httpListenerConfigBuilder = new ConfigLine.Builder();
             httpListenerConfigBuilder
@@ -421,16 +425,26 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
                     .setParent(() -> httpListenerConfigBuilder.build())
                     .build())
                 .setParent(() -> mainConfigLineBuilder.build());
+            mainConfigLineBuilder.addChild(httpListenerConfigBuilder.build());
 
             List<DomainElement> flows = domainElement.getObjectByPropertyId("http://mulesoft.com/vocabularies/mule#flows");
             for (DomainElement flow : flows) {
+              String flowName = flow.getScalarByPropertyId("http://mulesoft.com/vocabularies/mule#name").get(0).toString();
               ConfigLine.Builder flowBuilder = new ConfigLine.Builder()
                   .setNamespace(CORE_PREFIX)
                   .setIdentifier("flow")
-                  .addConfigAttribute("name",
-                                      flow.getScalarByPropertyId("http://mulesoft.com/vocabularies/mule#name").get(0).toString(),
-                                      false)
+                  .addConfigAttribute("name", flowName, false)
                   .setParent(() -> mainConfigLineBuilder.build());
+
+              // Fixes http listener source
+              ConfigLine.Builder httpSourceConfigBuilder = new ConfigLine.Builder();
+              httpSourceConfigBuilder
+                  .setNamespace("http")
+                  .setIdentifier("listener")
+                  .addConfigAttribute("config-ref", "lisConfig", false)
+                  .addConfigAttribute("path", "/" + flowName, false)
+                  .setParent(() -> flowBuilder.build());
+              flowBuilder.addChild(httpSourceConfigBuilder.build());
 
               for (DomainElement flowStep : flow.getObjectByPropertyId("http://mulesoft.com/vocabularies/mule#flow-steps")) {
                 ConfigLine.Builder configLineBuilder = new ConfigLine.Builder();
