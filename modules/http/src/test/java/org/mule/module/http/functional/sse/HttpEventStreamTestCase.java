@@ -21,7 +21,7 @@ import static org.mule.api.lifecycle.LifecycleUtils.startIfNeeded;
 import static org.mule.module.http.functional.TestEventStreamServer.SSE_ERROR_RESPONSE;
 import static org.mule.module.http.functional.TestEventStreamServer.SSE_MOVED_RESPONSE;
 import static org.mule.module.http.functional.TestEventStreamServer.SSE_RESPONSE;
-import static org.mule.module.http.internal.sse.DefaultHttpEventStreamListener.LAST_EVENT_ID_KEY;
+import static org.mule.module.http.internal.sse.SseConstants.DEFAULT_RECONNECTION_TIME_MILLIS;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -34,6 +34,7 @@ import org.junit.Test;
 import org.mule.api.MuleMessage;
 import org.mule.api.client.MuleClient;
 import org.mule.module.http.functional.TestEventStreamServer;
+import org.mule.module.http.internal.sse.SseConstants;
 import org.mule.tck.junit4.FunctionalTestCase;
 import org.mule.tck.junit4.rule.DynamicPort;
 import org.mule.tck.probe.JUnitProbe;
@@ -269,7 +270,7 @@ public class HttpEventStreamTestCase extends FunctionalTestCase
             protected boolean test() throws Exception
             {
                 assertThat(sseServer.getLastRequest(), not(nullValue()));
-                assertThat(sseServer.getLastRequest(), not(containsString(LAST_EVENT_ID_KEY)));
+                assertThat(sseServer.getLastRequest(), not(containsString(SseConstants.LAST_EVENT_ID_KEY)));
                 return true;
             }
         });
@@ -288,7 +289,7 @@ public class HttpEventStreamTestCase extends FunctionalTestCase
             protected boolean test() throws Exception
             {
                 assertThat(sseServer.getLastRequest(), not(nullValue()));
-                assertThat(sseServer.getLastRequest(), not(containsString(LAST_EVENT_ID_KEY)));
+                assertThat(sseServer.getLastRequest(), not(containsString(SseConstants.LAST_EVENT_ID_KEY)));
                 return true;
             }
         });
@@ -307,7 +308,7 @@ public class HttpEventStreamTestCase extends FunctionalTestCase
             protected boolean test() throws Exception
             {
                 assertThat(sseServer.getLastRequest(), not(nullValue()));
-                assertThat(sseServer.getLastRequest(), containsString(LAST_EVENT_ID_KEY + ": 1"));
+                assertThat(sseServer.getLastRequest(), containsString(SseConstants.LAST_EVENT_ID_KEY + ": 1"));
                 return true;
             }
         });
@@ -322,7 +323,7 @@ public class HttpEventStreamTestCase extends FunctionalTestCase
             protected boolean test() throws Exception
             {
                 assertThat(sseServer.getLastRequest(), not(nullValue()));
-                assertThat(sseServer.getLastRequest(), not(containsString(LAST_EVENT_ID_KEY)));
+                assertThat(sseServer.getLastRequest(), not(containsString(SseConstants.LAST_EVENT_ID_KEY)));
                 return true;
             }
         });
@@ -366,7 +367,7 @@ public class HttpEventStreamTestCase extends FunctionalTestCase
         long secondConnection = currentTimeMillis();
         
         // Use some error margin to account for the polling time of the pollers used above
-        assertThat(secondConnection - firstConnection, greaterThanOrEqualTo(3000L - 1000L));
+        assertThat(secondConnection - firstConnection, greaterThanOrEqualTo(DEFAULT_RECONNECTION_TIME_MILLIS - 1000L));
 
     }
 

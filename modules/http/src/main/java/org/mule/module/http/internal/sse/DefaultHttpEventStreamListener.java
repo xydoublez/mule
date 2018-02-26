@@ -19,6 +19,7 @@ import static org.mule.api.MuleEvent.TIMEOUT_WAIT_FOREVER;
 import static org.mule.api.transformer.DataType.STRING_DATA_TYPE;
 import static org.mule.config.i18n.MessageFactory.createStaticMessage;
 import static org.mule.module.http.api.HttpHeaders.Names.COOKIE;
+import static org.mule.module.http.internal.sse.SseConstants.DEFAULT_RECONNECTION_TIME_MILLIS;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -92,15 +93,10 @@ public class DefaultHttpEventStreamListener implements HttpServerSent, HttpReque
 {
 
     public static final int DEFAULT_MAX_THREADS = 128;
-    private static final int DEFAULT_RECONNECTION_TIME = 3000;
-
     private static final Logger logger = LoggerFactory.getLogger(DefaultHttpEventStreamListener.class);
 
     private static final Pattern EVENT_LINE_PATTERN = compile("^(?!:.*)([^:\\r\\n]+)(?:: ?(.*)?)?");
-    public static final String LAST_EVENT_ID_KEY = "Last-Event-ID";
-    private static final String RECONNECTION_TIME_KEY = "Reconnection-Time";
-    private static final String TEXT_EVENT_STREAM_MEDIA_TYPE = "text/event-stream";
-
+    public static final String RECONNECTION_TIME_KEY = "Reconnection-Time";
     public static final String DEFAULT_FOLLOW_REDIRECTS = "true";
 
     private DefaultHttpRequesterConfig requestConfig;
@@ -384,7 +380,14 @@ public class DefaultHttpEventStreamListener implements HttpServerSent, HttpReque
                     do {
                         if(incompleteBody)
                         {
-                            lines.add(lines.remove(lines.size() - 1) + line);
+                            if(lines.isEmpty())
+                            {
+                                lines.add(line);
+                            }
+                            else
+                            {
+                                lines.add(lines.remove(lines.size() - 1) + line);
+                            }
                             incompleteBody = false;
                         }
                         else
@@ -525,12 +528,12 @@ public class DefaultHttpEventStreamListener implements HttpServerSent, HttpReque
                                 {
                                     try
                                     {
-                                        if(objectStore.contains(LAST_EVENT_ID_KEY)) {
-                                            objectStore.remove(LAST_EVENT_ID_KEY);
+                                        if(objectStore.contains(SseConstants.LAST_EVENT_ID_KEY)) {
+                                            objectStore.remove(SseConstants.LAST_EVENT_ID_KEY);
                                         }
                                         if(!"".equals(value))
                                         {
-                                            objectStore.store(LAST_EVENT_ID_KEY, value);
+                                            objectStore.store(SseConstants.LAST_EVENT_ID_KEY, value);
                                         }
                                     }
                                     catch (ObjectStoreException e)
@@ -584,7 +587,7 @@ public class DefaultHttpEventStreamListener implements HttpServerSent, HttpReque
                 public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception
                 {
                     String contentType = headers.getHeaders().getFirstValue(ContentType.toString());
-                    if(TEXT_EVENT_STREAM_MEDIA_TYPE.equals(contentType))
+                    if(SseConstants.TEXT_EVENT_STREAM_MEDIA_TYPE.equals(contentType))
                     {
                         return STATE.CONTINUE;
                     }
@@ -705,11 +708,11 @@ public class DefaultHttpEventStreamListener implements HttpServerSent, HttpReque
         builder.setMethod(resolvedMethod);
         builder.setHeaders(requestBuilder.getHeaders(null));
         builder.addHeader(CacheControl.toString(), "no-cache");
-        builder.addHeader(Accept.toString(), TEXT_EVENT_STREAM_MEDIA_TYPE);
+        builder.addHeader(Accept.toString(), SseConstants.TEXT_EVENT_STREAM_MEDIA_TYPE);
         
-        if(objectStore.contains(LAST_EVENT_ID_KEY))
+        if(objectStore.contains(SseConstants.LAST_EVENT_ID_KEY))
         {
-            builder.addHeader(LAST_EVENT_ID_KEY, objectStore.retrieve(LAST_EVENT_ID_KEY).toString());
+            builder.addHeader(SseConstants.LAST_EVENT_ID_KEY, objectStore.retrieve(SseConstants.LAST_EVENT_ID_KEY).toString());
         }
         
         builder.setQueryParams(requestBuilder.getQueryParams(null));
@@ -774,7 +777,7 @@ public class DefaultHttpEventStreamListener implements HttpServerSent, HttpReque
                 }
                 else
                 {
-                    Thread.sleep(DEFAULT_RECONNECTION_TIME);
+                    Thread.sleep(DEFAULT_RECONNECTION_TIME_MILLIS);
                 }
                 connect();
             }
@@ -887,6 +890,11 @@ public class DefaultHttpEventStreamListener implements HttpServerSent, HttpReque
         this.followRedirects = new AttributeEvaluator(followsRedirects);
     }
 
+    public void setRequestStreamingMode(String requestStreamingMode)
+    {
+        this.requestStreamingMode = new AttributeEvaluator(requestStreamingMode);
+    }
+    
     public void setSendBodyMode(String sendBodyMode)
     {
         this.sendBodyMode = new AttributeEvaluator(sendBodyMode);
