@@ -251,7 +251,7 @@
         <muleMetadataExtensionTestVersion>4.1.1-DRY-RUN</muleMetadataExtensionTestVersion>
         <muleVeganExtensionTestVersion>4.1.1-DRY-RUN</muleVeganExtensionTestVersion>
         <muleHeisenbergExtensionTestVersion>4.1.1-DRY-RUN</muleHeisenbergExtensionTestVersion>
-        <muleMarvelExtensionTestVersion>4.1.1-SNAPSHOT</muleMarvelExtensionTestVersion>
+        <muleMarvelExtensionTestVersion>4.1.1-DRY-RUN</muleMarvelExtensionTestVersion>
         <mulePetstoreExtensionTestVersion>4.1.1-SNAPSHOT</mulePetstoreExtensionTestVersion>
         <muleSubtypesExtensionTestVersion>4.1.1-SNAPSHOT</muleSubtypesExtensionTestVersion>
 
