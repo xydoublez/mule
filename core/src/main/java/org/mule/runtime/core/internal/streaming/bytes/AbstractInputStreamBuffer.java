@@ -10,9 +10,12 @@ import static java.lang.Math.min;
 import static java.lang.Math.toIntExact;
 import static java.lang.System.arraycopy;
 import static java.nio.channels.Channels.newChannel;
+import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.util.Preconditions.checkState;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import org.mule.runtime.api.exception.MuleRuntimeException;
+import org.mule.runtime.api.i18n.I18nMessageFactory;
 import org.mule.runtime.api.util.LazyValue;
 import org.mule.runtime.core.api.streaming.bytes.ByteBufferManager;
 import org.mule.runtime.core.internal.streaming.AbstractStreamingBuffer;
@@ -69,7 +72,15 @@ public abstract class AbstractInputStreamBuffer extends AbstractStreamingBuffer 
     this.stream = stream;
     this.streamChannel = streamChannel;
     this.bufferManager = bufferManager;
-    buffer = new LazyValue<>(() -> bufferManager.allocate(bufferSize));
+    buffer = new LazyValue<>(() -> {
+      if(!closed.get()) {
+        return withWriteLock(() -> {
+          return bufferManager.allocate(bufferSize);
+        });
+      } else {
+        throw new MuleRuntimeException(createStaticMessage("%s already closed.", AbstractInputStreamBuffer.this.toString()));
+      }
+    });
   }
 
   /**
