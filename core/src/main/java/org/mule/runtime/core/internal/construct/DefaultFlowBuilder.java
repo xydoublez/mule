@@ -21,6 +21,7 @@ import static org.mule.runtime.core.internal.event.DefaultEventContext.child;
 import static org.mule.runtime.core.privileged.event.PrivilegedEvent.setCurrentEvent;
 import static org.mule.runtime.core.privileged.processor.MessageProcessors.processToApply;
 import static reactor.core.publisher.Flux.from;
+
 import org.mule.runtime.api.deployment.management.ComponentInitialStateManager;
 import org.mule.runtime.api.event.EventContext;
 import org.mule.runtime.api.exception.MuleException;
@@ -246,6 +247,7 @@ public class DefaultFlowBuilder implements Builder {
           .doOnNext(assertStarted())
           .flatMap(event -> {
             CoreEvent request = createMuleEventForCurrentFlow((PrivilegedEvent) event);
+            Publisher<CoreEvent> responsePublisher = ((BaseEventContext) request.getContext()).getResponsePublisher();
             // Use sink and potentially shared stream in Flow by dispatching incoming event via sink and then using
             // response publisher to operate of the result of flow processing before returning
             try {
@@ -255,7 +257,7 @@ public class DefaultFlowBuilder implements Builder {
               MessagingException me = new MessagingException(event, overloadException, this);
               ((BaseEventContext) request.getContext()).error(exceptionResolver.resolve(me, getMuleContext()));
             }
-            return Mono.from(((BaseEventContext) request.getContext()).getResponsePublisher())
+            return Mono.from(responsePublisher)
                 .cast(PrivilegedEvent.class)
                 .map(r -> {
                   CoreEvent result = createReturnEventForParentFlowConstruct(r, (InternalEvent) event);
