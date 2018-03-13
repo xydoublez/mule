@@ -1,0 +1,162 @@
+[[section-runtime-view]]
+== Runtime View
+
+
+[role="arc42help"]
+****
+.Contents
+The runtime view describes concrete behavior and interactions of the system’s building blocks in form of scenarios from the following areas:
+
+* important use cases or features: how do building blocks execute them?
+* interactions at critical external interfaces: how do building blocks cooperate with users and neighboring systems?
+* operation and administration: launch, start-up, stop
+* error and exception scenarios
+
+Remark: The main criterion for the choice of possible scenarios (sequences, workflows) is their *architectural relevance*. It is *not* important to describe a large number of scenarios. You should rather document a representative selection.
+
+.Motivation
+You should understand how (instances of) building blocks of your system perform their job and communicate at runtime.
+You will mainly capture scenarios in your documentation to communicate your architecture to stakeholders that are less willing or able to read and understand the static models (building block view, deployment view).
+
+.Form
+There are many notations for describing scenarios, e.g.
+
+* numbered list of steps (in natural language)
+* activity diagrams or flow charts
+* sequence diagrams
+* BPMN or EPCs (event process chains)
+* state machines
+* ...
+
+****
+
+=== Mule Runtime Bootstrapping
+
+[plantuml, muleRuntimeBootstrappingSequence]
+....
+title Mule Runtime Bootstrapping sequence diagram
+
+autonumber
+Launcher -> DeploymentService: create
+Launcher -> ServiceManager: starts
+ServiceManager -> ServiceManager: discoverServiceProviders
+
+loop for each runtime service
+    create collections ServiceProviders
+    ServiceManager -> ServiceProviders: List<ServiceDefinition> providedServices()
+    loop for each provided service
+        ServiceManager -> SimpleRegistry: registerService(String name, Object impl)
+    end
+end
+
+Launcher -> MuleCoreExtensionManagerServer
+MuleCoreExtensionManagerServer -> MuleCoreExtensionManagerServer: List<MuleCoreExtension> discover()
+
+loop for each core extension
+    create collections CoreExtensions
+    loop for each CoreExtensions dependency
+        MuleCoreExtensionManagerServer -> CoreExtensions: setXXX
+    end
+    loop for each CoreExtensions dependency
+        MuleCoreExtensionManagerServer -> CoreExtensions: initialise
+    end
+    loop for each CoreExtensions dependency
+        MuleCoreExtensionManagerServer -> CoreExtensions: start
+    end
+end
+
+Launcher -> DeploymentService: start
+DeploymentService -> DeploymentService: List<Domain> findDomains()
+loop for each domain
+    DeploymentService -> DomainArchiveDeployer: deployDomain(domain)
+end
+
+DeploymentService -> DeploymentService: List<Application> findApplications()
+loop for each application
+    DeploymentService -> DefaultArchiveDeployer: deployApplication(application)
+end
+
+
+....
+
+.Runtime Bootstrapping:
+. First of all the DeploymentService gets created since it does not depends on anything else and there may be core extension that depend on it.
+. ServiceManager gets started
+. ServiceManager discovers all the installed services within the runtime by looking at the +MULE_HOME/services+ folder
+. Since an installed runtime service may provide several services (Java interfaces) a ServiceProvider is discovered for each installed service. Such ServiceProvider returns multiple ServiceDefinition.
+. Each ServiceDefinition contains a pair ID / Class where the Class is a Java Class that implements the service definition. Once the service is instantiated it gets registered by it's ID in a ServiceProvider registry. Later on another Service or a component within an Artifact can access the service by using JSR330 (dependency injection) by referencing the API definition of the service. For instance, an operation may use the HTTP service by annotating a field of type HttpService with @Inject.
+. MuleCoreExtensionManagerServer which manages the core extensions installed in the runtime.
+// TODO add link to explanation to core extensions
+. Any module within the runtime libraries (+MULE_HOME/lib/mule+) will be discovered.
+. A core extension may depend on other core extensions or runtime services. So dependency injection is made over core extensions.
+. After dependency injection initialisation of the core extension is done
+. Then the core extensions get started.
+. The DeploymentService gets started.
+. The +MULE_HOME/domains+ folder is introspected to find domains to deploy.
+. For each domain, the DomainArchiveDeployer is invoked to deploy it.
+. The +MULE_HOME/apps+ folder is introspected to find domains to deploy.
+. For each application, the DefaultArchiveDeployer is invoked to deploy it.
+
+
+
+=== Application Deployment
+
+[plantuml, applicationDeploymentSequence]
+....
+title Application Deployment sequence diagram
+
+autonumber
+actor User
+MuleAgent -> DeploymentService: deploy(application.jar)
+DeploymentService -> DefaultArchiveDeployer: deployPackagedArtifact(application.jar)
+DefaultArchiveDeployer -> DefaultArchiveDeployer: installArtifact(application.jar)
+DefaultArchiveDeployer -> DefaultApplicationFactory: createArtifact(applicationFolder)
+DefaultApplicationFactory -> ApplicationDescriptorFactory: ApplicationDescriptor create(applicationFolder)
+ApplicationDescriptorFactory -> ClassLoaderModelLoader: ClassLoaderModel load(artifactLocation)
+DefaultApplicationFactory -> DefaultApplicationFactory: Domain getApplicationDomain(ApplicationDescriptor)
+DefaultApplicationFactory -> DefaultApplicationFactory: List<ArtifactPluginDescriptor> resolveArtifactPlugins(ApplicationDescriptor)
+DefaultApplicationFactory -> DefaultApplicationFactory: ClassLoader createApplicationClassloader(Domain, List<ArtifactPluginDescriptor>, ClassLoaderModel)
+DefaultApplicationFactory -> DefaultArchiveDeployer: Application
+DefaultArchiveDeployer -> Application: install
+DefaultArchiveDeployer -> Application: initialise
+create MuleArtifactContext
+Application -> MuleArtifactContext: create(runtimeServices, domainServices, configurationFiles)
+MuleArtifactContext -> MuleArtifactContext: registerComponentBuildingDefinitions
+MuleArtifactContext -> MuleArtifactContext: processConfiguration: List<Components>
+create collections Components
+loop forech components
+    MuleArtifactContext -> Components: initialise
+end
+DefaultArchiveDeployer -> Application: start
+loop forech components
+    MuleArtifactContext -> Components: start
+end
+DefaultArchiveDeployer -> DeploymentService: Application
+....
+
+.Application deployment:
+. The Mule Agent, used by ARM, invokes the deploy method of DeploymentService with the file to be deployed.
+. The DeploymentService delegates the deployment to an specific implementation (DefaultArchiveDeployer) that knows how to deploy Artifacts of type Application.
+. The artifact jar file gets decompressed and generates a folder inside +MULE_HOME/apps+. The original file gets deleted.
+. The DefaultArchiveDeployer request the ApplicationDescriptorFactory to create the Artifact for the mule application
+. The ApplicationDescriptorFactory is used to create the descriptor of the application. The descriptor provides critical information about the artifact to be created such as the associated domain if any, the configuration files, the minimal mule runtime version required to run the application, etc.
+. The ClassLoaderModel gets created based on the ApplicationDescriptor. The ClassLoaderModel provides all the information related to the classloading aspects of the application. For instance, it describes which are the exported packages of the application that can be accessed by the Artifact Plugins, which are the Artifact Plugins the application depends on and where they are located, etc.
+. The Domain for the Application is search in the runtime. It should be deployed already.
+. The list of descriptors for the ArtifactPlugins the application depends on are created.
+. With the Domain (that may provide an API to the application or Artifact Plugins), the app Artifact Plugins and the ClassLoaderModel of the application the DefaultApplicationFactory creates the Classloader of the artifact.
+. Once the application is created it's return to the DefaultArchiveDeployer that will apply lifecycle over it.
+. The install method of the application gets invoked. At this point basic validations over the artifact are done like verifying the existence of the configuration files.
+. The initialise method gets invoked. This creates all the resources associated to the application.
+. The application delegates the creation of the components to MuleArtifactContext which makes use of spring container to create components
+. Within the context of the application a set of ComponentBuildingDefinitions are registered. This provide the support for transforming a component within the XML configuration (i.e: <http:request/>) to an Spring BeanDefinition which later will instantiate an Object in memory that represents the component and will be responsible of the execution of such component.
+. The XML gets parsed and convert to an abstract model that represents the components defined in the XML.
+. Once all components are created the initialise method gets invoke that prepares the component
+. Later the start method is invoked. Within this method all required connections to external services are stablished including the sources of messages which are ready to start processing messages through the flows.
+
+=== Domain Deployment
+
+Domain deployment it's a subset of an Application deployment. The only difference is that a domain does not depend on a domain and that a domain has a restricted set of components that can be configured in it but the process remains exactly the same.
+
+=== Policy Deployment
+
+

@@ -1,0 +1,532 @@
+[[section-building-block-view]]
+
+
+== Mule Runtime components
+
+=== Overall System
+
+[plantuml, muleRuntimeComponents]
+....
+title Mule Runtime components diagram
+
+!include styles.iuml
+
+[Bootstrap] as bootstrap
+[Launcher] as launcher
+[ServiceManager] as serviceManager
+[Extensions Support] as extensionsSupport
+[Deployment Service] as deploymentService
+[Core Extension Manager] as coreExtensionManager
+[Domain Factory] as domainFactory
+[Application Factory] as applicationFactory
+() "HTTP Service API" as httpServiceApi
+[HTTP Service Impl] as httpServiceImpl
+() "Expresson Language Service API" as expressionLanguageServiceApi
+[Expresson Language Service Impl] as expressionLanguageServiceImpl
+() "Scheduler Service API" as schedulerServiceApi
+[Scheduler Service Impl] as schedulerServiceImpl
+[Classloader Manager] as classloaderManager
+[Artifact Factory] as artifactFactory
+[Domain] as domain
+[Application] as application
+
+bootstrap --> launcher
+
+launcher --> serviceManager : starts
+launcher --> extensionsSupport : starts
+launcher --> deploymentService : starts
+launcher --> coreExtensionManager : starts
+
+serviceManager --> httpServiceImpl: discovers
+serviceManager --> expressionLanguageServiceImpl: discovers
+serviceManager --> schedulerServiceImpl: discovers
+
+httpServiceImpl --> httpServiceApi: implements
+expressionLanguageServiceImpl --> expressionLanguageServiceApi: implements
+schedulerServiceImpl --> schedulerServiceApi: implements
+
+deploymentService --> domainFactory : uses
+deploymentService --> applicationFactory : uses
+
+domainFactory --> classloaderManager : uses
+applicationFactory --> classloaderManager : uses
+domainFactory --> application : creates
+applicationFactory --> domain : creates
+domainFactory --> artifactFactory : extends
+applicationFactory --> artifactFactory : extends
+....
+
+=== Mule Runtime Bootstrapping
+
+The bootstrap is the initial configuration of the JVM for the Mule Runtime.
+
+
+[plantuml, bootstrap]
+....
+title Mule Runtime Bootstrapping
+
+!include styles.iuml
+
+[/bin/mule] as binMule
+[Tanuki Wrapper] as tanukiWrapper
+node "JVM" {
+    [Mule Module Reboot] as rebootModule
+    [MuleContainerBootstrap] as muleContainerBootstrap
+}
+
+binMule --> tanukiWrapper : executes
+tanukiWrapper --> JVM : configures
+tanukiWrapper --> muleContainerBootstrap : mainClass
+....
+
+
+[plantuml, binMule]
+....
+!include styles.iuml
+[/bin/mule]
+....
+This is an OS specific script that allows to executes commands over the mule runtime like start, stop, status. The start command invokes the Tanuki Wrapper to start the Mule Runtime.
+
+[plantuml, tanukiWrapper]
+....
+!include styles.iuml
+[Tanuki Wrapper]
+....
+Tanuki Wrapper is a tool used by the runtime to properly create the JVM process in different OSs and also to monitor the process and restart it if it detects that the process died or is hang.
+
+
+[plantuml, muleModuleReboot]
+....
+!include styles.iuml
+[Mule Module Reboot]
+....
+The module that contains the code invoked by the Tanuki Wrapper.
+
+[plantuml, muleContainerBootstrap]
+....
+!include styles.iuml
+[MuleContainerBootstrap]
+....
+The main class that configures the SL4j Bridge for the runtime logging and also configures the MULE_HOME, MULE_BASE as system properties. Then it delegates to the MuleContainer class.
+
+
+=== Mule Runtime Services
+
+[plantuml, muleModuleReboot]
+....
+!include styles.iuml
+[ServiceManager]
+....
+
+After the bootstrapping is done the Mule Runtime creates all the necessary services to run artifacts (applications, domain, policies) and all the infrastructure to run extensions used to monitor and manage the runtime and the artifacts.
+
+// TODO fix link to Runtime Services
+The link:https://github.com/mulesoft/mule/blob/mule-4.x/modules/service/src/main/java/org/mule/runtime/module/service/api/manager/ServiceManager.java[Service Manager] is responsible for the whole lifecycle of a xref:Runtime Services[Runtime Service]. It discovers the available services by introspecting the +MULE_HOME/services+ folder. Runtime services can be started and stopped and such lifecycle is bound to the runtime lifecycle. While the runtime is starting, the discovered services get started as well.
+
+.Examples of Runtime Services are:
+* HTTP Service: Provides an API to connect to external systems through HTTP or to create an HTTP server. Is the single mechanism that the runtime uses to connect through HTTP.
+* Scheduler service: Manages all the thread pools and execution of tasks within the runtime
+* Expression Language service: Provides an API for executing expressions within the Runtime. There are two implementation. One for using DataWeave and another one to use MEL for compatibility during migration of applications from 3.x to 4.x.
+
+Each service provides an API and an implementation. The implementation part may be change in the future or multiple implementations may exists based on deployment configurations.
+
+Internal dependencies of a service not exposed. Only the API part of it is exposed to other components in Mule. This way a runtime service can use guava version 18 while another runtime service can use guava version 21.
+
+[plantuml, serviceManager]
+....
+!include styles.iuml
+title Service API Class Diagram
+
+ServiceDefinition -> Service: defines
+ServiceProviderDiscoverer --> ServiceProvider: discovers
+ServiceManager --> ServiceDiscoverer: uses
+ServiceProvider "1" --> "many" ServiceDefinition: has
+ServiceDiscoverer -> ServiceProviderDiscoverer: uses
+ServiceDiscoverer -> ServiceResolver: uses
+ServiceManager --> Service: provides
+
+interface ServiceDiscoverer
+interface ServiceProvider
+interface ServiceProviderDiscoverer
+interface Service
+interface ServiceResolver
+interface ServiceDefinition {
+    Class<?> serviceImpl
+}
+interface ServiceManager {
+    List<Service> getServices()
+}
+
+....
+
+.ServiceManager
+
+Finds all the installed `Services` in the runtime. Is the API that provides access to the services to the runtime that later expose those services to be injected using dependency injection `JSR330`. It's also responsible for appliying lifecyle to all the services.
+
+.ServiceDiscoverer
+
+Discovers and creates all the available services. First it delegates to the `ServiceProviderDiscoverer` to find the services definitions installed in the runtime. With those definitions it ask the `ServiceResolver` to actually create the `Service`.
+
+.ServiceResolver
+
+The service resolver actually creates the service implementation from a `ServiceDefinition`. It's responsible for creating the right classloader for the service so it can run in proper isolation of the rest of the runtime components.
+
+.ServiceProviderDiscoverer
+
+Discovers the `ServiceProviders` based on the installed services.
+
+.ServiceProvider
+
+Is the representation of the services provided by a particular service jar file. A single jar file may provide multiple services defined by a `ServiceDefinition`
+
+.ServiceDefinition
+
+Contains the information about a service. Mainly it provides the java class which is the implementation of the service.
+
+.Service
+
+It's a common interface defined for all services implementations. Most likely the service not only implements this interface but also implements an actual API for the service like the HTTPService interface.
+
+
+=== Extension Support
+
+[plantuml, extensionSupport]
+....
+!include styles.iuml
+[Extension Support]
+....
+
+// TODO fix link to artifact plugins
+// TODO fix link to Extension Model
+// TODO fix link to ComponentBuildingDefinition
+This component is the one that provides support for the Artifact Plugins develop by the Runtime Java SDK or the Runtime XML SDK. For instance it allows to load the ExtensionModel of each Artifact Plugin or the ComponentBuildingDefinitions to create the runtime components from the configuration.
+
+[plantuml, extensionSupportClassDiagram]
+....
+
+ArtifactExtensionManagerFactory --> ExtensionManager: creates
+ArtifactExtensionManagerFactory "1" --> "many" ArtifactPlugin: uses
+ArtifactPlugin --> ArtifactPluginDescriptor: has
+ArtifactExtensionManagerFactory --> ExtensionModelLoaderRepository: uses
+ExtensionModelLoaderRepository --> ExtensionModelLoader: discovers
+ExtensionModelLoader --> ExtensionModel: creates
+DefaultJavaExtensionModelLoader -> ExtensionModelLoader: extends
+XmlExtensionModelLoader --> ExtensionModelLoader: extends
+CraftedExtensionModelLoader -> ExtensionModelLoader: extends
+
+
+interface ExtensionManager {
+    Set<ExtensionModel> getExtensions()
+    void registerExtension(ExtensionModel extensionModel)
+}
+
+class ArtifactExtensionManagerFactory {
+    ExtensionManager create(MuleContext muleContext)
+}
+
+interface ArtifactPlugin {
+   ArtifactPluginDescriptor getDescriptor()
+   ArtifactClassLoader getArtifactClassLoader()
+}
+
+interface ExtensionModelLoaderRepository {
+    ExtensionModelLoader getExtensionModelLoader(LoaderDescriber loaderDescriber)
+}
+
+class ArtifactPluginDescriptor
+
+abstract class ExtensionModelLoader {
+    ExtensionModel loadExtensionModel(ClassLoader pluginClassLoader, DslResolvingContext dslResolvingContext,
+                                                     Map<String, Object> attributes)
+}
+
+interface ExtensionModel
+
+abstract class DefaultJavaExtensionModelLoader
+....
+
+.ExtensionManager
+
+Manages the `ExtensionModels` available within an `artifact`.
+
+.ExtensionModel
+
+Describes the different components provided by an `ArtifactPlugin` like the source or operations it provides and also data specific to those components like the set of input parameters, output, etc. It also provides information about the execution of such operations.
+
+.ArtifactExtensionManagerFactory
+
+Creates ExtensionManager for mule artifacts. In order to do so it receives a set of `ArtifactPlugins` based on the dependencies of the `artifact`.
+
+.ExtensionModelLoaderRepository
+
+Discover and stores the already discovered `ExtensionModelLoaders`.
+
+.ExtensionModelLoader
+
+Loader of an `ExtensionModel` for an `ArtifactPlugin` from a set of attributes located in the `ArtifactPluginDescriptor`.
+
+.ArtifactPluginDescriptor
+
+A descriptor of an `ArtifactPlugin`. It indicates the minimal runtime version required to run, the kind of product (EE or CE) and also information about how to load the `ExtensionModel` of this plugin based on the method that it was used to develop the `ArtifactPlugin`.
+
+.DefaultJavaExtensionModelLoader
+
+Loader to be used to load an `ArtifactPlugin` created with the `java SDK`
+
+.XmlExtensionModelLoader
+
+Loader to be used to load an `ArtifactPlugin` created with the `XML SDK`
+
+.CraftedExtensionModelLoader
+
+Loader to be used to load an `ArtifactPlugin` created with custom declarer of an ExtensionModel. This mechanism is used to build extensions that require things outside of the scope of ours SDKs.
+
+
+=== Deployment Service
+
+[plantuml, deploymentService]
+....
+!include styles.iuml
+[Deployment Service]
+....
+
+// TODO fix link to deployable archive
+The deployment service is the responsible for managing the deployment of artifacts in the runtime. Monitors the deployment folder of the mule installation and automatically deployed / undeploys / redeploys artifact
+based on changes made in those folder (+MULE_HOME/apps+ or +MULE_HOME/domains+). It also provides the link:https://github.com/mulesoft/mule/blob/mule-4.x/modules/deployment/src/main/java/org/mule/runtime/module/deployment/api/DeploymentService.java[DeploymentService] interface so other tools can deploy artifacts in the runtime.
+
+Then it delegates the creation of the Artifact to the appropriate Artifact Factory implementation.
+
+.Artifacts can be deployed:
+* By dropping an archive artifact file in one of the deploy folder of the mule runtime (+MULE_HOME/apps+ or +MULE_HOME/domains+).
+* By dropping an exploded artifact folder in one of the deploy folder of the mule runtime (+MULE_HOME/apps+ or +MULE_HOME/domains+).
+// TODO add link to the Mule Agent
+* From the Mule Agent Plugin API which allows the deployment of domains or applications
+* From the API Gateway Plugin which allows to deploy a policy
+
+
+=== Artifact Factory
+
+[plantuml, artifactFactory]
+....
+!include styles.iuml
+[Artifact Factory]
+....
+
+Is the component responsible for creating the set of components declared within an Artifact. Each artifact contains a set of libraries and artifact plugins. In order to isolate the artifact dependencies from the artifact plugins dependencies and the runtime libraries a proper classloader must be created. For that purpose the Classloader Manager is used.
+
+
+
+=== Deployable Artifact
+
+[plantuml, artifact]
+....
+!include styles.iuml
+[Artifact]
+....
+
+This is an abstract representation of a deployable archive within the runtime. Specific implementation of this interface are used to interact with artifacts in runtime.
+
+
+
+
+
+
+[role="arc42help"]
+****
+.Content
+The building block view shows the static decomposition of the system into building blocks (modules, components, subsystems, classes,
+interfaces, packages, libraries, frameworks, layers, partitions, tiers, functions, macros, operations,
+datas structures, ...) as well as their dependencies (relationships, associations, ...)
+
+This view is mandatory for every architecture documentation.
+In analogy to a house this is the _floor plan_.
+
+.Motivation
+Maintain an overview of your source code by making its structure understandable through
+abstraction.
+
+This allows you to communicate with your stakeholder on an abstract level without disclosing implementation details.
+
+.Form
+The building block view is a hierarchical collection of black boxes and white boxes
+(see figure below) and their descriptions.
+
+image:05_building_blocks-EN.png["Hierarchy of building blocks"]
+
+*Level 1* is the white box description of the overall system together with black
+box descriptions of all contained building blocks.
+
+*Level 2* zooms into some building blocks of level 1.
+Thus it contains the white box description of selected building blocks of level 1, together with black box descriptions of their internal building blocks.
+
+*Level 3* zooms into selected building blocks of level 2, and so on.
+****
+
+[role="arc42help"]
+****
+Here you describe the decomposition of the overall system using the following white box template. It contains
+
+ * an overview diagram
+ * a motivation for the decomposition
+ * black box descriptions of the contained building blocks. For these we offer you alternatives:
+
+   ** use _one_ table for a short and pragmatic overview of all contained building blocks and their interfaces
+   ** use a list of black box descriptions of the building blocks according to the black box template (see below).
+   Depending on your choice of tool this list could be sub-chapters (in text files), sub-pages (in a Wiki) or nested elements (in a modeling tool).
+
+
+ * (optional:) important interfaces, that are not explained in the black box templates of a building block, but are very important for understanding the white box.
+Since there are so many ways to specify interfaces why do not provide a specific template for them.
+ In the worst case you have to specify and describe syntax, semantics, protocols, error handling,
+ restrictions, versions, qualities, necessary compatibilities and many things more.
+In the best case you will get away with examples or simple signatures.
+
+****
+
+_**<Overview Diagram>**_
+
+Motivation::
+
+_<text explanation>_
+
+
+Contained Building Blocks::
+_<Description of contained building block (black boxes)>_
+
+Important Interfaces::
+_<Description of important interfaces>_
+
+[role="arc42help"]
+****
+Insert your explanations of black boxes from level 1:
+
+If you use tabular form you will only describe your black boxes with name and
+responsibility according to the following schema:
+
+[cols="1,2" options="header"]
+|===
+| **Name** | **Responsibility**
+| _<black box 1>_ | _<Text>_
+| _<black box 2>_ | _<Text>_
+|===
+
+
+
+If you use a list of black box descriptions then you fill in a separate black box template for every important building block .
+Its headline is the name of the black box.
+****
+
+
+==== <Name black box 1>
+
+[role="arc42help"]
+****
+Here you describe <black box 1>
+according the the following black box template:
+
+* Purpose/Responsibility
+* Interface(s), when they are not extracted as separate paragraphs. This interfaces may include qualities and performance characteristics.
+* (Optional) Quality-/Performance characteristics of the black box, e.g.availability, run time behavior, ....
+* (Optional) directory/file location
+* (Optional) Fulfilled requirements (if you need traceability to requirements).
+* (Optional) Open issues/problems/risks
+
+****
+
+_<Purpose/Responsibility>_
+
+_<Interface(s)>_
+
+_<(Optional) Quality/Performance Characteristics>_
+
+_<(Optional) Directory/File Location>_
+
+_<(Optional) Fulfilled Requirements>_
+
+_<(optional) Open Issues/Problems/Risks>_
+
+
+
+
+==== <Name black box 2>
+
+_<black box template>_
+
+==== <Name black box n>
+
+_<black box template>_
+
+
+==== <Name interface 1>
+
+...
+
+==== <Name interface m>
+
+
+
+=== Level 2
+
+[role="arc42help"]
+****
+Here you can specify the inner structure of (some) building blocks from level 1 as white boxes.
+
+You have to decide which building blocks of your system are important enough to justify such a detailed description.
+Please prefer relevance over completeness. Specify important, surprising, risky, complex or volatile building blocks.
+Leave out normal, simple, boring or standardized parts of your system
+****
+
+==== White Box _<building block 1>_
+
+[role="arc42help"]
+****
+...describes the internal structure of _building block 1_.
+****
+
+_<white box template>_
+
+==== White Box _<building block 2>_
+
+
+_<white box template>_
+
+...
+
+==== White Box _<building block m>_
+
+
+_<white box template>_
+
+
+
+=== Level 3
+
+[role="arc42help"]
+****
+Here you can specify the inner structure of (some) building blocks from level 2 as white boxes.
+
+When you need more detailed levels of your architecture please copy this
+part of arc42 for additional levels.
+****
+
+
+==== White Box <_building block x.1_>
+
+[role="arc42help"]
+****
+Specifies the internal structure of _building block x.1_.
+****
+
+
+_<white box template>_
+
+
+==== White Box <_building block x.2_>
+
+_<white box template>_
+
+
+
+==== White Box <_building block y.1_>
+
+_<white box template>_
