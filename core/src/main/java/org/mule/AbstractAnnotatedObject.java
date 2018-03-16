@@ -41,4 +41,6 @@ public abstract class AbstractAnnotatedObject implements AnnotatedObject
         annotations.clear();
         annotations.putAll(newAnnotations);
     }
+    
+    
 }
