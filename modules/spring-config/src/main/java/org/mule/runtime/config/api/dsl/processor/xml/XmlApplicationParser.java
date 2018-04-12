@@ -175,6 +175,9 @@ public final class XmlApplicationParser {
     XmlMetadataAnnotations userData = (XmlMetadataAnnotations) node.getUserData(XmlMetadataAnnotations.METADATA_ANNOTATIONS_KEY);
     int lineNumber = userData.getLineNumber();
     builder.setLineNumber(lineNumber);
+    builder.setEndLineNumber(userData.getEndLineNumber());
+    builder.setColumnNumber(userData.getColumnNumber());
+    builder.setEndColumnNumber(userData.getEndColumnNumber());
 
     to(builder).addNode(node);
 

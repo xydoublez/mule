@@ -49,4 +49,10 @@ public interface XmlMetadataAnnotations {
    * @return the line where the declaration of the element starts in its source xml file.
    */
   int getLineNumber();
+
+  int getEndLineNumber();
+
+  int getColumnNumber();
+
+  int getEndColumnNumber();
 }

@@ -20,6 +20,9 @@ public class DefaultXmlMetadataAnnotations implements XmlMetadataAnnotations {
 
   private StringBuilder xmlContent = new StringBuilder();
   private int lineNumber;
+  private int columnNumber;
+  private int endLineNumber;
+  private int endColumnNumber;
 
   /**
    * Builds the opening tag of the xml element.
@@ -82,5 +85,32 @@ public class DefaultXmlMetadataAnnotations implements XmlMetadataAnnotations {
   @Override
   public int getLineNumber() {
     return lineNumber;
+  }
+
+  public void setColumnNumber(int columnNumber) {
+    this.columnNumber = columnNumber;
+  }
+
+  public void setEndLineNumber(int endLineNumber) {
+    this.endLineNumber = endLineNumber;
+  }
+
+  public void setEndColumnNumber(int endColumnNumber) {
+    this.endColumnNumber = endColumnNumber;
+  }
+
+  @Override
+  public int getColumnNumber() {
+    return columnNumber;
+  }
+
+  @Override
+  public int getEndLineNumber() {
+    return endLineNumber;
+  }
+
+  @Override
+  public int getEndColumnNumber() {
+    return endColumnNumber;
   }
 }

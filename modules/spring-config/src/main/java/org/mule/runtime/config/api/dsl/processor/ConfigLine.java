@@ -136,6 +136,9 @@ public final class ConfigLine {
         "builder already build an object, you cannot modify it";
     private ConfigLine configLine = new ConfigLine();
     private boolean alreadyBuild;
+    private int endLineNumber;
+    private int columnNumber;
+    private int endColumnNumber;
 
     public Builder setNamespace(String namespace) {
       checkState(!alreadyBuild, BUILDER_ALREADY_BUILD_AN_OBJECT_YOU_CANNOT_MODIFY_IT);
@@ -192,6 +195,18 @@ public final class ConfigLine {
     public ConfigLine build() {
       alreadyBuild = true;
       return configLine;
+    }
+
+    public void setEndLineNumber(int endLineNumber) {
+      this.endLineNumber = endLineNumber;
+    }
+
+    public void setColumnNumber(int columnNumber) {
+      this.columnNumber = columnNumber;
+    }
+
+    public void setEndColumnNumber(int endColumnNumber) {
+      this.endColumnNumber = endColumnNumber;
     }
   }
 

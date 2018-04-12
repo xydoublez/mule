@@ -100,6 +100,7 @@ final public class MuleDocumentLoader implements DocumentLoader {
     public XmlMetadataAnnotations create(Locator locator) {
       DefaultXmlMetadataAnnotations annotations = new DefaultXmlMetadataAnnotations();
       annotations.setLineNumber(locator.getLineNumber());
+      annotations.setColumnNumber(locator.getColumnNumber());
       return annotations;
     }
   }
@@ -149,8 +150,13 @@ final public class MuleDocumentLoader implements DocumentLoader {
       metadataAnnotations.appendElementEnd(qName);
 
       if (!annotationsStack.isEmpty()) {
-        annotationsStack.peek()
+        XmlMetadataAnnotations xmlMetadataAnnotations = annotationsStack.peek();
+        xmlMetadataAnnotations
             .appendElementBody(LINE_SEPARATOR + metadataAnnotations.getElementString() + LINE_SEPARATOR);
+        if (xmlMetadataAnnotations instanceof DefaultXmlMetadataAnnotations) {
+            ((DefaultXmlMetadataAnnotations) xmlMetadataAnnotations).setEndLineNumber(locator.getLineNumber());
+          ((DefaultXmlMetadataAnnotations) xmlMetadataAnnotations).setEndColumnNumber(locator.getColumnNumber());
+        }
       }
 
       walker.getParentNode().setUserData(METADATA_ANNOTATIONS_KEY, metadataAnnotations, COPY_METADATA_ANNOTATIONS_DATA_HANDLER);

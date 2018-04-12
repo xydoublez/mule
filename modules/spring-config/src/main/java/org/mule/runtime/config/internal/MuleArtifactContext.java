@@ -207,6 +207,8 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
     this.serviceDiscoverer = new DefaultRegistry(muleContext);
     originalRegistry = ((MuleRegistryHelper) this.muleContext.getRegistry()).getDelegate();
 
+    xmlApplicationParser = createApplicationParser();
+
     registerComponentBuildingDefinitions(serviceRegistry, MuleArtifactContext.class.getClassLoader(),
                                          componentBuildingDefinitionRegistry,
                                          getExtensionModels(muleContext.getExtensionManager()),
@@ -220,7 +222,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
                                                .getComponentBuildingDefinitions()));
     }
 
-    xmlApplicationParser = createApplicationParser();
+
     this.beanDefinitionFactory =
         new BeanDefinitionFactory(componentBuildingDefinitionRegistry, muleContext.getErrorTypeRepository());
 
