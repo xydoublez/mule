@@ -184,8 +184,8 @@ public class ResponseDeferringCompletionHandler extends BaseResponseCompletionHa
         {
           content = getBufferAsContent().append(content);
         }
-        waitAndWrite(content);
         isDone = true;
+        waitAndWrite(content);
         if (!httpResponsePacket.isChunked())
         {
           // In HTTP 1.0 (no chunk supported) there is no more data sent to the client after the input stream is completed.
