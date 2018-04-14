@@ -34,6 +34,7 @@ import java.io.Serializable;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ScheduledFuture;
 
 import javax.inject.Inject;
 
@@ -47,6 +48,7 @@ public class MuleObjectStoreManager implements ObjectStoreManager, Initialisable
   private MuleContext muleContext;
 
   private final ConcurrentMap<String, ObjectStore<?>> stores = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, ScheduledFuture> expirationScheduledFutures = new ConcurrentHashMap<>();
   private final ConcurrentMap<String, Scheduler> expirationSchedulers = new ConcurrentHashMap<>();
 
   private String baseTransientStoreKey = BASE_IN_MEMORY_OBJECT_STORE_KEY;
@@ -79,6 +81,10 @@ public class MuleObjectStoreManager implements ObjectStoreManager, Initialisable
 
   @Override
   public void dispose() {
+    for (ScheduledFuture<?> scheduledFuture : expirationScheduledFutures.values()) {
+      scheduledFuture.cancel(true);
+    }
+    expirationScheduledFutures.clear();
     for (Scheduler scheduler : expirationSchedulers.values()) {
       scheduler.stop();
     }
@@ -191,12 +197,14 @@ public class MuleObjectStoreManager implements ObjectStoreManager, Initialisable
       Scheduler scheduler = schedulerService.customScheduler(muleContext.getSchedulerBaseConfig()
           .withName("ObjectStoreManager-Monitor-" + name).withMaxConcurrentTasks(1));
 
-      scheduler.scheduleWithFixedDelay(new Monitor(name,
-                                                   (PartitionableExpirableObjectStore) baseStore,
-                                                   settings.getEntryTTL().orElse(0L),
-                                                   settings.getMaxEntries().orElse(UNBOUNDED)),
-                                       0,
-                                       settings.getExpirationInterval(), MILLISECONDS);
+      final ScheduledFuture<?> scheduled = scheduler.scheduleWithFixedDelay(new Monitor(name,
+                                                                                        (PartitionableExpirableObjectStore) baseStore,
+                                                                                        settings.getEntryTTL().orElse(0L),
+                                                                                        settings.getMaxEntries()
+                                                                                            .orElse(UNBOUNDED)),
+                                                                            0,
+                                                                            settings.getExpirationInterval(), MILLISECONDS);
+      expirationScheduledFutures.put(name, scheduled);
       expirationSchedulers.put(name, scheduler);
       return store;
     } else {
@@ -241,7 +249,12 @@ public class MuleObjectStoreManager implements ObjectStoreManager, Initialisable
         String partitionName = partition.getPartitionName();
         partition.getBaseStore().disposePartition(partitionName);
 
-        Scheduler scheduler = expirationSchedulers.remove(partitionName);
+        final ScheduledFuture<?> scheduledFuture = expirationScheduledFutures.remove(name);
+        if (scheduledFuture != null) {
+          scheduledFuture.cancel(false);
+        }
+
+        final Scheduler scheduler = expirationSchedulers.remove(partitionName);
         if (scheduler != null) {
           scheduler.stop();
         }

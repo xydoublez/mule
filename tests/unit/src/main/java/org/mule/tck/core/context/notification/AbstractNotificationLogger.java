@@ -6,6 +6,7 @@
  */
 package org.mule.tck.core.context.notification;
 
+import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.notification.Notification;
 
 import java.util.LinkedList;
@@ -17,7 +18,7 @@ import java.util.List;
  * @param <T> the type of notifications to store.
  * @since 4.0
  */
-public abstract class AbstractNotificationLogger<T extends Notification> implements NotificationLogger<T> {
+public abstract class AbstractNotificationLogger<T extends Notification> implements NotificationLogger<T>, Disposable {
 
   private LinkedList<T> notifications = new LinkedList<>();
 
@@ -28,6 +29,11 @@ public abstract class AbstractNotificationLogger<T extends Notification> impleme
   @Override
   public List<T> getNotifications() {
     return notifications;
+  }
+
+  @Override
+  public void dispose() {
+    notifications.clear();
   }
 
 }
