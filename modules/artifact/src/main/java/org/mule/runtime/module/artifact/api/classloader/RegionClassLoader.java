@@ -313,4 +313,11 @@ public class RegionClassLoader extends MuleDeployableArtifactClassLoader {
       this.filter = filter;
     }
   }
+
+  @Override
+  public void close() throws IOException {
+    System.out.println(">>>> Closed this RCL!!");
+
+    super.close();
+  }
 }

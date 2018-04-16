@@ -10,6 +10,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mule.runtime.api.scheduler.SchedulerConfig.config;
 
 import org.mule.runtime.core.api.MuleContext;
+import org.mule.runtime.core.api.config.MuleConfiguration;
 import org.mule.runtime.api.scheduler.SchedulerConfig;
 import org.mule.runtime.api.scheduler.SchedulerService;
 
@@ -34,8 +35,9 @@ public class SchedulerBaseConfigFactory implements FactoryBean<SchedulerConfig> 
 
   @Override
   public SchedulerConfig getObject() throws Exception {
-    return config().withPrefix(muleContext.getConfiguration().getId())
-        .withShutdownTimeout(() -> muleContext.getConfiguration().getShutdownTimeout(), MILLISECONDS);
+    final MuleConfiguration configuration = muleContext.getConfiguration();
+    return config().withPrefix(configuration.getId())
+        .withShutdownTimeout(() -> configuration.getShutdownTimeout(), MILLISECONDS);
   }
 
   @Override
