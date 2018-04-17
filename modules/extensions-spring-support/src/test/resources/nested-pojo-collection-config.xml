@@ -1,0 +1,22 @@
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:np="http://www.mulesoft.org/schema/mule/np"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+               http://www.mulesoft.org/schema/mule/np http://www.mulesoft.org/schema/mule/np/current/mule-np.xsd">
+
+
+    <np:explicit-config name="testConfig">
+        <np:test-pojos>
+            <np:test-pojo>
+                <np:inner-strings>
+                    <np:inner-string value="something"/>
+                </np:inner-strings>
+            </np:test-pojo>
+        </np:test-pojos>
+    </np:explicit-config>
+
+    <flow name="testFlow">
+        <logger message="LALA"/>
+    </flow>
+
+</mule>

@@ -336,6 +336,13 @@
         </dependency>
         <dependency>
             <groupId>org.mule.tests</groupId>
+            <artifactId>nested-pojo-collection-extension</artifactId>
+            <version>${project.version}</version>
+            <classifier>mule-plugin</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mule.tests</groupId>
             <artifactId>classloading-extension</artifactId>
             <version>${project.version}</version>
             <classifier>mule-plugin</classifier>
