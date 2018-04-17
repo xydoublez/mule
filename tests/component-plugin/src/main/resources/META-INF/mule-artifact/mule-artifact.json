@@ -7,6 +7,7 @@
     "attributes": {
       "exportedPackages": [
         "org.mule.functional.api.component",
+        "org.mule.functional.api",
         "org.mule.functional.api.event",
         "org.mule.functional.api.exception",
         "org.mule.functional.api.flow",
@@ -15,7 +16,8 @@
       ],
       "exportedResources": [
         "META-INF/mule.schemas",
-        "META-INF/mule-test.xsd"
+        "META-INF/mule-test.xsd",
+        "META-INF/services/org.mule.runtime.dsl.api.xml.XmlNamespaceInfoProvider"
       ]
     }
   },

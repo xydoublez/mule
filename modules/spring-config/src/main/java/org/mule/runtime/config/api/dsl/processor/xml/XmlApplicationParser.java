@@ -15,6 +15,13 @@ import static org.mule.runtime.internal.dsl.DslConstants.DOMAIN_NAMESPACE;
 import static org.mule.runtime.internal.dsl.DslConstants.DOMAIN_PREFIX;
 import static org.mule.runtime.internal.dsl.DslConstants.EE_DOMAIN_NAMESPACE;
 import static org.mule.runtime.internal.dsl.DslConstants.EE_DOMAIN_PREFIX;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.config.api.dsl.processor.ConfigLine;
@@ -27,26 +34,19 @@ import org.mule.runtime.core.api.registry.SpiServiceRegistry;
 import org.mule.runtime.dsl.api.xml.XmlNamespaceInfo;
 import org.mule.runtime.dsl.api.xml.XmlNamespaceInfoProvider;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
+
 /**
- * Simple parser that transforms an XML document to a set of {@link org.mule.runtime.config.api.dsl.processor.ConfigLine}
- * objects.
+ * Simple parser that transforms an XML document to a set of {@link org.mule.runtime.config.api.dsl.processor.ConfigLine} objects.
  * <p>
  * It uses the SPI interface {@link XmlNamespaceInfoProvider} to locate for all namespace info provided and normalize the
  * namespace from the XML document.
@@ -127,6 +127,22 @@ public final class XmlApplicationParser {
     this.namespaceCache = CacheBuilder.newBuilder().build();
   }
 
+
+
+  public String getNormalizedNamespace(String namespaceUri, String namespacePrefix) {
+    try {
+      return namespaceCache.get(namespaceUri, () -> {
+        String namespace = loadNamespaceFromProviders(namespaceUri);
+        if (namespace == null) {
+          namespace = namespacePrefix;
+        }
+        return namespace;
+      });
+    } catch (Exception e) {
+      throw new MuleRuntimeException(e);
+    }
+  }
+
   private String loadNamespaceFromProviders(String namespaceUri) {
     if (predefinedNamespace.containsKey(namespaceUri)) {
       return predefinedNamespace.get(namespaceUri);
@@ -141,20 +157,6 @@ public final class XmlApplicationParser {
     // TODO MULE-9638 for now since just return a fake value since guava cache does not support null values. When done right throw
     // a configuration exception with a meaningful message if there's no info provider defined
     return UNDEFINED_NAMESPACE;
-  }
-
-  public String getNormalizedNamespace(String namespaceUri, String namespacePrefix) {
-    try {
-      return namespaceCache.get(namespaceUri, () -> {
-        String namespace = loadNamespaceFromProviders(namespaceUri);
-        if (namespace == null) {
-          namespace = namespacePrefix;
-        }
-        return namespace;
-      });
-    } catch (Exception e) {
-      throw new MuleRuntimeException(e);
-    }
   }
 
   public Optional<ConfigLine> parse(Element configElement) {

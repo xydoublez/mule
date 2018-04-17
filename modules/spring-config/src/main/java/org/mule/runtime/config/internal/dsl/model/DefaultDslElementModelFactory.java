@@ -7,6 +7,7 @@
 package org.mule.runtime.config.internal.dsl.model;
 
 import static java.util.stream.Collectors.toMap;
+import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.app.declaration.api.ElementDeclaration;
 import org.mule.runtime.config.api.dsl.model.DslElementModel;
 import org.mule.runtime.config.api.dsl.model.DslElementModelFactory;

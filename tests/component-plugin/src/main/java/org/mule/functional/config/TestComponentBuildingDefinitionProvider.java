@@ -6,7 +6,7 @@
  */
 package org.mule.functional.config;
 
-import static org.mule.functional.config.TestXmlNamespaceInfoProvider.TEST_NAMESPACE;
+import static org.mule.functional.api.TestXmlNamespaceInfoProvider.TEST_NAMESPACE;
 import static org.mule.runtime.core.api.processor.ReactiveProcessor.ProcessingType.CPU_LITE;
 import static org.mule.runtime.dsl.api.component.AttributeDefinition.Builder.fromChildCollectionConfiguration;
 import static org.mule.runtime.dsl.api.component.AttributeDefinition.Builder.fromChildConfiguration;

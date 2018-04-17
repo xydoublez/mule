@@ -1,1 +1,1 @@
-org.mule.functional.config.TestXmlNamespaceInfoProvider
+org.mule.functional.api.TestXmlNamespaceInfoProvider

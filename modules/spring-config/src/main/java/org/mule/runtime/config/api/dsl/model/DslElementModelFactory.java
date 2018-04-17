@@ -9,6 +9,7 @@ package org.mule.runtime.config.api.dsl.model;
 import org.mule.api.annotation.NoImplement;
 import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.api.model.ObjectType;
+import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.app.declaration.api.ElementDeclaration;
 import org.mule.runtime.config.internal.dsl.model.DefaultDslElementModelFactory;
 import org.mule.runtime.api.dsl.DslResolvingContext;

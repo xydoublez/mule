@@ -4,7 +4,7 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.functional.config;
+package org.mule.functional.api;
 
 import static java.util.Arrays.asList;
 import org.mule.runtime.dsl.api.xml.XmlNamespaceInfo;
