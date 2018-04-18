@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * @param <T> type of the transaction identifier
  * @param <K> type of the journal entry
  */
-class TransactionJournalFile<T, K extends JournalEntry<T>> {
+class TransactionJournalFile<T, K extends JournalEntry<T>> implements AutoCloseable {
 
   /**
    * Defines the minimum number of entries in the log that are required to clear the log file once there are no more transactions

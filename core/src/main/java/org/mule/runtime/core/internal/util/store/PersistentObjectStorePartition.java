@@ -319,7 +319,7 @@ public class PersistentObjectStorePartition<T extends Serializable> extends Temp
         this.partitionName = readPartitionFileName(partitionDirectory);
         return partitionDescriptorFile;
       }
-      try (FileWriter fileWriter = new FileWriter(partitionDescriptorFile.getAbsolutePath(), false)) {
+      try (FileWriter fileWriter = new FileWriter(partitionDescriptorFile, false)) {
         fileWriter.write(partitionName);
         fileWriter.flush();
       }
