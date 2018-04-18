@@ -154,7 +154,7 @@ final public class MuleDocumentLoader implements DocumentLoader {
         xmlMetadataAnnotations
             .appendElementBody(LINE_SEPARATOR + metadataAnnotations.getElementString() + LINE_SEPARATOR);
         if (xmlMetadataAnnotations instanceof DefaultXmlMetadataAnnotations) {
-            ((DefaultXmlMetadataAnnotations) xmlMetadataAnnotations).setEndLineNumber(locator.getLineNumber());
+          ((DefaultXmlMetadataAnnotations) xmlMetadataAnnotations).setEndLineNumber(locator.getLineNumber());
           ((DefaultXmlMetadataAnnotations) xmlMetadataAnnotations).setEndColumnNumber(locator.getColumnNumber());
         }
       }

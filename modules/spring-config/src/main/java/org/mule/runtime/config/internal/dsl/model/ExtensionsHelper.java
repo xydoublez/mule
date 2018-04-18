@@ -18,12 +18,14 @@ import java.util.Set;
 import org.mule.metadata.api.model.ObjectType;
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.dsl.DslResolvingContext;
+import org.mule.runtime.api.meta.model.ComponentModel;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.config.ConfigurationModel;
 import org.mule.runtime.api.meta.model.construct.ConstructModel;
 import org.mule.runtime.api.meta.model.construct.HasConstructModels;
 import org.mule.runtime.api.meta.model.operation.HasOperationModels;
 import org.mule.runtime.api.meta.model.operation.OperationModel;
+import org.mule.runtime.api.meta.model.parameter.ParameterModel;
 import org.mule.runtime.api.meta.model.source.HasSourceModels;
 import org.mule.runtime.api.meta.model.source.SourceModel;
 import org.mule.runtime.api.meta.model.util.ExtensionWalker;
@@ -48,10 +50,7 @@ public class ExtensionsHelper {
 
     // TODO this code is duplicated from ConfigurationBasedElementModelFactory
 
-    Optional<Map.Entry<ExtensionModel, DslSyntaxResolver>> entry =
-        resolvers.entrySet().stream()
-            .filter(e -> e.getKey().getXmlDslModel().getPrefix().equals(identifier.getNamespace()))
-            .findFirst();
+    Optional<Map.Entry<ExtensionModel, DslSyntaxResolver>> entry = findExtensionEntry(identifier);
 
     if (!entry.isPresent()) {
       return null;
@@ -118,6 +117,12 @@ public class ExtensionsHelper {
 
   }
 
+  private Optional<Map.Entry<ExtensionModel, DslSyntaxResolver>> findExtensionEntry(ComponentIdentifier identifier) {
+    return resolvers.entrySet().stream()
+        .filter(e -> e.getKey().getXmlDslModel().getPrefix().equals(identifier.getNamespace()))
+        .findFirst();
+  }
+
   private Optional<ComponentIdentifier> getIdentifier(DslElementSyntax dsl) {
     if (isNotBlank(dsl.getElementName()) && isNotBlank(dsl.getPrefix())) {
       return Optional.of(builder()
@@ -153,4 +158,26 @@ public class ExtensionsHelper {
   }
 
 
+  public Optional<ParameterModel> findParameterModel(ComponentIdentifier componentIdentifier, ComponentIdentifier parameterIdentifier) {
+
+    Optional<Map.Entry<ExtensionModel, DslSyntaxResolver>> entry = findExtensionEntry(componentIdentifier);
+
+    if (!entry.isPresent()) {
+      return null;
+    }
+
+    DslSyntaxResolver dsl = entry.get().getValue();
+
+    Object model = findModel(componentIdentifier);
+    if (model instanceof ComponentModel) {
+      // TODO have in mind the namespace of the attribute
+      // TODO have in mind complex child elements that are parameter models
+      return ((ComponentModel) model).getAllParameterModels()
+          .stream()
+          .filter(parameterModel -> dsl.resolve(parameterModel).getAttributeName().equals(parameterIdentifier.getName()))
+          .findAny();
+    } else {
+      throw new RuntimeException(componentIdentifier + " " + parameterIdentifier);
+    }
+  }
 }

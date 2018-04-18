@@ -321,11 +321,11 @@ public class XmlArtifactParser {
     if (userData != null) {
       //TODO add support for userData when the node is an XML attributes
       SourceCodeLocation sourceCodeLocation = SourceCodeLocation.builder()
-              .withStartLine(userData.getLineNumber())
-              .withEndLine(userData.getEndLineNumber())
-              .withStartColumn(userData.getColumnNumber())
-              .withEndColumn(userData.getEndColumnNumber())
-              .build();
+          .withStartLine(userData.getLineNumber())
+          .withEndLine(userData.getEndLineNumber())
+          .withStartColumn(userData.getColumnNumber())
+          .withEndColumn(userData.getEndColumnNumber())
+          .build();
       return sourceCodeLocation;
     }
     return null;
