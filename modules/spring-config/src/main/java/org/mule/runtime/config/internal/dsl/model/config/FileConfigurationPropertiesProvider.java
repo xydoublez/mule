@@ -18,6 +18,7 @@ import org.mule.runtime.config.api.dsl.model.properties.ConfigurationPropertiesP
 import org.mule.runtime.config.api.dsl.model.properties.ConfigurationProperty;
 import org.mule.runtime.core.api.exception.ResourceNotFoundException;
 import org.mule.runtime.core.api.util.IOUtils;
+import org.mule.runtime.dsl.api.ResourceProvider;
 
 /**
  * File based properties provider, using an external resource provider.

@@ -6,6 +6,9 @@
  */
 package org.mule.runtime.config.internal.model;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -21,16 +24,23 @@ import org.mule.runtime.api.artifact.semantic.Construct;
 import org.mule.runtime.api.artifact.semantic.Operation;
 import org.mule.runtime.api.artifact.semantic.Parameter;
 import org.mule.runtime.api.artifact.semantic.ParameterValue;
+import org.mule.runtime.api.artifact.semantic.Route;
 import org.mule.runtime.api.artifact.semantic.Source;
 import org.mule.runtime.api.artifact.sintax.ArtifactDefinition;
 import org.mule.runtime.api.artifact.sintax.ComponentDefinition;
+import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.config.ConfigurationModel;
 import org.mule.runtime.api.meta.model.connection.ConnectionProviderModel;
 import org.mule.runtime.api.meta.model.construct.ConstructModel;
+import org.mule.runtime.api.meta.model.nested.NestedChainModel;
+import org.mule.runtime.api.meta.model.nested.NestedComponentModel;
+import org.mule.runtime.api.meta.model.nested.NestedRouteModel;
 import org.mule.runtime.api.meta.model.operation.OperationModel;
+import org.mule.runtime.api.meta.model.parameter.ParameterizedModel;
 import org.mule.runtime.api.meta.model.source.SourceModel;
 import org.mule.runtime.config.internal.dsl.model.ExtensionsHelper;
+import org.mule.runtime.internal.dsl.DslConstants;
 
 public class ArtifactModelFactory {
 
@@ -48,13 +58,15 @@ public class ArtifactModelFactory {
   }
 
   private List<Component> createGlobalComponents(ArtifactDefinition artifactDefinition) {
-    return artifactDefinition.getGlobalDefinitions().stream().map(componentDefinition -> {
-      Object model = extensionsHelper.findModel(componentDefinition.getIdentifier());
-      return createComponent(componentDefinition, model);
-    }).collect(Collectors.toList());
+    return artifactDefinition.getGlobalDefinitions().stream()
+        .map(componentDefinition -> createComponent(componentDefinition, empty())).collect(Collectors.toList());
   }
 
-  private Component createComponent(ComponentDefinition componentDefinition, Object model) {
+  private Component createComponent(ComponentDefinition componentDefinition, Optional<ConstructModel> constructModel) {
+    Object model = extensionsHelper.findModel(componentDefinition.getIdentifier());
+    if (model == null && constructModel.isPresent()) {
+      model = extensionsHelper.findWithinModel(componentDefinition.getIdentifier(), constructModel.get());
+    }
     if (model instanceof OperationModel) {
       return createOperation(componentDefinition, (OperationModel) model);
     } else if (model instanceof SourceModel) {
@@ -67,14 +79,35 @@ public class ArtifactModelFactory {
       return createConnectionProvider(componentDefinition, (ConnectionProviderModel) model);
     } else if (model instanceof ObjectType) {
       return createObject(componentDefinition, (ObjectType) model);
+    } else if (model instanceof NestedRouteModel) {
+      return createRoute(componentDefinition, (NestedRouteModel) model);
+    } else if (model instanceof NestedChainModel) {
+
+    } else if (model instanceof NestedComponentModel) {
+
     }
-    //TODO improve
+    // TODO improve
     throw new RuntimeException();
   }
 
-  private Component createObject(ComponentDefinition componentDefinition, ObjectType model)
-  {
-    //TODO implement
+  private Component createRoute(ComponentDefinition componentDefinition, NestedRouteModel model) {
+    return Route.builder()
+        .withComponentDefinition(componentDefinition)
+        .withParameters(extractParameters(componentDefinition, model))
+        .withModel(model)
+        .withProcessorComponents(extractProcessorComponents(componentDefinition))
+        .build();
+  }
+
+  private List<Component> extractProcessorComponents(ComponentDefinition componentDefinition) {
+    // TODO filter those that are parameters
+    return componentDefinition.getChildComponentDefinitions().stream()
+        .map(childComponentDefinition -> createComponent(childComponentDefinition, empty()))
+        .collect(Collectors.toList());
+  }
+
+  private Component createObject(ComponentDefinition componentDefinition, ObjectType model) {
+    // TODO implement
     return null;
   }
 
@@ -82,7 +115,7 @@ public class ArtifactModelFactory {
     return ConnectionProvider.builder()
         .withModel(model)
         .withComponentDefinition(componentDefinition)
-        .withParameters(extractParameters(componentDefinition))
+        .withParameters(extractParameters(componentDefinition, model))
         .build();
   }
 
@@ -90,22 +123,19 @@ public class ArtifactModelFactory {
     return Configuration.builder()
         .withModel(model)
         .withComponentDefinition(componentDefinition)
-        .withParameters(extractParameters(componentDefinition))
+        .withParameters(extractParameters(componentDefinition, model))
         .build();
   }
 
   private Construct createConstruct(ComponentDefinition componentDefinition, ConstructModel model) {
     Construct.ConstructBuilder constructBuilder = Construct.builder()
-        .withParameters(extractParameters(componentDefinition))
+        .withParameters(extractParameters(componentDefinition, model))
         .withModel(model)
         .withComponentDefinition(componentDefinition);
 
     constructBuilder.withProcessorComponents(componentDefinition.getChildComponentDefinitions()
         .stream() // add predicate to filter childs that are parameters
-        .map(childComponentDefinition -> {
-          Object childModel = extensionsHelper.findModel(childComponentDefinition.getIdentifier());
-          return createComponent(childComponentDefinition, childModel);
-        })
+        .map(childComponentDefinition -> createComponent(childComponentDefinition, of(model)))
         .collect(Collectors.toList()));
 
     return constructBuilder
@@ -116,7 +146,7 @@ public class ArtifactModelFactory {
     return Source.builder()
         .withSourceModel(model)
         .withComponentDefinition(componentDefinition)
-        .withParameters(extractParameters(componentDefinition))
+        .withParameters(extractParameters(componentDefinition, model))
         .build();
   }
 
@@ -124,30 +154,49 @@ public class ArtifactModelFactory {
     return Operation.builder()
         .withComponentDefinition(componentDefinition)
         .withOperationModel(model)
-        .withParameters(extractParameters(componentDefinition))
+        .withParameters(extractParameters(componentDefinition, model))
         .build();
   }
 
-  private List<Parameter> extractParameters(ComponentDefinition componentDefinition) {
+  private List<Parameter> extractParameters(ComponentDefinition componentDefinition, ParameterizedModel parameterizedModel) {
     // TODO missing parameters that do not exists in ext. model as the name parameter
     Stream<Optional<Parameter>> parameterOptionalStream = componentDefinition.getParameterDefinitions().stream()
         .map(parameterDefinition -> extensionsHelper
-            .findParameterModel(componentDefinition.getIdentifier(),
+            .findParameterModel(parameterizedModel,
                                 parameterDefinition.getParameterIdentifierDefinition().getComponentIdentifier())
             .map(parameterModel -> Parameter.builder()
                 .withModel(parameterModel)
                 .withParameterDefinition(parameterDefinition)
                 .withValue(ParameterValue.builder()
-                    .withParameterDefinition(parameterDefinition)
+                    .withParameterValueDefinition(parameterDefinition.getParameterValueDefinition())
                     .build())
                 .build()));
 
-    // TODO continue processing childs that may be parameters
+
+
+    // TODO continue processing childs that may be parameters. This is doing nothing right now.
     componentDefinition.getChildComponentDefinitions().stream()
         .map(childComponentDefinition -> extensionsHelper.findParameterModel(componentDefinition.getIdentifier(),
                                                                              childComponentDefinition.getIdentifier()));
-    return parameterOptionalStream.filter(optional -> optional.isPresent()).map(optional -> optional.orElse(null))
-        .collect(Collectors.toList());
+    List<Parameter> parameters =
+        parameterOptionalStream.filter(optional -> optional.isPresent()).map(optional -> optional.orElse(null))
+            .collect(Collectors.toList());
+
+    // TODO do not add if already exists
+    componentDefinition.getParameterDefinitions().stream()
+        .filter(parameterDefinition -> parameterDefinition.getParameterIdentifierDefinition().getComponentIdentifier()
+            .equals(ComponentIdentifier.builder().namespace(DslConstants.CORE_PREFIX).name("name").build()))
+        .findAny()
+        .ifPresent(parameterDefinition -> {
+          parameters.add(Parameter.builder()
+              .withParameterDefinition(parameterDefinition)
+              .withValue(ParameterValue.builder()
+                  .withParameterValueDefinition(parameterDefinition.getParameterValueDefinition())
+                  .build())
+              .build());
+        });
+
+    return parameters;
   }
 
 

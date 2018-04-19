@@ -21,6 +21,12 @@
       ]
     }
   },
+  "extensionModelLoaderDescriptor": {
+    "id": "crafted",
+    "attributes": {
+      "type": "org.mule.functional.api.TestPluginExtensionModelProvider"
+    }
+  },
   "bundleDescriptorLoader": {
     "id": "mule",
     "attributes": {}

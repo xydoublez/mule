@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.mule.apache.xerces.dom.DeferredAttrNSImpl;
 import org.mule.runtime.api.artifact.sintax.ArtifactDefinition;
 import org.mule.runtime.api.artifact.sintax.ComponentDefinition;
 import org.mule.runtime.api.artifact.sintax.ParameterDefinition;
@@ -39,7 +38,6 @@ import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.util.Pair;
 import org.mule.runtime.config.api.XmlConfigurationDocumentLoader;
-import org.mule.runtime.config.api.dsl.model.ResourceProvider;
 import org.mule.runtime.config.api.dsl.processor.xml.XmlApplicationParser;
 import org.mule.runtime.config.api.dsl.xml.StaticXmlNamespaceInfo;
 import org.mule.runtime.config.api.dsl.xml.StaticXmlNamespaceInfoProvider;
@@ -47,6 +45,7 @@ import org.mule.runtime.config.internal.dsl.model.config.RuntimeConfigurationExc
 import org.mule.runtime.config.internal.parsers.XmlMetadataAnnotations;
 import org.mule.runtime.core.api.config.ConfigResource;
 import org.mule.runtime.core.api.registry.SpiServiceRegistry;
+import org.mule.runtime.dsl.api.ResourceProvider;
 import org.mule.runtime.dsl.api.xml.XmlNamespaceInfo;
 import org.mule.runtime.dsl.api.xml.XmlNamespaceInfoProvider;
 

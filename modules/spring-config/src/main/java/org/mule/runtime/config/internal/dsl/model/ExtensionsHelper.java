@@ -23,9 +23,11 @@ import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.config.ConfigurationModel;
 import org.mule.runtime.api.meta.model.construct.ConstructModel;
 import org.mule.runtime.api.meta.model.construct.HasConstructModels;
+import org.mule.runtime.api.meta.model.nested.NestableElementModel;
 import org.mule.runtime.api.meta.model.operation.HasOperationModels;
 import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterModel;
+import org.mule.runtime.api.meta.model.parameter.ParameterizedModel;
 import org.mule.runtime.api.meta.model.source.HasSourceModels;
 import org.mule.runtime.api.meta.model.source.SourceModel;
 import org.mule.runtime.api.meta.model.util.ExtensionWalker;
@@ -157,10 +159,10 @@ public class ExtensionsHelper {
     return Optional.empty();
   }
 
+  public Optional<ParameterModel> findParameterModel(ParameterizedModel parameterizedModel,
+                                                     ComponentIdentifier parameterIdentifier) {
 
-  public Optional<ParameterModel> findParameterModel(ComponentIdentifier componentIdentifier, ComponentIdentifier parameterIdentifier) {
-
-    Optional<Map.Entry<ExtensionModel, DslSyntaxResolver>> entry = findExtensionEntry(componentIdentifier);
+    Optional<Map.Entry<ExtensionModel, DslSyntaxResolver>> entry = findExtensionEntry(parameterIdentifier);
 
     if (!entry.isPresent()) {
       return null;
@@ -168,16 +170,44 @@ public class ExtensionsHelper {
 
     DslSyntaxResolver dsl = entry.get().getValue();
 
+    return parameterizedModel.getAllParameterModels()
+        .stream()
+        .filter(parameterModel -> dsl.resolve(parameterModel).getAttributeName().equals(parameterIdentifier.getName()))
+        .findAny();
+  }
+
+
+  public Optional<ParameterModel> findParameterModel(ComponentIdentifier componentIdentifier,
+                                                     ComponentIdentifier parameterIdentifier) {
+
     Object model = findModel(componentIdentifier);
     if (model instanceof ComponentModel) {
       // TODO have in mind the namespace of the attribute
       // TODO have in mind complex child elements that are parameter models
-      return ((ComponentModel) model).getAllParameterModels()
-          .stream()
-          .filter(parameterModel -> dsl.resolve(parameterModel).getAttributeName().equals(parameterIdentifier.getName()))
-          .findAny();
+      return findParameterModel((ParameterizedModel) model, parameterIdentifier);
     } else {
       throw new RuntimeException(componentIdentifier + " " + parameterIdentifier);
     }
   }
+
+  public Object findWithinModel(ComponentIdentifier identifier, ConstructModel constructModel) {
+
+    Optional<Map.Entry<ExtensionModel, DslSyntaxResolver>> entry = findExtensionEntry(identifier);
+
+    if (!entry.isPresent()) {
+      return null;
+    }
+
+    DslSyntaxResolver dsl = entry.get().getValue();
+
+    Optional<? extends NestableElementModel> nestedElementModelOptional = constructModel.getNestedComponents().stream()
+        .filter(elementModel -> getIdentifier(dsl.resolve(elementModel))
+            .map(foundIdentifier -> foundIdentifier.equals(identifier))
+            .orElse(false))
+        .findFirst();
+
+    // TODO change to not return null
+    return nestedElementModelOptional.orElse(null);
+  }
+
 }

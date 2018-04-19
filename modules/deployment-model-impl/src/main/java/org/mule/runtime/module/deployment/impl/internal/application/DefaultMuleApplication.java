@@ -13,6 +13,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMess
 import static org.mule.runtime.api.connectivity.ConnectivityTestingService.CONNECTIVITY_TESTING_SERVICE_KEY;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.metadata.MetadataService.METADATA_SERVICE_KEY;
+import static org.mule.runtime.api.util.Pair.of;
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import static org.mule.runtime.api.value.ValueProviderService.VALUE_PROVIDER_SERVICE_KEY;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APP;
@@ -32,23 +33,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.mule.runtime.api.artifact.Registry;
 import org.mule.runtime.api.connectivity.ConnectivityTestingService;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Stoppable;
+import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.metadata.MetadataService;
 import org.mule.runtime.api.notification.IntegerAction;
 import org.mule.runtime.api.notification.Notification.Action;
 import org.mule.runtime.api.notification.NotificationListener;
 import org.mule.runtime.api.notification.NotificationListenerRegistry;
 import org.mule.runtime.api.service.ServiceRepository;
+import org.mule.runtime.api.util.Pair;
 import org.mule.runtime.api.value.ValueProviderService;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.context.notification.MuleContextListener;
 import org.mule.runtime.core.api.context.notification.MuleContextNotification;
 import org.mule.runtime.core.api.context.notification.MuleContextNotificationListener;
+import org.mule.runtime.core.api.extension.ExtensionManager;
 import org.mule.runtime.core.internal.lifecycle.phases.NotInLifecyclePhase;
 import org.mule.runtime.core.internal.logging.LogUtil;
 import org.mule.runtime.deployment.model.api.DeploymentInitException;
@@ -61,17 +66,24 @@ import org.mule.runtime.deployment.model.api.application.ApplicationStatus;
 import org.mule.runtime.deployment.model.api.artifact.ArtifactContext;
 import org.mule.runtime.deployment.model.api.domain.Domain;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPlugin;
+import org.mule.runtime.deployment.model.api.plugin.ArtifactPluginDescriptor;
+import org.mule.runtime.dsl.api.ResourceProvider;
+import org.mule.runtime.dsl.internal.ClassLoaderResourceProvider;
 import org.mule.runtime.module.artifact.api.classloader.ArtifactClassLoader;
 import org.mule.runtime.module.artifact.api.classloader.ClassLoaderRepository;
 import org.mule.runtime.module.artifact.api.classloader.DisposableClassLoader;
 import org.mule.runtime.module.artifact.api.classloader.MuleDeployableArtifactClassLoader;
 import org.mule.runtime.module.artifact.api.classloader.RegionClassLoader;
 import org.mule.runtime.module.deployment.impl.internal.artifact.ArtifactContextBuilder;
+import org.mule.runtime.module.deployment.impl.internal.artifact.ExtensionModelDiscoverer;
 import org.mule.runtime.module.deployment.impl.internal.domain.DomainRepository;
+import org.mule.runtime.module.deployment.impl.internal.plugin.MuleExtensionModelLoaderManager;
 import org.mule.runtime.module.extension.internal.loader.ExtensionModelLoaderRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Streams;
 
 public class DefaultMuleApplication implements Application {
 
@@ -186,6 +198,16 @@ public class DefaultMuleApplication implements Application {
 
   @Override
   public void init() {
+
+    //
+    // XmlArtifactParser xmlArtifactParser =
+    // new XmlArtifactParser(artifactConfigResources, xmlConfigurationDocumentLoader, extensions,
+    // new ClassLoaderResourceProvider(muleContext.getExecutionClassLoader()),
+    // property -> environmentPropertiesConfigurationProvider.getConfigurationProperty(property)
+    // .map(configurationProperty -> configurationProperty.getRawValue().toString()).orElse(null));
+    //
+    // ArtifactDefinition artifactDefinition = xmlArtifactParser.parse();
+    // Artifact artifact = new ArtifactModelFactory(extensions).createFrom(artifactDefinition);
     doInit(false, false);
   }
 
@@ -194,6 +216,40 @@ public class DefaultMuleApplication implements Application {
       log(miniSplash(format("Initializing app '%s'", descriptor.getName())));
     });
     try {
+
+      Domain domain = domainRepository.getDomain(descriptor.getDomainName());
+
+      ExtensionModelDiscoverer extensionModelDiscoverer = new ExtensionModelDiscoverer();
+      List<Pair<ArtifactPluginDescriptor, ArtifactClassLoader>> pluginsData = artifactPlugins.stream()
+          .map(artifactPlugin -> of(artifactPlugin.getDescriptor(), artifactPlugin.getArtifactClassLoader()))
+          .collect(Collectors.toList());
+      MuleExtensionModelLoaderManager loaderRepository = new MuleExtensionModelLoaderManager(deploymentClassLoader);
+      Set<Pair<ArtifactPluginDescriptor, ExtensionModel>> pluginDescriptorExtensionModelPairs;
+
+      if (domain.getRegistry() != null) {
+        pluginDescriptorExtensionModelPairs =
+            extensionModelDiscoverer.discoverPluginsExtensionModels(loaderRepository, pluginsData, domain.getRegistry()
+                .lookupByType(ExtensionManager.class).map(ExtensionManager::getExtensions).get());
+      } else {
+        pluginDescriptorExtensionModelPairs =
+            extensionModelDiscoverer.discoverPluginsExtensionModels(loaderRepository, pluginsData);
+      }
+
+      Set<ExtensionModel> runtimeExtensionModels = extensionModelDiscoverer.discoverRuntimeExtensionModels();
+
+      List<ExtensionModel> allExtensionModels =
+          Streams.concat(runtimeExtensionModels.stream(), pluginDescriptorExtensionModelPairs.stream().map(Pair::getSecond))
+              .collect(Collectors.toList());
+
+      ResourceProvider externalResourceProvider = new ClassLoaderResourceProvider(deploymentClassLoader.getClassLoader());
+
+      //TODO replace this thing
+      //EnvironmentPropertiesConfigurationProvider environmentPropertiesConfigurationProvider = new EnvironmentPropertiesConfigurationProvider();
+
+      XmlArtifactParser xmlArtifactParser = new XmlArtifactParser(artifactConfigResources, xmlConfigurationDocumentLoader, extensions,
+
+
+
       ArtifactContextBuilder artifactBuilder =
           newBuilder().setArtifactProperties(merge(descriptor.getAppProperties(), getProperties())).setArtifactType(APP)
               .setDataFolderName(descriptor.getDataFolderName())
@@ -209,7 +265,7 @@ public class DefaultMuleApplication implements Application {
                                                                     descriptor.getDeploymentProperties())))
               .setPolicyProvider(policyManager);
 
-      Domain domain = domainRepository.getDomain(descriptor.getDomainName());
+
       if (domain.getRegistry() != null) {
         artifactBuilder.setParentArtifact(domain);
       }
