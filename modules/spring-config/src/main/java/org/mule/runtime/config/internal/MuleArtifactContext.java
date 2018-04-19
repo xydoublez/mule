@@ -53,6 +53,8 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import org.mule.runtime.api.artifact.Registry;
+import org.mule.runtime.api.artifact.semantic.Artifact;
+import org.mule.runtime.api.artifact.sintax.ArtifactDefinition;
 import org.mule.runtime.api.component.Component;
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.component.ConfigurationProperties;
@@ -79,7 +81,9 @@ import org.mule.runtime.config.internal.dsl.model.config.RuntimeConfigurationExc
 import org.mule.runtime.config.internal.dsl.spring.BeanDefinitionFactory;
 import org.mule.runtime.config.internal.editors.MulePropertyEditorRegistrar;
 import org.mule.runtime.config.internal.model.ApplicationModel;
+import org.mule.runtime.config.internal.model.ArtifactModelFactory;
 import org.mule.runtime.config.internal.model.ComponentModel;
+import org.mule.runtime.config.internal.parser.XmlArtifactParser;
 import org.mule.runtime.config.internal.processor.ComponentLocatorCreatePostProcessor;
 import org.mule.runtime.config.internal.processor.DiscardedOptionalBeanPostProcessor;
 import org.mule.runtime.config.internal.processor.LifecycleStatePostProcessor;
@@ -277,17 +281,17 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
       ResourceProvider externalResourceProvider = new ClassLoaderResourceProvider(muleContext.getExecutionClassLoader());
 
       // TODO move this logic elsewhere
-      // EnvironmentPropertiesConfigurationProvider environmentPropertiesConfigurationProvider =
-      // new EnvironmentPropertiesConfigurationProvider();
-      //
-      // XmlArtifactParser xmlArtifactParser =
-      // new XmlArtifactParser(artifactConfigResources, xmlConfigurationDocumentLoader, extensions,
-      // new ClassLoaderResourceProvider(muleContext.getExecutionClassLoader()),
-      // property -> environmentPropertiesConfigurationProvider.getConfigurationProperty(property)
-      // .map(configurationProperty -> configurationProperty.getRawValue().toString()).orElse(null));
-      //
-      // ArtifactDefinition artifactDefinition = xmlArtifactParser.parse();
-      // Artifact artifact = new ArtifactModelFactory(extensions).createFrom(artifactDefinition);
+      EnvironmentPropertiesConfigurationProvider environmentPropertiesConfigurationProvider =
+          new EnvironmentPropertiesConfigurationProvider();
+
+      XmlArtifactParser xmlArtifactParser =
+          new XmlArtifactParser(artifactConfigResources, xmlConfigurationDocumentLoader, extensions,
+                                new ClassLoaderResourceProvider(muleContext.getExecutionClassLoader()),
+                                property -> environmentPropertiesConfigurationProvider.getConfigurationProperty(property)
+                                    .map(configurationProperty -> configurationProperty.getRawValue().toString()).orElse(null));
+
+      ArtifactDefinition artifactDefinition = xmlArtifactParser.parse();
+      Artifact artifact = new ArtifactModelFactory(extensions).createFrom(artifactDefinition);
 
       ArtifactConfig artifactConfig = resolveArtifactConfig();
 

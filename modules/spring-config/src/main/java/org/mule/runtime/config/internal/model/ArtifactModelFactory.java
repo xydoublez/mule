@@ -15,6 +15,8 @@ import java.util.stream.Stream;
 import org.mule.metadata.api.model.ObjectType;
 import org.mule.runtime.api.artifact.semantic.Artifact;
 import org.mule.runtime.api.artifact.semantic.Component;
+import org.mule.runtime.api.artifact.semantic.Configuration;
+import org.mule.runtime.api.artifact.semantic.ConnectionProvider;
 import org.mule.runtime.api.artifact.semantic.Construct;
 import org.mule.runtime.api.artifact.semantic.Operation;
 import org.mule.runtime.api.artifact.semantic.Parameter;
@@ -26,10 +28,6 @@ import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.config.ConfigurationModel;
 import org.mule.runtime.api.meta.model.connection.ConnectionProviderModel;
 import org.mule.runtime.api.meta.model.construct.ConstructModel;
-import org.mule.runtime.api.meta.model.nested.NestableElementModelVisitor;
-import org.mule.runtime.api.meta.model.nested.NestedChainModel;
-import org.mule.runtime.api.meta.model.nested.NestedComponentModel;
-import org.mule.runtime.api.meta.model.nested.NestedRouteModel;
 import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.meta.model.source.SourceModel;
 import org.mule.runtime.config.internal.dsl.model.ExtensionsHelper;
@@ -62,44 +60,53 @@ public class ArtifactModelFactory {
     } else if (model instanceof SourceModel) {
       return createSource(componentDefinition, (SourceModel) model);
     } else if (model instanceof ConstructModel) {
-      return createConstructModel(componentDefinition, (ConstructModel) model);
+      return createConstruct(componentDefinition, (ConstructModel) model);
     } else if (model instanceof ConfigurationModel) {
-
+      return createConfiguration(componentDefinition, (ConfigurationModel) model);
     } else if (model instanceof ConnectionProviderModel) {
-
+      return createConnectionProvider(componentDefinition, (ConnectionProviderModel) model);
     } else if (model instanceof ObjectType) {
-
+      return createObject(componentDefinition, (ObjectType) model);
     }
+    //TODO improve
+    throw new RuntimeException();
+  }
+
+  private Component createObject(ComponentDefinition componentDefinition, ObjectType model)
+  {
+    //TODO implement
     return null;
   }
 
-  private Construct createConstructModel(ComponentDefinition componentDefinition, ConstructModel model) {
+  private Component createConnectionProvider(ComponentDefinition componentDefinition, ConnectionProviderModel model) {
+    return ConnectionProvider.builder()
+        .withModel(model)
+        .withComponentDefinition(componentDefinition)
+        .withParameters(extractParameters(componentDefinition))
+        .build();
+  }
+
+  private Component createConfiguration(ComponentDefinition componentDefinition, ConfigurationModel model) {
+    return Configuration.builder()
+        .withModel(model)
+        .withComponentDefinition(componentDefinition)
+        .withParameters(extractParameters(componentDefinition))
+        .build();
+  }
+
+  private Construct createConstruct(ComponentDefinition componentDefinition, ConstructModel model) {
     Construct.ConstructBuilder constructBuilder = Construct.builder()
         .withParameters(extractParameters(componentDefinition))
         .withModel(model)
         .withComponentDefinition(componentDefinition);
 
-    model.getNestedComponents().stream()
-        .map(nestableElementModel -> {
-          nestableElementModel.accept(new NestableElementModelVisitor() {
-
-            @Override
-            public void visit(NestedComponentModel component) {
-              // TODO defin what do here
-            }
-
-            @Override
-            public void visit(NestedChainModel component) {
-
-           }
-
-            @Override
-            public void visit(NestedRouteModel component) {
-
-            }
-          });
-          return null;
-        });
+    constructBuilder.withProcessorComponents(componentDefinition.getChildComponentDefinitions()
+        .stream() // add predicate to filter childs that are parameters
+        .map(childComponentDefinition -> {
+          Object childModel = extensionsHelper.findModel(childComponentDefinition.getIdentifier());
+          return createComponent(childComponentDefinition, childModel);
+        })
+        .collect(Collectors.toList()));
 
     return constructBuilder
         .build();
