@@ -1588,7 +1588,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.0</version>
+                    <version>3.6</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -1960,6 +1960,8 @@
                                 <encoding>ISO-8859-1</encoding>
                                 <source>1.7</source>
                                 <target>1.7</target>
+
+                                <additionalparam>${xDocLint}</additionalparam>
                                 <!-- Link to the external online JavaDoc -->
                                 <links>
                                     <link>http://docs.oracle.com/javase/7/docs/api/</link>
