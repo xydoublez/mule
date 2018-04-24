@@ -9,7 +9,7 @@ package org.mule.runtime.config.api.dsl.model.properties;
 import org.mule.api.annotation.NoImplement;
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.config.api.dsl.model.ConfigurationParameters;
-import org.mule.runtime.dsl.api.ResourceProvider;
+import org.mule.runtime.config.api.dsl.model.ResourceProvider;
 
 /**
  * Builds the provider for a custom configuration properties element.

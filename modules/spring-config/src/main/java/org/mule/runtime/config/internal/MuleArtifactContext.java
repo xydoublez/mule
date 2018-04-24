@@ -66,13 +66,11 @@ import org.mule.runtime.api.util.Pair;
 import org.mule.runtime.app.declaration.api.ArtifactDeclaration;
 import org.mule.runtime.config.api.XmlConfigurationDocumentLoader;
 import org.mule.runtime.config.api.dsl.model.ComponentBuildingDefinitionRegistry;
-import org.mule.runtime.config.api.dsl.model.ResourceProvider;
 import org.mule.runtime.config.api.dsl.processor.ArtifactConfig;
 import org.mule.runtime.config.api.dsl.processor.ConfigFile;
 import org.mule.runtime.config.api.dsl.processor.ConfigLine;
 import org.mule.runtime.config.api.dsl.processor.SimpleConfigAttribute;
 import org.mule.runtime.config.api.dsl.processor.xml.XmlApplicationParser;
-import org.mule.runtime.config.internal.dsl.model.ClassLoaderResourceProvider;
 import org.mule.runtime.config.internal.dsl.model.ConfigurationDependencyResolver;
 import org.mule.runtime.config.internal.dsl.model.SpringComponentModel;
 import org.mule.runtime.config.internal.dsl.model.config.DefaultConfigurationPropertiesResolver;
@@ -81,7 +79,6 @@ import org.mule.runtime.config.internal.dsl.model.config.RuntimeConfigurationExc
 import org.mule.runtime.config.internal.dsl.spring.BeanDefinitionFactory;
 import org.mule.runtime.config.internal.editors.MulePropertyEditorRegistrar;
 import org.mule.runtime.config.internal.model.ApplicationModel;
-import org.mule.runtime.config.internal.model.ArtifactModelFactory;
 import org.mule.runtime.config.internal.model.ComponentModel;
 import org.mule.runtime.config.internal.parser.XmlArtifactParser;
 import org.mule.runtime.config.internal.processor.ComponentLocatorCreatePostProcessor;
@@ -102,6 +99,9 @@ import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.runtime.core.internal.registry.DefaultRegistry;
 import org.mule.runtime.core.internal.registry.MuleRegistryHelper;
 import org.mule.runtime.core.internal.registry.TransformerResolver;
+import org.mule.runtime.dsl.api.ResourceProvider;
+import org.mule.runtime.dsl.internal.ClassLoaderResourceProvider;
+import org.mule.runtime.dsl.internal.parser.ArtifactModelFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -299,7 +299,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
       applicationModel = new ApplicationModel(artifactConfig, artifactDeclaration, extensions,
                                               artifactProperties, parentConfigurationProperties,
                                               of(componentBuildingDefinitionRegistry),
-                                              true, externalResourceProvider);
+                                              true, uri -> externalResourceProvider.getResourceAsStream(uri));
     } catch (MuleRuntimeException e) {
       throw e;
     } catch (Exception e) {

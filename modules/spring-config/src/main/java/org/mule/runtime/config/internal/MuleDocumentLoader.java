@@ -7,11 +7,12 @@
 package org.mule.runtime.config.internal;
 
 import static org.apache.commons.lang3.SystemUtils.LINE_SEPARATOR;
-import static org.mule.runtime.config.internal.parsers.XmlMetadataAnnotations.METADATA_ANNOTATIONS_KEY;
+import static org.mule.runtime.dsl.internal.parser.xml.XmlMetadataAnnotations.METADATA_ANNOTATIONS_KEY;
 
-import org.mule.runtime.config.internal.parsers.DefaultXmlMetadataAnnotations;
-import org.mule.runtime.config.internal.parsers.XmlMetadataAnnotations;
+import org.mule.runtime.dsl.internal.parser.xml.DefaultXmlMetadataAnnotations;
+import org.mule.runtime.dsl.internal.parser.xml.XmlMetadataAnnotations;
 import org.mule.runtime.core.api.util.xmlsecurity.XMLSecureFactories;
+import org.mule.runtime.dsl.internal.parser.xml.XmlMetadataAnnotationsFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

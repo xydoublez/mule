@@ -9,6 +9,9 @@ package org.mule.test.crafted.config.properties.extension;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+
+import java.util.Optional;
+
 import org.mule.runtime.api.component.location.ComponentLocation;
 import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.lifecycle.Initialisable;
@@ -16,8 +19,6 @@ import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.config.api.dsl.model.ResourceProvider;
 import org.mule.runtime.config.api.dsl.model.properties.ConfigurationProperty;
 import org.mule.runtime.config.api.dsl.model.properties.DefaultConfigurationPropertiesProvider;
-
-import java.util.Optional;
 
 /**
  * Artifact attributes configuration. This class represents a single secure-configuration-properties element from the

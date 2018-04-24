@@ -15,9 +15,9 @@ import org.mule.runtime.api.component.AbstractComponent;
 import org.mule.runtime.api.component.location.ComponentLocation;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
+import org.mule.runtime.config.api.dsl.model.ResourceProvider;
 import org.mule.runtime.config.internal.dsl.model.config.ConfigurationPropertiesException;
 import org.mule.runtime.config.internal.dsl.model.config.DefaultConfigurationProperty;
-import org.mule.runtime.dsl.api.ResourceProvider;
 
 import java.io.IOException;
 import java.io.InputStream;

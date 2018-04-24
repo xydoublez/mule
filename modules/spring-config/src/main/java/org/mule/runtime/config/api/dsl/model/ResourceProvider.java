@@ -13,6 +13,7 @@ import org.mule.api.annotation.NoImplement;
  * @deprecated use @link {@link org.mule.runtime.dsl.api.ResourceProvider} instead
  */
 @NoImplement
-public interface ResourceProvider extends org.mule.runtime.dsl.api.ResourceProvider{
+@Deprecated
+public interface ResourceProvider extends org.mule.runtime.dsl.api.ResourceProvider {
 
 }

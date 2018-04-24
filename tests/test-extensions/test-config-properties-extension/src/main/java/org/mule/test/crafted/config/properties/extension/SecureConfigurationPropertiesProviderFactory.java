@@ -7,8 +7,8 @@
 package org.mule.test.crafted.config.properties.extension;
 
 import static org.mule.runtime.api.component.ComponentIdentifier.builder;
-import static org.mule.runtime.internal.dsl.DslConstants.EE_PREFIX;
 import static org.mule.test.crafted.config.properties.extension.TestConfigPropertiesExtensionLoadingDelegate.EXTENSION_NAME;
+
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.util.Preconditions;
 import org.mule.runtime.config.api.dsl.model.ConfigurationParameters;

@@ -21,8 +21,7 @@ import org.mule.test.marvel.drstrange.DrStrangeTypeWithCustomStereotype;
 @Configurations({IronMan.class, DrStrange.class})
 @ErrorTypes(DrStrangeErrorTypeDefinition.class)
 @Export(classes = {IronMan.class, DrStrangeTypeWithCustomStereotype.class})
-public class
-MarvelExtension {
+public class MarvelExtension {
 
   public static final String MARVEL_EXTENSION = "Marvel";
 }

@@ -6,18 +6,19 @@
  */
 package org.mule.runtime.core.api.config;
 
-import org.mule.runtime.core.api.util.IOUtils;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
+import org.mule.runtime.core.api.util.IOUtils;
+
 /**
  * A ConfigResource holds the url description (or location) and the url stream. It is useful to associate the two for error
  * reporting when the stream cannot be read.
  */
-public final class ConfigResource {
+//TODO duplicated. This class should be removed
+public class ConfigResource {
 
   protected String resourceName;
   private URL url;

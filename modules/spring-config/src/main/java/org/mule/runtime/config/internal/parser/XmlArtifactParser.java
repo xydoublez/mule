@@ -42,7 +42,7 @@ import org.mule.runtime.config.api.dsl.processor.xml.XmlApplicationParser;
 import org.mule.runtime.config.api.dsl.xml.StaticXmlNamespaceInfo;
 import org.mule.runtime.config.api.dsl.xml.StaticXmlNamespaceInfoProvider;
 import org.mule.runtime.config.internal.dsl.model.config.RuntimeConfigurationException;
-import org.mule.runtime.config.internal.parsers.XmlMetadataAnnotations;
+import org.mule.runtime.dsl.internal.parser.xml.XmlMetadataAnnotations;
 import org.mule.runtime.core.api.config.ConfigResource;
 import org.mule.runtime.core.api.registry.SpiServiceRegistry;
 import org.mule.runtime.dsl.api.ResourceProvider;
@@ -286,12 +286,13 @@ public class XmlArtifactParser {
       NodeList children = node.getChildNodes();
       for (int i = 0; i < children.getLength(); i++) {
         Node child = children.item(i);
-        if (isTextContent(child)) {
+        if (isTextContent(child) && !isTextEmpty(child)) {
           componentDefinitionBuilder.withParameterValueDefinition(ParameterValueDefinition
               .builder()
               .withRawValue(child.getNodeValue())
               .withSourceCodeLocation(getSourceCodeLocationFromNode(child))
-              .build());
+              .build())
+              .build();
           // TODO see why CDATA is relevant
           // if (child.getNodeType() == Node.CDATA_SECTION_NODE) {
           // builder.addCustomAttribute(IS_CDATA, Boolean.TRUE);
@@ -306,6 +307,10 @@ public class XmlArtifactParser {
     return Optional.of(componentDefinitionBuilder.build());
   }
 
+  private boolean isTextEmpty(Node node) {
+    return node.getNodeValue().replaceAll("\n", "").trim().isEmpty();
+  }
+
   private ComponentIdentifier getComponentIdentifierFromNode(Node node) {
     String name = parseIdentifier(node);
     String namespace = parseNamespace(node);
@@ -318,7 +323,7 @@ public class XmlArtifactParser {
   private SourceCodeLocation getSourceCodeLocationFromNode(Node node) {
     XmlMetadataAnnotations userData = (XmlMetadataAnnotations) node.getUserData(XmlMetadataAnnotations.METADATA_ANNOTATIONS_KEY);
     if (userData != null) {
-      //TODO add support for userData when the node is an XML attributes
+      // TODO add support for userData when the node is an XML attributes
       SourceCodeLocation sourceCodeLocation = SourceCodeLocation.builder()
           .withStartLine(userData.getLineNumber())
           .withEndLine(userData.getEndLineNumber())
@@ -333,7 +338,7 @@ public class XmlArtifactParser {
   private String parseNamespace(Node node) {
     String namespace = CORE_PREFIX;
     if (node.getNodeType() == Node.ATTRIBUTE_NODE) {
-      //TODO remove duplicate code with below
+      // TODO remove duplicate code with below
       String namespaceURI = node.getNamespaceURI();
       if (namespaceURI == null) {
         namespaceURI = ((Attr) node).getOwnerElement().getNamespaceURI();

@@ -1,4 +1,35 @@
 {
+  "4.2.0": {
+    "revapi": {
+      "ignore": [
+        {
+          "code": "java.method.parameterTypeChanged",
+          "old": "parameter org.mule.runtime.config.api.XmlConfigurationDocumentLoader org.mule.runtime.config.api.XmlConfigurationDocumentLoader::schemaValidatingDocumentLoader(===org.mule.runtime.config.api.XmlGathererErrorHandlerFactory===)",
+          "new": "parameter org.mule.runtime.config.api.XmlConfigurationDocumentLoader org.mule.runtime.config.api.XmlConfigurationDocumentLoader::schemaValidatingDocumentLoader(===org.mule.runtime.dsl.internal.parser.xml.XmlGathererErrorHandlerFactory===)",
+          "oldType": "org.mule.runtime.config.api.XmlGathererErrorHandlerFactory",
+          "newType": "org.mule.runtime.dsl.internal.parser.xml.XmlGathererErrorHandlerFactory",
+          "package": "org.mule.runtime.config.api",
+          "classSimpleName": "XmlConfigurationDocumentLoader",
+          "methodName": "schemaValidatingDocumentLoader",
+          "parameterIndex": "0",
+          "elementKind": "parameter",
+          "justification": "Not used by users"
+        },
+        {
+          "code": "java.method.returnTypeChanged",
+          "old": "method org.mule.runtime.config.api.XmlGathererErrorHandler org.mule.runtime.config.api.XmlGathererErrorHandlerFactory::create()",
+          "new": "method org.mule.runtime.dsl.internal.parser.xml.XmlGathererErrorHandler org.mule.runtime.config.api.XmlGathererErrorHandlerFactory::create()",
+          "oldType": "org.mule.runtime.config.api.XmlGathererErrorHandler",
+          "newType": "org.mule.runtime.dsl.internal.parser.xml.XmlGathererErrorHandler",
+          "package": "org.mule.runtime.config.api",
+          "classSimpleName": "XmlGathererErrorHandlerFactory",
+          "methodName": "create",
+          "elementKind": "method",
+          "justification": "Not used by users"
+        }
+      ]
+    }
+  },
   "4.1.2": {
     "revapi": {
       "ignore": [

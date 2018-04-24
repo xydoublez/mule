@@ -12,11 +12,11 @@ import org.mule.runtime.dsl.api.xml.XmlNamespaceInfo;
  * A {@link XmlNamespaceInfo} which returns fix values obtained through the constructor
  *
  * @since 4.0
+ *
+ * @deprecated use {@link org.mule.runtime.dsl.api.xml.StaticXmlNamespaceInfo} instead.
  */
-public final class StaticXmlNamespaceInfo implements XmlNamespaceInfo {
-
-  private final String namespaceUriPrefix;
-  private final String namespace;
+@Deprecated
+public final class StaticXmlNamespaceInfo extends org.mule.runtime.dsl.api.xml.StaticXmlNamespaceInfo {
 
   /**
    * Creates a new instance
@@ -25,17 +25,6 @@ public final class StaticXmlNamespaceInfo implements XmlNamespaceInfo {
    * @param namespace the value to be returned by {@link #getNamespace()}
    */
   public StaticXmlNamespaceInfo(String namespaceUriPrefix, String namespace) {
-    this.namespaceUriPrefix = namespaceUriPrefix;
-    this.namespace = namespace;
-  }
-
-  @Override
-  public String getNamespaceUriPrefix() {
-    return namespaceUriPrefix;
-  }
-
-  @Override
-  public String getNamespace() {
-    return namespace;
+    super(namespaceUriPrefix, namespace);
   }
 }

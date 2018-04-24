@@ -37,7 +37,7 @@ import org.mule.runtime.config.internal.dsl.processor.ObjectTypeVisitor;
 import org.mule.runtime.config.internal.dsl.processor.xml.XmlCustomAttributeHandler;
 import org.mule.runtime.config.internal.factories.ModuleOperationMessageProcessorChainFactoryBean;
 import org.mule.runtime.config.internal.model.ComponentModel;
-import org.mule.runtime.config.internal.parsers.XmlMetadataAnnotations;
+import org.mule.runtime.dsl.internal.parser.xml.XmlMetadataAnnotations;
 import org.mule.runtime.config.privileged.dsl.BeanDefinitionPostProcessor;
 import org.mule.runtime.core.api.processor.strategy.ProcessingStrategy;
 import org.mule.runtime.core.api.registry.SpiServiceRegistry;

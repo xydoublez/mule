@@ -13,7 +13,6 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMess
 import static org.mule.runtime.api.connectivity.ConnectivityTestingService.CONNECTIVITY_TESTING_SERVICE_KEY;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.metadata.MetadataService.METADATA_SERVICE_KEY;
-import static org.mule.runtime.api.util.Pair.of;
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import static org.mule.runtime.api.value.ValueProviderService.VALUE_PROVIDER_SERVICE_KEY;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APP;
@@ -28,6 +27,7 @@ import static org.mule.runtime.module.deployment.impl.internal.artifact.Artifact
 import static org.mule.runtime.module.deployment.impl.internal.util.DeploymentPropertiesUtils.resolveDeploymentProperties;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.mule.runtime.api.artifact.Registry;
+import org.mule.runtime.api.artifact.semantic.Artifact;
 import org.mule.runtime.api.connectivity.ConnectivityTestingService;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Stoppable;
@@ -50,6 +51,7 @@ import org.mule.runtime.api.service.ServiceRepository;
 import org.mule.runtime.api.util.Pair;
 import org.mule.runtime.api.value.ValueProviderService;
 import org.mule.runtime.core.api.MuleContext;
+import org.mule.runtime.core.api.config.ConfigurationException;
 import org.mule.runtime.core.api.context.notification.MuleContextListener;
 import org.mule.runtime.core.api.context.notification.MuleContextNotification;
 import org.mule.runtime.core.api.context.notification.MuleContextNotificationListener;
@@ -67,13 +69,12 @@ import org.mule.runtime.deployment.model.api.artifact.ArtifactContext;
 import org.mule.runtime.deployment.model.api.domain.Domain;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPlugin;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPluginDescriptor;
-import org.mule.runtime.dsl.api.ResourceProvider;
-import org.mule.runtime.dsl.internal.ClassLoaderResourceProvider;
 import org.mule.runtime.module.artifact.api.classloader.ArtifactClassLoader;
 import org.mule.runtime.module.artifact.api.classloader.ClassLoaderRepository;
 import org.mule.runtime.module.artifact.api.classloader.DisposableClassLoader;
 import org.mule.runtime.module.artifact.api.classloader.MuleDeployableArtifactClassLoader;
 import org.mule.runtime.module.artifact.api.classloader.RegionClassLoader;
+import org.mule.runtime.module.deployment.impl.internal.artifact.ArtifactBuilder;
 import org.mule.runtime.module.deployment.impl.internal.artifact.ArtifactContextBuilder;
 import org.mule.runtime.module.deployment.impl.internal.artifact.ExtensionModelDiscoverer;
 import org.mule.runtime.module.deployment.impl.internal.domain.DomainRepository;
@@ -105,6 +106,7 @@ public class DefaultMuleApplication implements Application {
   private ApplicationPolicyProvider policyManager;
 
   private NotificationListenerRegistry notificationRegistrer;
+  private Artifact artifact;
 
   public DefaultMuleApplication(ApplicationDescriptor descriptor,
                                 MuleDeployableArtifactClassLoader deploymentClassLoader,
@@ -219,35 +221,13 @@ public class DefaultMuleApplication implements Application {
 
       Domain domain = domainRepository.getDomain(descriptor.getDomainName());
 
-      ExtensionModelDiscoverer extensionModelDiscoverer = new ExtensionModelDiscoverer();
-      List<Pair<ArtifactPluginDescriptor, ArtifactClassLoader>> pluginsData = artifactPlugins.stream()
-          .map(artifactPlugin -> of(artifactPlugin.getDescriptor(), artifactPlugin.getArtifactClassLoader()))
-          .collect(Collectors.toList());
-      MuleExtensionModelLoaderManager loaderRepository = new MuleExtensionModelLoaderManager(deploymentClassLoader);
-      Set<Pair<ArtifactPluginDescriptor, ExtensionModel>> pluginDescriptorExtensionModelPairs;
+      Set<ExtensionModel> allExtensionModels = getExtensionModels(domain);
 
-      if (domain.getRegistry() != null) {
-        pluginDescriptorExtensionModelPairs =
-            extensionModelDiscoverer.discoverPluginsExtensionModels(loaderRepository, pluginsData, domain.getRegistry()
-                .lookupByType(ExtensionManager.class).map(ExtensionManager::getExtensions).get());
-      } else {
-        pluginDescriptorExtensionModelPairs =
-            extensionModelDiscoverer.discoverPluginsExtensionModels(loaderRepository, pluginsData);
-      }
-
-      Set<ExtensionModel> runtimeExtensionModels = extensionModelDiscoverer.discoverRuntimeExtensionModels();
-
-      List<ExtensionModel> allExtensionModels =
-          Streams.concat(runtimeExtensionModels.stream(), pluginDescriptorExtensionModelPairs.stream().map(Pair::getSecond))
-              .collect(Collectors.toList());
-
-      ResourceProvider externalResourceProvider = new ClassLoaderResourceProvider(deploymentClassLoader.getClassLoader());
-
-      //TODO replace this thing
-      //EnvironmentPropertiesConfigurationProvider environmentPropertiesConfigurationProvider = new EnvironmentPropertiesConfigurationProvider();
-
-      XmlArtifactParser xmlArtifactParser = new XmlArtifactParser(artifactConfigResources, xmlConfigurationDocumentLoader, extensions,
-
+      this.artifact = new ArtifactBuilder()
+          .setClassLoader(deploymentClassLoader.getClassLoader())
+          .setConfigFiles(descriptor.getConfigResources())
+          .setExtensionModels(allExtensionModels)
+          .build();
 
 
       ArtifactContextBuilder artifactBuilder =
@@ -281,6 +261,30 @@ public class DefaultMuleApplication implements Application {
       logger.error(e.getMessage(), getRootCause(e));
       throw new DeploymentInitException(createStaticMessage(getRootCauseMessage(e)), e);
     }
+  }
+
+  private Set<ExtensionModel> getExtensionModels(Domain domain) {
+    ExtensionModelDiscoverer extensionModelDiscoverer = new ExtensionModelDiscoverer();
+    List<Pair<ArtifactPluginDescriptor, ArtifactClassLoader>> pluginsData = artifactPlugins.stream()
+        .map(artifactPlugin -> new Pair<ArtifactPluginDescriptor, ArtifactClassLoader>(artifactPlugin.getDescriptor(),
+                                                                                       artifactPlugin.getArtifactClassLoader()))
+        .collect(Collectors.toList());
+    MuleExtensionModelLoaderManager loaderRepository = new MuleExtensionModelLoaderManager(deploymentClassLoader);
+    Set<Pair<ArtifactPluginDescriptor, ExtensionModel>> pluginDescriptorExtensionModelPairs;
+
+    if (domain.getRegistry() != null) {
+      pluginDescriptorExtensionModelPairs =
+          extensionModelDiscoverer.discoverPluginsExtensionModels(loaderRepository, pluginsData, domain.getRegistry()
+              .lookupByType(ExtensionManager.class).map(ExtensionManager::getExtensions).get());
+    } else {
+      pluginDescriptorExtensionModelPairs =
+          extensionModelDiscoverer.discoverPluginsExtensionModels(loaderRepository, pluginsData);
+    }
+
+    Set<ExtensionModel> runtimeExtensionModels = extensionModelDiscoverer.discoverRuntimeExtensionModels();
+
+    return Streams.concat(runtimeExtensionModels.stream(), pluginDescriptorExtensionModelPairs.stream().map(Pair::getSecond))
+        .collect(Collectors.toSet());
   }
 
   private Properties getProperties() {

@@ -15,8 +15,8 @@ import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.meta.model.ExtensionModel;
-import org.mule.runtime.config.internal.DefaultXmlGathererErrorHandlerFactory;
-import org.mule.runtime.config.internal.DefaultXmlLoggerErrorHandler;
+import org.mule.runtime.dsl.internal.parser.xml.DefaultXmlGathererErrorHandlerFactory;
+import org.mule.runtime.dsl.internal.parser.xml.DefaultXmlLoggerErrorHandler;
 import org.mule.runtime.config.internal.ModuleDelegatingEntityResolver;
 import org.mule.runtime.config.internal.MuleDocumentLoader;
 
@@ -40,6 +40,8 @@ import java.util.Set;
  * @see {@link #loadDocument(Set, String, InputStream)}
  * @since 4.0
  */
+
+//TODO try to remove
 public final class XmlConfigurationDocumentLoader {
 
   /**
@@ -52,7 +54,7 @@ public final class XmlConfigurationDocumentLoader {
    */
   private static final int NO_VALIDATION = 0;
 
-  private final XmlGathererErrorHandlerFactory xmlGathererErrorHandlerFactory;
+  private final org.mule.runtime.dsl.internal.parser.xml.XmlGathererErrorHandlerFactory xmlGathererErrorHandlerFactory;
   private final int validationMode;
 
   /**
@@ -80,7 +82,7 @@ public final class XmlConfigurationDocumentLoader {
    * @param errorHandlerFactory to create {@link XmlGathererErrorHandler} in the {@link #loadDocument(Set, String, InputStream)}
    * @return a new instance of {@link XmlConfigurationDocumentLoader}
    */
-  public static XmlConfigurationDocumentLoader schemaValidatingDocumentLoader(XmlGathererErrorHandlerFactory errorHandlerFactory) {
+  public static XmlConfigurationDocumentLoader schemaValidatingDocumentLoader(org.mule.runtime.dsl.internal.parser.xml.XmlGathererErrorHandlerFactory errorHandlerFactory) {
     return new XmlConfigurationDocumentLoader(errorHandlerFactory);
   }
 
@@ -95,7 +97,7 @@ public final class XmlConfigurationDocumentLoader {
     return new XmlConfigurationDocumentLoader(null);
   }
 
-  private XmlConfigurationDocumentLoader(XmlGathererErrorHandlerFactory errorHandlerFactory) {
+  private XmlConfigurationDocumentLoader(org.mule.runtime.dsl.internal.parser.xml.XmlGathererErrorHandlerFactory errorHandlerFactory) {
     this.validationMode = errorHandlerFactory != null ? VALIDATION_XSD : NO_VALIDATION;
     this.xmlGathererErrorHandlerFactory = errorHandlerFactory;
   }
@@ -126,7 +128,7 @@ public final class XmlConfigurationDocumentLoader {
    * @see {@link DefaultXmlLoggerErrorHandler#getErrors()}
    */
   public Document loadDocument(Set<ExtensionModel> extensions, String filename, InputStream inputStream) {
-    final XmlGathererErrorHandler errorHandler = createXmlGathererErrorHandler();
+    final org.mule.runtime.dsl.internal.parser.xml.XmlGathererErrorHandler errorHandler = createXmlGathererErrorHandler();
     Document document;
     try {
       document = new MuleDocumentLoader()
@@ -146,7 +148,8 @@ public final class XmlConfigurationDocumentLoader {
     return document;
   }
 
-  private void throwExceptionIfErrorsWereFound(XmlGathererErrorHandler errorHandler, String filename) {
+  private void throwExceptionIfErrorsWereFound(org.mule.runtime.dsl.internal.parser.xml.XmlGathererErrorHandler errorHandler,
+                                               String filename) {
     final List<SAXParseException> errors = errorHandler.getErrors();
     if (!errors.isEmpty()) {
       final String subMessage = format(errors.size() == 1 ? "was '%s' error" : "were '%s' errors", errors.size());
@@ -160,7 +163,7 @@ public final class XmlConfigurationDocumentLoader {
     }
   }
 
-  private XmlGathererErrorHandler createXmlGathererErrorHandler() {
+  private org.mule.runtime.dsl.internal.parser.xml.XmlGathererErrorHandler createXmlGathererErrorHandler() {
     return validationMode == VALIDATION_XSD ? xmlGathererErrorHandlerFactory.create() : null;
   }
 }

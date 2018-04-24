@@ -30,6 +30,35 @@ import static org.mule.runtime.config.internal.model.ApplicationModel.GLOBAL_PRO
 import static org.mule.runtime.core.api.exception.Errors.ComponentIdentifiers.Handleable.ANY;
 import static org.mule.runtime.core.internal.processor.chain.ModuleOperationMessageProcessorChainBuilder.MODULE_CONNECTION_GLOBAL_ELEMENT_NAME;
 import static org.mule.runtime.extension.api.util.XmlModelUtils.createXmlLanguageModel;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+
+import javax.xml.transform.Source;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.commons.lang3.StringUtils;
+import org.jgrapht.DirectedGraph;
+import org.jgrapht.alg.CycleDetector;
+import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
+
 import org.mule.metadata.api.builder.BaseTypeBuilder;
 import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.catalog.api.TypeResolver;
@@ -62,7 +91,6 @@ import org.mule.runtime.config.api.dsl.model.properties.ConfigurationPropertiesP
 import org.mule.runtime.config.api.dsl.model.properties.ConfigurationProperty;
 import org.mule.runtime.config.api.dsl.processor.ConfigLine;
 import org.mule.runtime.config.api.dsl.processor.xml.XmlApplicationParser;
-import org.mule.runtime.config.internal.dsl.model.ClassLoaderResourceProvider;
 import org.mule.runtime.config.internal.dsl.model.ComponentModelReader;
 import org.mule.runtime.config.internal.dsl.model.config.ConfigurationPropertiesResolver;
 import org.mule.runtime.config.internal.dsl.model.config.DefaultConfigurationPropertiesResolver;
@@ -79,6 +107,7 @@ import org.mule.runtime.config.internal.dsl.model.extension.xml.property.Private
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.TestConnectionGlobalElementModelProperty;
 import org.mule.runtime.config.internal.model.ComponentModel;
 import org.mule.runtime.config.internal.util.NoOpXmlErrorHandler;
+import org.mule.runtime.dsl.internal.ClassLoaderResourceProvider;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.dsl.syntax.resolver.DslSyntaxResolver;
 import org.mule.runtime.extension.api.exception.IllegalModelDefinitionException;
@@ -91,37 +120,10 @@ import org.mule.runtime.extension.internal.loader.validator.property.InvalidTest
 import org.mule.runtime.extension.internal.property.NoReconnectionStrategyModelProperty;
 import org.mule.runtime.internal.dsl.NullDslResolvingContext;
 
+import org.w3c.dom.Document;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-
-import javax.xml.transform.Source;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.apache.commons.lang3.StringUtils;
-import org.jgrapht.DirectedGraph;
-import org.jgrapht.alg.CycleDetector;
-import org.jgrapht.graph.DefaultDirectedGraph;
-import org.jgrapht.graph.DefaultEdge;
-import org.w3c.dom.Document;
 
 /**
  * Describes an {@link ExtensionModel} by scanning an XML provided in the constructor
@@ -178,6 +180,7 @@ public final class XmlExtensionLoaderDelegate {
 
   /**
    * ENUM used to discriminate which visibility an <operation/> has.
+   * 
    * @see {@link XmlExtensionLoaderDelegate#loadOperationsFrom(HasOperationDeclarer, ComponentModel, DirectedGraph, XmlDslModel, XmlExtensionLoaderDelegate.OperationVisibility)}
    */
   private enum OperationVisibility {
@@ -328,8 +331,8 @@ public final class XmlExtensionLoaderDelegate {
   }
 
   /**
-   * Transforms the current <module/> by stripping out the <body/>'s content, so that there are not parsing errors, to generate
-   * a simpler {@link ExtensionModel} if there are references to the TNS prefix defined by the {@link #XMLNS_TNS}.
+   * Transforms the current <module/> by stripping out the <body/>'s content, so that there are not parsing errors, to generate a
+   * simpler {@link ExtensionModel} if there are references to the TNS prefix defined by the {@link #XMLNS_TNS}.
    *
    * @param resource <module/>'s resource
    * @param extensions complete list of extensions the current module depends on
@@ -435,7 +438,7 @@ public final class XmlExtensionLoaderDelegate {
     declarer.withModelProperty(getXmlExtensionModelProperty(moduleModel, xmlDslModel));
 
     DirectedGraph<String, DefaultEdge> directedGraph = new DefaultDirectedGraph<>(DefaultEdge.class);
-    //loading public operations
+    // loading public operations
     final List<ComponentModel> globalElementsComponentModel = extractGlobalElementsFrom(moduleModel);
     addGlobalElementModelProperty(declarer, globalElementsComponentModel);
     final Optional<ConfigurationDeclarer> configurationDeclarer =
@@ -443,12 +446,12 @@ public final class XmlExtensionLoaderDelegate {
     final HasOperationDeclarer hasOperationDeclarer = configurationDeclarer.isPresent() ? configurationDeclarer.get() : declarer;
 
     loadOperationsFrom(hasOperationDeclarer, moduleModel, directedGraph, xmlDslModel, OperationVisibility.PUBLIC);
-    //loading private operations
+    // loading private operations
     if (comesFromTNS) {
-      //when parsing for the TNS, we need the <operation/>s to be part of the extension model to validate the XML properly
+      // when parsing for the TNS, we need the <operation/>s to be part of the extension model to validate the XML properly
       loadOperationsFrom(hasOperationDeclarer, moduleModel, directedGraph, xmlDslModel, OperationVisibility.PRIVATE);
     } else {
-      //when parsing for the macro expansion, the <operation/>s will be left in the PrivateOperationsModelProperty model property
+      // when parsing for the macro expansion, the <operation/>s will be left in the PrivateOperationsModelProperty model property
       final ExtensionDeclarer temporalDeclarer = new ExtensionDeclarer();
       fillDeclarer(temporalDeclarer, name, version, category, vendor, xmlDslModel, description);
       loadOperationsFrom(temporalDeclarer, moduleModel, directedGraph, xmlDslModel, OperationVisibility.PRIVATE);
@@ -486,8 +489,8 @@ public final class XmlExtensionLoaderDelegate {
    * @param moduleModel XML of the <module/>
    * @param xmlDslModel the {@link XmlDslModel} for the current {@link ExtensionModel} generation
    * @return a {@link XmlExtensionModelProperty} which contains all the namespaces dependencies. Among them could be dependencies
-   * that must be macro expanded and others which might not, but that job is left for the
-   * {@link MacroExpansionModulesModel#getDirectExpandableNamespaceDependencies(ComponentModel, Set)}
+   *         that must be macro expanded and others which might not, but that job is left for the
+   *         {@link MacroExpansionModulesModel#getDirectExpandableNamespaceDependencies(ComponentModel, Set)}
    */
   private XmlExtensionModelProperty getXmlExtensionModelProperty(ComponentModel moduleModel,
                                                                  XmlDslModel xmlDslModel) {
@@ -559,6 +562,7 @@ public final class XmlExtensionLoaderDelegate {
 
   /**
    * Throws exception if a <property/> for a configuration or connection have the same name.
+   * 
    * @param configurationProperties properties that will go in the configuration
    * @param connectionProperties properties that will go in the connection
    */
@@ -647,8 +651,8 @@ public final class XmlExtensionLoaderDelegate {
 
   /**
    * Goes over all {@code globalElementsComponentModel} looking for the configuration and connection elements (parent and child),
-   * where if present looks for the {@link ExtensionModel}s validating if the element is in fact a {@link ConnectionProvider}.
-   * It heavily relies on the {@link DslSyntaxResolver}, as many elements in the XML do not match to the names of the model.
+   * where if present looks for the {@link ExtensionModel}s validating if the element is in fact a {@link ConnectionProvider}. It
+   * heavily relies on the {@link DslSyntaxResolver}, as many elements in the XML do not match to the names of the model.
    *
    * @param globalElementsComponentModel global elements of the smart connector
    * @param extensions set of extensions used to generate the current {@link ExtensionModel}
@@ -757,14 +761,14 @@ public final class XmlExtensionLoaderDelegate {
                                           final List<ComponentModel> innerComponents) {
     innerComponents.forEach(childMPComponentModel -> {
       if (TNS_PREFIX.equals(childMPComponentModel.getIdentifier().getNamespace())) {
-        //we will take the current component model name, as any child of it are actually TNS child references (aka: parameters)
+        // we will take the current component model name, as any child of it are actually TNS child references (aka: parameters)
         final String targetOperationVertex = childMPComponentModel.getIdentifier().getName();
         if (!directedGraph.containsVertex(targetOperationVertex)) {
           directedGraph.addVertex(targetOperationVertex);
         }
         directedGraph.addEdge(sourceOperationVertex, targetOperationVertex);
       } else {
-        //scenario for nested scopes that might be having cyclic references to operations
+        // scenario for nested scopes that might be having cyclic references to operations
         childMPComponentModel.getInnerComponents()
             .forEach(childChildMPComponentModel -> fillGraphWithTnsReferences(directedGraph, sourceOperationVertex,
                                                                               childMPComponentModel.getInnerComponents()));
@@ -879,11 +883,11 @@ public final class XmlExtensionLoaderDelegate {
   private MetadataType getMetadataType(Optional<ComponentModel> outputAttributesComponentModel,
                                        Optional<MetadataType> declarationMetadataType) {
     MetadataType metadataType;
-    //the calculated metadata has precedence over the one configured in the xml
+    // the calculated metadata has precedence over the one configured in the xml
     if (declarationMetadataType.isPresent()) {
       metadataType = declarationMetadataType.get();
     } else {
-      //if tye element is absent, it will default to the VOID type
+      // if tye element is absent, it will default to the VOID type
       if (outputAttributesComponentModel.isPresent()) {
         String receivedOutputAttributeType = outputAttributesComponentModel.get().getParameters().get(TYPE_ATTRIBUTE);
         metadataType = extractType(receivedOutputAttributeType);
@@ -941,9 +945,9 @@ public final class XmlExtensionLoaderDelegate {
 
   /**
    * Utility class to read the XML module entirely so that if there's any usage of configurations properties, such as
-   * "${someProperty}", the {@link ForbiddenConfigurationPropertiesValidator} can show the errors consistently,
-   * Without this dull implementation, the {@link ComponentModelReader#extractComponentDefinitionModel(ConfigLine, String)} method
-   * fails while reading ANY parametrization throwing a {@link PropertyNotFoundException} eagerly. 
+   * "${someProperty}", the {@link ForbiddenConfigurationPropertiesValidator} can show the errors consistently, Without this dull
+   * implementation, the {@link ComponentModelReader#extractComponentDefinitionModel(ConfigLine, String)} method fails while
+   * reading ANY parametrization throwing a {@link PropertyNotFoundException} eagerly.
    */
   private class XmlExtensionConfigurationPropertiesResolver implements ConfigurationPropertiesResolver {
 

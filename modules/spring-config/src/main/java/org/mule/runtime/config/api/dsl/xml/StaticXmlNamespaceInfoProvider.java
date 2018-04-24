@@ -6,22 +6,21 @@
  */
 package org.mule.runtime.config.api.dsl.xml;
 
-import static com.google.common.collect.ImmutableList.copyOf;
+import java.util.Collection;
 
 import org.mule.runtime.dsl.api.xml.XmlNamespaceInfo;
 import org.mule.runtime.dsl.api.xml.XmlNamespaceInfoProvider;
-
-import java.util.Collection;
 
 /**
  * A {@link XmlNamespaceInfoProvider} which provides a fixed set of {@link XmlNamespaceInfo} instances obtained through the
  * constructor
  *
  * @since 4.0
+ * 
+ * @deprecated use {@link org.mule.runtime.dsl.api.xml.StaticXmlNamespaceInfoProvider} instead.
  */
-public final class StaticXmlNamespaceInfoProvider implements XmlNamespaceInfoProvider {
-
-  private final Collection<XmlNamespaceInfo> namespaceInfos;
+@Deprecated
+public final class StaticXmlNamespaceInfoProvider extends org.mule.runtime.dsl.api.xml.StaticXmlNamespaceInfoProvider {
 
   /**
    * Creates a new instance
@@ -29,11 +28,6 @@ public final class StaticXmlNamespaceInfoProvider implements XmlNamespaceInfoPro
    * @param namespaceInfos the {@link Collection} to be returned by {@link #getXmlNamespacesInfo()}
    */
   public StaticXmlNamespaceInfoProvider(Collection<XmlNamespaceInfo> namespaceInfos) {
-    this.namespaceInfos = copyOf(namespaceInfos);
-  }
-
-  @Override
-  public Collection<XmlNamespaceInfo> getXmlNamespacesInfo() {
-    return namespaceInfos;
+    super(namespaceInfos);
   }
 }

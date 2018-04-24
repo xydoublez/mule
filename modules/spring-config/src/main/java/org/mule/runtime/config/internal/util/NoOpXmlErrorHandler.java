@@ -8,9 +8,9 @@ package org.mule.runtime.config.internal.util;
 
 import static java.util.Collections.emptyList;
 
-import java.util.List;
+import org.mule.runtime.dsl.internal.parser.xml.XmlGathererErrorHandler;
 
-import org.mule.runtime.config.api.XmlGathererErrorHandler;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

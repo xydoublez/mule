@@ -18,10 +18,10 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import org.mule.runtime.api.lifecycle.InitialisationException;
+import org.mule.runtime.config.api.dsl.model.ResourceProvider;
+import org.mule.runtime.config.api.dsl.model.ResourceProviderAdapter;
 import org.mule.runtime.config.api.dsl.model.properties.DefaultConfigurationPropertiesProvider;
 import org.mule.runtime.config.internal.dsl.model.config.ConfigurationPropertiesException;
-import org.mule.runtime.dsl.api.ResourceProvider;
-import org.mule.runtime.dsl.internal.ClassLoaderResourceProvider;
 
 import io.qameta.allure.Description;
 import io.qameta.allure.Feature;
@@ -39,7 +39,7 @@ public class YamlConfigurationPropertiesComponentTestCase {
 
   @Before
   public void setUp() {
-    externalResourceProvider = new ClassLoaderResourceProvider(Thread.currentThread().getContextClassLoader());
+    externalResourceProvider = new ResourceProviderAdapter(Thread.currentThread().getContextClassLoader());
   }
 
   @Description("Validates the values obtained for the different types in the properties")

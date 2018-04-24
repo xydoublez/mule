@@ -24,5 +24,5 @@ public interface XmlGathererErrorHandlerFactory {
    * @return Creates an {@link XmlGathererErrorHandler} to be used when executing
    *         {@link org.springframework.beans.factory.xml.DocumentLoader#loadDocument(InputSource, EntityResolver, ErrorHandler, int, boolean)}
    */
-  XmlGathererErrorHandler create();
+  org.mule.runtime.dsl.internal.parser.xml.XmlGathererErrorHandler create();
 }
