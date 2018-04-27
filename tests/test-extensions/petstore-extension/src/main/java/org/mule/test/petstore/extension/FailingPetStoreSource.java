@@ -9,7 +9,7 @@ package org.mule.test.petstore.extension;
 
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.mule.runtime.extension.api.annotation.param.MediaType.TEXT_PLAIN;
-
+import org.mule.runtime.api.component.location.ComponentLocation;
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.connection.ConnectionProvider;
 import org.mule.runtime.api.exception.MuleException;
@@ -46,9 +46,11 @@ public class FailingPetStoreSource extends Source<String, Object> {
   public static ConnectionException connectionException = new ConnectionException("ERROR");
   public static ExecutorService executor;
 
+  private ComponentLocation location;
+
   @Override
   public void onStart(SourceCallback<String, Object> sourceCallback) throws MuleException {
-    PetStoreConnector.timesStarted++;
+    incrementStartTimes();
 
     if (failOnStart || failedDueOnException) {
       throw new RuntimeException(connectionException);
@@ -63,4 +65,15 @@ public class FailingPetStoreSource extends Source<String, Object> {
 
   @Override
   public void onStop() {}
+
+  private void incrementStartTimes() {
+    synchronized (PetStoreConnector.timesStarted) {
+      Integer times = PetStoreConnector.timesStarted.getOrDefault(getFlowName(), 0);
+      PetStoreConnector.timesStarted.put(getFlowName(), times + 1);
+    }
+  }
+
+  private String getFlowName() {
+    return location.getParts().get(0).getPartPath();
+  }
 }

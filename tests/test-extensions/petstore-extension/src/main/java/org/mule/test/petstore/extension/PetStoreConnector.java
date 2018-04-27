@@ -17,7 +17,10 @@ import org.mule.runtime.extension.api.annotation.param.DefaultEncoding;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Extension(name = "petstore")
 @Operations({PetStoreOperations.class, PetStoreOperationsWithFailures.class, PetStoreFailingOperations.class})
@@ -32,7 +35,9 @@ public class PetStoreConnector {
   /**
    * Indicates how many times a {@link PetStoreConnector} was started.
    */
-  public static int timesStarted;
+  // public static int timesStarted;
+
+  public static Map<String, Integer> timesStarted = new HashMap<>();
 
   @Parameter
   private List<String> pets;
@@ -79,7 +84,11 @@ public class PetStoreConnector {
     return encoding;
   }
 
-  public static int getTimesStarted() {
+  // public static int getTimesStarted() {
+  //   return timesStarted;
+  // }
+
+  public static Map<String, Integer> getTimesStarted() {
     return timesStarted;
   }
 

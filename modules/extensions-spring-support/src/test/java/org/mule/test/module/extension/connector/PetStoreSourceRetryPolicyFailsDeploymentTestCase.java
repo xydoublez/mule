@@ -12,14 +12,16 @@ import static org.junit.Assert.assertThat;
 import static org.junit.rules.ExpectedException.none;
 import static org.mule.test.petstore.extension.FailingPetStoreSource.connectionException;
 import static org.mule.test.petstore.extension.FailingPetStoreSource.executor;
-import org.mule.runtime.core.api.construct.Flow;
 import org.mule.runtime.core.api.retry.policy.RetryPolicyExhaustedException;
 import org.mule.tck.junit4.rule.SystemProperty;
 import org.mule.tck.probe.JUnitLambdaProbe;
 import org.mule.tck.probe.PollingProber;
 import org.mule.test.module.extension.AbstractExtensionFunctionalTestCase;
 import org.mule.test.petstore.extension.PetStoreConnector;
+import org.mule.test.runner.RunnerDelegateTo;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 
 import org.junit.After;
@@ -27,8 +29,10 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runners.Parameterized;
 
-public class PetStoreSourceRetryPolicyProviderTestCase extends AbstractExtensionFunctionalTestCase {
+@RunnerDelegateTo(Parameterized.class)
+public class PetStoreSourceRetryPolicyFailsDeploymentTestCase extends AbstractExtensionFunctionalTestCase {
 
   public static final int TIMEOUT_MILLIS = 1000;
   public static final int POLL_DELAY_MILLIS = 50;
@@ -37,11 +41,24 @@ public class PetStoreSourceRetryPolicyProviderTestCase extends AbstractExtension
   public ExpectedException exception = none();
 
   @Rule
-  public SystemProperty team = new SystemProperty("initialState", "stopped");
+  public SystemProperty team = new SystemProperty("initialState", "started");
+
+  @Parameterized.Parameter(0)
+  public boolean failsDeployment;
+
+  @Parameterized.Parameter(1)
+  public String connectionConfig;
+
+
+  @Parameterized.Parameters(name = "{1}")
+  public static Collection<Object[]> data() {
+    return Arrays.asList(new Object[] {false, "petstore-connection-dont-fail-deployment.xml"},
+                         new Object[] {true, "petstore-connection-fail-deployment.xml"});
+  }
 
   @Override
   protected String[] getConfigFiles() {
-    return new String[] {"petstore-connection-fail-deployment.xml", "petstore-source-retry-policy.xml"};
+    return new String[] {connectionConfig, "petstore-source-retry-policy.xml"};
   }
 
   @Before
@@ -57,25 +74,27 @@ public class PetStoreSourceRetryPolicyProviderTestCase extends AbstractExtension
     }
   }
 
-  @Test
-  public void retryPolicySourceFailOnStart() throws Exception {
-    exception.expect(RetryPolicyExhaustedException.class);
-    exception.expectCause(sameInstance(connectionException));
-    try {
-      startFlow("source-fail-on-start");
-    } catch (Exception e) {
-      new PollingProber(TIMEOUT_MILLIS, POLL_DELAY_MILLIS)
-          .check(new JUnitLambdaProbe(() -> {
-            assertThat(PetStoreConnector.timesStarted.get("source-fail-on-start"), is(2));
-            return true;
-          }));
-      throw e;
+  @Override
+  protected void doSetUpBeforeMuleContextCreation() throws Exception {
+    if (failsDeployment) {
+      exception.expect(RetryPolicyExhaustedException.class);
+      exception.expectCause(sameInstance(connectionException));
+    } else {
+      exception = none();
     }
   }
 
   @Test
+  public void retryPolicySourceFailOnStart() throws Exception {
+    new PollingProber(TIMEOUT_MILLIS, POLL_DELAY_MILLIS)
+        .check(new JUnitLambdaProbe(() -> {
+          assertThat(PetStoreConnector.timesStarted.get("source-fail-on-start"), is(2));
+          return true;
+        }));
+  }
+
+  @Test
   public void retryPolicySourceFailWithConnectionException() throws Exception {
-    startFlow("source-fail-with-connection-exception");
     new PollingProber(TIMEOUT_MILLIS, POLL_DELAY_MILLIS)
         .check(new JUnitLambdaProbe(() -> {
           assertThat(PetStoreConnector.timesStarted.get("source-fail-with-connection-exception"), is(3));
@@ -83,7 +102,4 @@ public class PetStoreSourceRetryPolicyProviderTestCase extends AbstractExtension
         }));
   }
 
-  private void startFlow(String flowName) throws Exception {
-    ((Flow) getFlowConstruct(flowName)).start();
-  }
 }

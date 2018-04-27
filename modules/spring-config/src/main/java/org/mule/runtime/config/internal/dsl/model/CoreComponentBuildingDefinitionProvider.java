@@ -1162,11 +1162,11 @@ public class CoreComponentBuildingDefinitionProvider implements ComponentBuildin
 
     ComponentBuildingDefinition.Builder baseReconnectDefinition = baseDefinition
         .withTypeDefinition(fromType(RetryPolicyTemplate.class)).withObjectFactoryType(RetryPolicyTemplateObjectFactory.class)
-        .withSetterParameterDefinition("blocking", fromSimpleParameter("blocking").build())
         .withSetterParameterDefinition("frequency", fromSimpleParameter("frequency").build());
 
     buildingDefinitions.add(baseReconnectDefinition.withIdentifier(RECONNECT_FOREVER_ELEMENT_IDENTIFIER)
         .withSetterParameterDefinition("count", fromFixedValue(RETRY_COUNT_FOREVER).build()).build());
+
     buildingDefinitions.add(baseReconnectDefinition.withIdentifier(RECONNECT_ELEMENT_IDENTIFIER)
         .withSetterParameterDefinition("retryNotifier", fromChildConfiguration(RetryNotifier.class).build())
         .withSetterParameterDefinition("count", fromSimpleParameter("count").build()).build());

@@ -6,9 +6,7 @@
  */
 package org.mule.tck.probe;
 
-import static org.mule.tck.report.ThreadDumper.logThreadDump;
 import static org.slf4j.LoggerFactory.getLogger;
-
 import org.mule.runtime.core.api.util.func.CheckedFunction;
 import org.mule.runtime.core.api.util.func.CheckedSupplier;
 
@@ -81,7 +79,7 @@ public class PollingProber implements Prober {
   public void check(Probe probe) {
     if (!poll(probe)) {
       LOGGER.error("test timed out. Maybe due to a deadlock?");
-      logThreadDump();
+      // logThreadDump();
       throw new AssertionError(probe.describeFailure());
     }
   }
