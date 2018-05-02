@@ -28,7 +28,20 @@ import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_MULE_SIMPLE
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_QUEUE_MANAGER;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_SECURITY_MANAGER;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APP;
+import static org.mule.runtime.core.api.context.TestArtifactAstBuilder.builder;
 import static org.mule.tck.util.MuleContextUtils.mockMuleContext;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.mockito.InOrder;
 
 import org.mule.runtime.api.artifact.Registry;
 import org.mule.runtime.api.lifecycle.InitialisationException;
@@ -46,17 +59,7 @@ import org.mule.tck.config.TestServicesConfigurationBuilder;
 import org.mule.tck.junit4.AbstractMuleTestCase;
 import org.mule.tck.testmodels.fruit.Banana;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.mockito.InOrder;
+import com.google.common.collect.ImmutableSet;
 
 public class DefaultMuleContextFactoryTestCase extends AbstractMuleTestCase {
 
@@ -152,7 +155,8 @@ public class DefaultMuleContextFactoryTestCase extends AbstractMuleTestCase {
   public void testCreateMuleContextString() throws InitialisationException, ConfigurationException {
     context = null;
     try {
-      context = muleContextFactory.createMuleContext("log4j2-test.xml");
+      context = muleContextFactory
+          .createMuleContext(builder().setConfig(ImmutableSet.of("log4j2-test.xml")).build());
     } catch (ConfigurationException e) {
       assertThat(e.getMessage(),
                  equalTo("No suitable configuration builder for resource \"[ConfigResource{resourceName='log4j2-test.xml'}]\" found.  "
@@ -169,7 +173,8 @@ public class DefaultMuleContextFactoryTestCase extends AbstractMuleTestCase {
 
     context = null;
     try {
-      context = muleContextFactory.createMuleContext("log4j2-test.xml", (Map) properties);
+      context =
+          muleContextFactory.createMuleContext(builder().setConfig(ImmutableSet.of("log4j2-test.xml")).build(), (Map) properties);
     } catch (ConfigurationException e) {
       assertThat(e.getMessage(),
                  equalTo("No suitable configuration builder for resource \"[ConfigResource{resourceName='log4j2-test.xml'}]\" found.  "

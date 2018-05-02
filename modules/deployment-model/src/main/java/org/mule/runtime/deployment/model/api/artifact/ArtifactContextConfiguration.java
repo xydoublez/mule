@@ -11,15 +11,16 @@ import static java.util.Collections.emptyMap;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 
-import org.mule.api.annotation.NoInstantiate;
-import org.mule.runtime.app.declaration.api.ArtifactDeclaration;
-import org.mule.runtime.api.config.custom.ServiceConfigurator;
-import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.core.api.config.bootstrap.ArtifactType;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.mule.api.annotation.NoInstantiate;
+import org.mule.runtime.api.artifact.ast.ArtifactAst;
+import org.mule.runtime.api.config.custom.ServiceConfigurator;
+import org.mule.runtime.app.declaration.api.ArtifactDeclaration;
+import org.mule.runtime.core.api.MuleContext;
+import org.mule.runtime.core.api.config.bootstrap.ArtifactType;
 
 /**
  * Configuration required for the creation of an {@link ArtifactContext}.
@@ -38,6 +39,7 @@ public final class ArtifactContextConfiguration {
   private boolean disableXmlValidations;
   private List<ServiceConfigurator> serviceConfigurators = emptyList();
   private Optional<MuleContext> parentContext = empty();
+  private ArtifactAst artifactAst;
 
   private ArtifactContextConfiguration() {}
 
@@ -83,6 +85,10 @@ public final class ArtifactContextConfiguration {
    */
   public ArtifactType getArtifactType() {
     return artifactType;
+  }
+
+  public ArtifactAst getArtifactAst() {
+    return artifactAst;
   }
 
   /**
@@ -210,6 +216,11 @@ public final class ArtifactContextConfiguration {
      */
     public ArtifactContextConfigurationBuilder setParentContext(MuleContext parentContext) {
       artifactContextConfiguration.parentContext = of(parentContext);
+      return this;
+    }
+
+    public ArtifactContextConfigurationBuilder setArtifactAst(ArtifactAst artifactAst) {
+      artifactContextConfiguration.artifactAst = artifactAst;
       return this;
     }
 

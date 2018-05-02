@@ -27,7 +27,6 @@ import static org.mule.runtime.module.deployment.impl.internal.artifact.Artifact
 import static org.mule.runtime.module.deployment.impl.internal.util.DeploymentPropertiesUtils.resolveDeploymentProperties;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +36,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.mule.runtime.api.artifact.Registry;
-import org.mule.runtime.api.artifact.semantic.Artifact;
+import org.mule.runtime.api.artifact.ast.ArtifactAst;
 import org.mule.runtime.api.connectivity.ConnectivityTestingService;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Stoppable;
@@ -51,7 +50,6 @@ import org.mule.runtime.api.service.ServiceRepository;
 import org.mule.runtime.api.util.Pair;
 import org.mule.runtime.api.value.ValueProviderService;
 import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.core.api.config.ConfigurationException;
 import org.mule.runtime.core.api.context.notification.MuleContextListener;
 import org.mule.runtime.core.api.context.notification.MuleContextNotification;
 import org.mule.runtime.core.api.context.notification.MuleContextNotificationListener;
@@ -74,7 +72,7 @@ import org.mule.runtime.module.artifact.api.classloader.ClassLoaderRepository;
 import org.mule.runtime.module.artifact.api.classloader.DisposableClassLoader;
 import org.mule.runtime.module.artifact.api.classloader.MuleDeployableArtifactClassLoader;
 import org.mule.runtime.module.artifact.api.classloader.RegionClassLoader;
-import org.mule.runtime.module.deployment.impl.internal.artifact.ArtifactBuilder;
+import org.mule.runtime.core.internal.artifact.ast.ArtifactXmlBasedAstBuilder;
 import org.mule.runtime.module.deployment.impl.internal.artifact.ArtifactContextBuilder;
 import org.mule.runtime.module.deployment.impl.internal.artifact.ExtensionModelDiscoverer;
 import org.mule.runtime.module.deployment.impl.internal.domain.DomainRepository;
@@ -106,7 +104,7 @@ public class DefaultMuleApplication implements Application {
   private ApplicationPolicyProvider policyManager;
 
   private NotificationListenerRegistry notificationRegistrer;
-  private Artifact artifact;
+  private ArtifactAst artifactAst;
 
   public DefaultMuleApplication(ApplicationDescriptor descriptor,
                                 MuleDeployableArtifactClassLoader deploymentClassLoader,
@@ -223,7 +221,7 @@ public class DefaultMuleApplication implements Application {
 
       Set<ExtensionModel> allExtensionModels = getExtensionModels(domain);
 
-      this.artifact = new ArtifactBuilder()
+      this.artifactAst = new ArtifactXmlBasedAstBuilder()
           .setClassLoader(deploymentClassLoader.getClassLoader())
           .setConfigFiles(descriptor.getConfigResources())
           .setExtensionModels(allExtensionModels)
@@ -241,6 +239,7 @@ public class DefaultMuleApplication implements Application {
               .setExtensionModelLoaderRepository(extensionModelLoaderRepository)
               .setClassLoaderRepository(classLoaderRepository)
               .setArtifactDeclaration(descriptor.getArtifactDeclaration())
+              .setArtifactAst(artifactAst)
               .setProperties(ofNullable(resolveDeploymentProperties(descriptor.getDataFolderName(),
                                                                     descriptor.getDeploymentProperties())))
               .setPolicyProvider(policyManager);

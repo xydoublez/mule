@@ -13,7 +13,6 @@ import static java.lang.String.join;
 import static java.lang.Thread.currentThread;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
 import static javax.xml.XMLConstants.XMLNS_ATTRIBUTE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -23,18 +22,20 @@ import static org.mule.metadata.catalog.api.PrimitiveTypesTypeLoader.PRIMITIVE_T
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.meta.model.display.LayoutModel.builder;
 import static org.mule.runtime.api.meta.model.parameter.ParameterRole.BEHAVIOUR;
-import static org.mule.runtime.config.api.XmlConfigurationDocumentLoader.schemaValidatingDocumentLoader;
+import static org.mule.runtime.config.internal.ArtifactAstHelper.getConnectionProviderAst;
 import static org.mule.runtime.config.internal.dsl.model.extension.xml.MacroExpansionModuleModel.TNS_PREFIX;
 import static org.mule.runtime.config.internal.dsl.model.extension.xml.MacroExpansionModulesModel.getUsedNamespaces;
 import static org.mule.runtime.config.internal.model.ApplicationModel.GLOBAL_PROPERTY;
+import static org.mule.runtime.config.internal.model.ApplicationModel.NAME_ATTRIBUTE;
 import static org.mule.runtime.core.api.exception.Errors.ComponentIdentifiers.Handleable.ANY;
 import static org.mule.runtime.core.internal.processor.chain.ModuleOperationMessageProcessorChainBuilder.MODULE_CONNECTION_GLOBAL_ELEMENT_NAME;
 import static org.mule.runtime.extension.api.util.XmlModelUtils.createXmlLanguageModel;
+import static org.mule.runtime.internal.dsl.DslConstants.CORE_NAMESPACE;
+import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,14 +46,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import javax.xml.transform.Source;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.alg.CycleDetector;
@@ -63,17 +58,20 @@ import org.mule.metadata.api.builder.BaseTypeBuilder;
 import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.catalog.api.TypeResolver;
 import org.mule.metadata.catalog.api.TypeResolverException;
+import org.mule.runtime.api.artifact.ast.ArtifactAst;
+import org.mule.runtime.api.artifact.ast.ComponentAst;
+import org.mule.runtime.api.artifact.ast.ConnectionProviderAst;
+import org.mule.runtime.api.artifact.ast.ConstructAst;
+import org.mule.runtime.api.artifact.ast.HasParametersAst;
+import org.mule.runtime.api.artifact.ast.ParameterAst;
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.connection.ConnectionProvider;
-import org.mule.runtime.api.dsl.DslResolvingContext;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.meta.Category;
 import org.mule.runtime.api.meta.NamedObject;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.XmlDslModel;
-import org.mule.runtime.api.meta.model.config.ConfigurationModel;
 import org.mule.runtime.api.meta.model.connection.ConnectionManagementType;
-import org.mule.runtime.api.meta.model.connection.ConnectionProviderModel;
 import org.mule.runtime.api.meta.model.declaration.fluent.ConfigurationDeclarer;
 import org.mule.runtime.api.meta.model.declaration.fluent.ConnectionProviderDeclarer;
 import org.mule.runtime.api.meta.model.declaration.fluent.ExtensionDeclarer;
@@ -86,17 +84,16 @@ import org.mule.runtime.api.meta.model.display.DisplayModel;
 import org.mule.runtime.api.meta.model.display.LayoutModel;
 import org.mule.runtime.api.meta.model.error.ErrorModelBuilder;
 import org.mule.runtime.api.meta.model.parameter.ParameterRole;
-import org.mule.runtime.config.api.XmlConfigurationDocumentLoader;
+import org.mule.runtime.config.api.dsl.model.ResourceProviderAdapter;
 import org.mule.runtime.config.api.dsl.model.properties.ConfigurationPropertiesProvider;
 import org.mule.runtime.config.api.dsl.model.properties.ConfigurationProperty;
 import org.mule.runtime.config.api.dsl.processor.ConfigLine;
-import org.mule.runtime.config.api.dsl.processor.xml.XmlApplicationParser;
+import org.mule.runtime.config.internal.ArtifactAstHelper;
+import org.mule.runtime.config.internal.ComponentAstHolder;
+import org.mule.runtime.config.internal.ParameterAstHolder;
 import org.mule.runtime.config.internal.dsl.model.ComponentModelReader;
 import org.mule.runtime.config.internal.dsl.model.config.ConfigurationPropertiesResolver;
-import org.mule.runtime.config.internal.dsl.model.config.DefaultConfigurationPropertiesResolver;
 import org.mule.runtime.config.internal.dsl.model.config.DefaultConfigurationProperty;
-import org.mule.runtime.config.internal.dsl.model.config.EnvironmentPropertiesConfigurationProvider;
-import org.mule.runtime.config.internal.dsl.model.config.FileConfigurationPropertiesProvider;
 import org.mule.runtime.config.internal.dsl.model.config.GlobalPropertyConfigurationPropertiesProvider;
 import org.mule.runtime.config.internal.dsl.model.config.PropertyNotFoundException;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.MacroExpansionModuleModel;
@@ -105,9 +102,9 @@ import org.mule.runtime.config.internal.dsl.model.extension.xml.property.GlobalE
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.OperationComponentModelModelProperty;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.PrivateOperationsModelProperty;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.TestConnectionGlobalElementModelProperty;
+import org.mule.runtime.config.internal.model.ApplicationModel;
 import org.mule.runtime.config.internal.model.ComponentModel;
-import org.mule.runtime.config.internal.util.NoOpXmlErrorHandler;
-import org.mule.runtime.dsl.internal.ClassLoaderResourceProvider;
+import org.mule.runtime.core.internal.artifact.ast.ArtifactXmlBasedAstBuilder;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.dsl.syntax.resolver.DslSyntaxResolver;
 import org.mule.runtime.extension.api.exception.IllegalModelDefinitionException;
@@ -120,9 +117,8 @@ import org.mule.runtime.extension.internal.loader.validator.property.InvalidTest
 import org.mule.runtime.extension.internal.property.NoReconnectionStrategyModelProperty;
 import org.mule.runtime.internal.dsl.NullDslResolvingContext;
 
-import org.w3c.dom.Document;
-
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 /**
@@ -196,13 +192,37 @@ public final class XmlExtensionLoaderDelegate {
   }
 
   private static final ComponentIdentifier OPERATION_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(MODULE_NAMESPACE_NAME).name("operation").build();
-  private static final ComponentIdentifier OPERATION_PROPERTY_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(MODULE_NAMESPACE_NAME).name("property").build();
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("operation").build();
+  private static final ComponentIdentifier PROPERTY_IDENTIFIER =
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("property").build();
+  private static final ComponentIdentifier NAME_ATTRIBUTE_IDENTIFIER =
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("name").build();
+  private static final ComponentIdentifier TYPE_ATTRIBUTE_IDENTIFIER =
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(TYPE_ATTRIBUTE).build();
+  private static final ComponentIdentifier VISIBILITY_ATTRIBUTE_ATTRIBUTE_IDENTIFIER =
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(ATTRIBUTE_VISIBILITY).build();
+  private static final ComponentIdentifier PASSWORD_ATTRIBUTE_IDENTIFIER =
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(PASSWORD).build();
+  private static final ComponentIdentifier ORDER_ATTRIBUTE_IDENTIFIER =
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(ORDER_ATTRIBUTE).build();
+  private static final ComponentIdentifier TAB_ATTRIBUTE_IDENTIFIER =
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(TAB_ATTRIBUTE).build();
+  private static final ComponentIdentifier DISPLAY_NAME_ATTRIBUTE_IDENTIFIER =
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(DISPLAY_NAME_ATTRIBUTE).build();
+  private static final ComponentIdentifier SUMMARY_ATTRIBUTE_IDENTIFIER =
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(SUMMARY_ATTRIBUTE).build();
+  private static final ComponentIdentifier EXAPLE_ATTRIBUTE_IDENTIFIER =
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(EXAMPLE_ATTRIBUTE).build();
+  private static final ComponentIdentifier DEFAULT_VALUE_ATTRIBUTE_IDENTIFIER =
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(PARAMETER_DEFAULT_VALUE).build();
+  private static final ComponentIdentifier ATTRIBUTE_USE_ATTRIBUTE_IDENTIFIER =
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(ATTRIBUTE_USE).build();
+  private static final ComponentIdentifier MODULE_CONNECTION_MARKER_ATTRIBUTE_IDENTIFIER =
+      ComponentIdentifier.builder().namespace("xmlns").name("connection").build();
   private static final ComponentIdentifier CONNECTION_PROPERTIES_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(MODULE_NAMESPACE_NAME).name("connection").build();
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("connection").build();
   private static final ComponentIdentifier OPERATION_PARAMETERS_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(MODULE_NAMESPACE_NAME).name("parameters").build();
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("parameters").build();
   private static final ComponentIdentifier OPERATION_PARAMETER_IDENTIFIER =
       ComponentIdentifier.builder().namespace(MODULE_NAMESPACE_NAME).name("parameter").build();
   private static final ComponentIdentifier OPERATION_BODY_IDENTIFIER =
@@ -260,8 +280,8 @@ public final class XmlExtensionLoaderDelegate {
                                          e);
     }
     loadDeclaration();
-    Document moduleDocument = getModuleDocument(context, resource);
-    loadModuleExtension(context.getExtensionDeclarer(), resource, moduleDocument,
+    ArtifactAst artifactAst = getModuleAst(context, resource);
+    loadModuleExtension(context.getExtensionDeclarer(), artifactAst,
                         context.getDslResolvingContext().getExtensions(), false);
   }
 
@@ -316,14 +336,17 @@ public final class XmlExtensionLoaderDelegate {
     });
   }
 
-  private Document getModuleDocument(ExtensionLoadingContext context, URL resource) {
-    XmlConfigurationDocumentLoader xmlConfigurationDocumentLoader =
-        validateXml ? schemaValidatingDocumentLoader() : schemaValidatingDocumentLoader(NoOpXmlErrorHandler::new);
+  private ArtifactAst getModuleAst(ExtensionLoadingContext context, URL resource) {
     try {
       final Set<ExtensionModel> extensions = new HashSet<>(context.getDslResolvingContext().getExtensions());
-      createTnsExtensionModel(resource, extensions).ifPresent(extensions::add);
-      return xmlConfigurationDocumentLoader.loadDocument(extensions, resource.getFile(), resource.openStream());
-    } catch (IOException e) {
+      return ArtifactXmlBasedAstBuilder.builder().setExtensionModels(extensions)
+          .setDisableXmlValidations(!validateXml)
+          .setClassLoader(Thread.currentThread().getContextClassLoader())
+          .setConfigFiles(ImmutableSet.of(FileUtils.toFile(resource).getAbsolutePath())) // TODO this is weird
+          .build();
+      // createTnsExtensionModel(resource, extensions).ifPresent(extensions::add); //TODO missing
+      // return xmlConfigurationDocumentLoader.loadDocument(extensions, resource.getFile(), resource.openStream());
+    } catch (Exception e) {
       throw new MuleRuntimeException(
                                      createStaticMessage(format("There was an issue reading the stream for the resource %s",
                                                                 resource.getFile())));
@@ -340,59 +363,44 @@ public final class XmlExtensionLoaderDelegate {
    * @throws IOException if it fails reading the resource
    */
   private Optional<ExtensionModel> createTnsExtensionModel(URL resource, Set<ExtensionModel> extensions) throws IOException {
-    ExtensionModel result = null;
-    final ByteArrayOutputStream resultStream = new ByteArrayOutputStream();
-    try (InputStream in = getClass().getClassLoader().getResourceAsStream(TRANSFORMATION_FOR_TNS_RESOURCE)) {
-      final Source xslt = new StreamSource(in);
-      final Source moduleToTransform = new StreamSource(resource.openStream());
-      TransformerFactory.newInstance()
-          .newTransformer(xslt)
-          .transform(moduleToTransform, new StreamResult(resultStream));
-    } catch (TransformerException e) {
-      throw new MuleRuntimeException(
-                                     createStaticMessage(format("There was an issue transforming the stream for the resource %s while trying to remove the content of the <body> element to generate an XSD",
-                                                                resource.getFile())),
-                                     e);
-    }
-    final Document transformedModuleDocument = schemaValidatingDocumentLoader(NoOpXmlErrorHandler::new)
-        .loadDocument(extensions, resource.getFile(), new ByteArrayInputStream(resultStream.toByteArray()));
-    if (StringUtils.isNotBlank(transformedModuleDocument.getDocumentElement().getAttribute(XMLNS_TNS))) {
-      final ExtensionDeclarer extensionDeclarer = new ExtensionDeclarer();
-      loadModuleExtension(extensionDeclarer, resource, transformedModuleDocument, extensions, true);
-      result = createExtensionModel(extensionDeclarer);
-    }
+    // TODO review this code
+    // ExtensionModel result = null;
+    // final ByteArrayOutputStream resultStream = new ByteArrayOutputStream();
+    // try (InputStream in = getClass().getClassLoader().getResourceAsStream(TRANSFORMATION_FOR_TNS_RESOURCE)) {
+    // final Source xslt = new StreamSource(in);
+    // final Source moduleToTransform = new StreamSource(resource.openStream());
+    // TransformerFactory.newInstance()
+    // .newTransformer(xslt)
+    // .transform(moduleToTransform, new StreamResult(resultStream));
+    // } catch (TransformerException e) {
+    // throw new MuleRuntimeException(
+    // createStaticMessage(format("There was an issue transforming the stream for the resource %s while trying to remove the
+    // content of the <body> element to generate an XSD",
+    // resource.getFile())),
+    // e);
+    // }
+    // final Document transformedModuleDocument = schemaValidatingDocumentLoader(NoOpXmlErrorHandler::new)
+    // .loadDocument(extensions, resource.getFile(), new ByteArrayInputStream(resultStream.toByteArray()));
+    ArtifactAst artifactAst = ArtifactXmlBasedAstBuilder.builder()
+        .setClassLoader(Thread.currentThread().getContextClassLoader())
+        .setExtensionModels(extensions)
+        .setConfigFiles(ImmutableSet.of(FileUtils.toFile(resource).getAbsolutePath()))
+        .build();
+    // if (StringUtils.isNotBlank(transformedModuleDocument.getDocumentElement().getAttribute(XMLNS_TNS))) {
+    final ExtensionDeclarer extensionDeclarer = new ExtensionDeclarer();
+    loadModuleExtension(extensionDeclarer, artifactAst, extensions, true);
+    ExtensionModel result = createExtensionModel(extensionDeclarer);
+    // }
     return Optional.ofNullable(result);
   }
 
-  private ComponentModel getModuleComponentModel(URL resource, Document moduleDocument, Set<ExtensionModel> extensions) {
-    XmlApplicationParser xmlApplicationParser = XmlApplicationParser.createFromExtensionModels(extensions);
-    Optional<ConfigLine> parseModule = xmlApplicationParser.parse(moduleDocument.getDocumentElement());
-    if (!parseModule.isPresent()) {
-      // This happens in org.mule.runtime.config.dsl.processor.xml.XmlApplicationParser.configLineFromElement()
-      throw new IllegalArgumentException(format("There was an issue trying to read the stream of '%s'", resource.getFile()));
+  private ApplicationModel getModuleComponentModel(ArtifactAst artifactAst, Set<ExtensionModel> extensions) {
+    try {
+      return new ApplicationModel(artifactAst, null, extensions, Collections.emptyMap(), empty(), empty(), true,
+                                  new ResourceProviderAdapter(Thread.currentThread().getContextClassLoader()));
+    } catch (Exception e) {
+      throw new MuleRuntimeException(e);
     }
-    final ConfigLine configLine = parseModule.get();
-    final ConfigurationPropertiesResolver externalPropertiesResolver = getConfigurationPropertiesResolver(configLine);
-    final ComponentModelReader componentModelReader = new ComponentModelReader(externalPropertiesResolver);
-    return componentModelReader.extractComponentDefinitionModel(configLine, modulePath);
-  }
-
-  private ConfigurationPropertiesResolver getConfigurationPropertiesResolver(ConfigLine configLine) {
-    // <mule:global-property ... /> properties reader
-    final ConfigurationPropertiesResolver globalPropertiesConfigurationPropertiesResolver =
-        new DefaultConfigurationPropertiesResolver(of(new XmlExtensionConfigurationPropertiesResolver()),
-                                                   createProviderFromGlobalProperties(configLine, modulePath));
-    // system properties, such as "file.separator" properties reader
-    final ConfigurationPropertiesResolver systemPropertiesResolver =
-        new DefaultConfigurationPropertiesResolver(of(globalPropertiesConfigurationPropertiesResolver),
-                                                   new EnvironmentPropertiesConfigurationProvider());
-    // "file::" properties reader
-    final String description = format("External files for smart connector '%s'", modulePath);
-    final FileConfigurationPropertiesProvider externalPropertiesConfigurationProvider =
-        new FileConfigurationPropertiesProvider(new ClassLoaderResourceProvider(currentThread().getContextClassLoader()),
-                                                description);
-    return new DefaultConfigurationPropertiesResolver(of(systemPropertiesResolver),
-                                                      externalPropertiesConfigurationProvider);
   }
 
   private ConfigurationPropertiesProvider createProviderFromGlobalProperties(ConfigLine moduleLine, String modulePath) {
@@ -411,21 +419,29 @@ public final class XmlExtensionLoaderDelegate {
     return new GlobalPropertyConfigurationPropertiesProvider(globalProperties);
   }
 
-  private void loadModuleExtension(ExtensionDeclarer declarer, URL resource, Document moduleDocument,
+  private void loadModuleExtension(ExtensionDeclarer declarer, ArtifactAst artifactAst,
                                    Set<ExtensionModel> extensions, boolean comesFromTNS) {
-    final ComponentModel moduleModel = getModuleComponentModel(resource, moduleDocument, extensions);
-    if (!moduleModel.getIdentifier().equals(MODULE_IDENTIFIER)) {
+    final ApplicationModel applicationModel = getModuleComponentModel(artifactAst, extensions);
+    if (!artifactAst.getArtifactType().equals(MODULE_IDENTIFIER)) { // TODO add data to do validation
       throw new MuleRuntimeException(createStaticMessage(format("The root element of a module must be '%s', but found '%s'",
                                                                 MODULE_IDENTIFIER.toString(),
-                                                                moduleModel.getIdentifier().toString())));
+                                                                artifactAst.getArtifactType())));
     }
-    final String name = moduleModel.getParameters().get(MODULE_NAME);
+    ArtifactAstHelper artifactAstHelper = new ArtifactAstHelper(artifactAst);
+    final String name =
+        artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_NAMESPACE)
+            .namespace(NAME_ATTRIBUTE).build()).get().getSimpleParameterValueAst().getRawValue();
     final String version = "4.0.0"; // TODO(fernandezlautaro): MULE-11010 remove version from ExtensionModel
-    final String category = moduleModel.getParameters().get(CATEGORY);
-    final String vendor = moduleModel.getParameters().get(VENDOR);
-    final XmlDslModel xmlDslModel = getXmlDslModel(moduleModel, name, version);
-    final String description = getDescription(moduleModel);
-    final String xmlnsTnsValue = moduleModel.getParameters().get(XMLNS_TNS);
+    final String category =
+        artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_NAMESPACE)
+            .namespace(CATEGORY).build()).get().getSimpleParameterValueAst().getRawValue();
+    final String vendor =
+        artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_NAMESPACE)
+            .namespace(VENDOR).build()).get().getSimpleParameterValueAst().getRawValue();
+    final XmlDslModel xmlDslModel = getXmlDslModel(artifactAstHelper, name, version);
+    final String description = getDescription(artifactAst);
+    final String xmlnsTnsValue = artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_NAMESPACE)
+        .namespace(XMLNS_TNS).build()).get().getSimpleParameterValueAst().getRawValue();
     if (xmlnsTnsValue != null && !xmlDslModel.getNamespace().equals(xmlnsTnsValue)) {
       throw new MuleRuntimeException(createStaticMessage(format("The %s attribute value of the module must be '%s', but found '%s'",
                                                                 XMLNS_TNS,
@@ -435,26 +451,25 @@ public final class XmlExtensionLoaderDelegate {
     resourcesPaths.stream().forEach(declarer::withResource);
 
     fillDeclarer(declarer, name, version, category, vendor, xmlDslModel, description);
-    declarer.withModelProperty(getXmlExtensionModelProperty(moduleModel, xmlDslModel));
+    declarer.withModelProperty(getXmlExtensionModelProperty(artifactAstHelper, xmlDslModel));
 
     DirectedGraph<String, DefaultEdge> directedGraph = new DefaultDirectedGraph<>(DefaultEdge.class);
     // loading public operations
-    final List<ComponentModel> globalElementsComponentModel = extractGlobalElementsFrom(moduleModel);
+    final List<ComponentAst> globalElementsComponentModel = extractGlobalElementsFrom(artifactAstHelper);
     addGlobalElementModelProperty(declarer, globalElementsComponentModel);
     final Optional<ConfigurationDeclarer> configurationDeclarer =
-        loadPropertiesFrom(declarer, moduleModel, globalElementsComponentModel, extensions);
-    final HasOperationDeclarer hasOperationDeclarer = configurationDeclarer.isPresent() ? configurationDeclarer.get() : declarer;
+        loadPropertiesFrom(declarer, artifactAstHelper, extensions);
 
-    loadOperationsFrom(hasOperationDeclarer, moduleModel, directedGraph, xmlDslModel, OperationVisibility.PUBLIC);
+    final HasOperationDeclarer hasOperationDeclarer = configurationDeclarer.isPresent() ? configurationDeclarer.get() : declarer;
     // loading private operations
     if (comesFromTNS) {
       // when parsing for the TNS, we need the <operation/>s to be part of the extension model to validate the XML properly
-      loadOperationsFrom(hasOperationDeclarer, moduleModel, directedGraph, xmlDslModel, OperationVisibility.PRIVATE);
+      loadOperationsFrom(hasOperationDeclarer, artifactAstHelper, directedGraph, xmlDslModel, OperationVisibility.PRIVATE);
     } else {
       // when parsing for the macro expansion, the <operation/>s will be left in the PrivateOperationsModelProperty model property
       final ExtensionDeclarer temporalDeclarer = new ExtensionDeclarer();
       fillDeclarer(temporalDeclarer, name, version, category, vendor, xmlDslModel, description);
-      loadOperationsFrom(temporalDeclarer, moduleModel, directedGraph, xmlDslModel, OperationVisibility.PRIVATE);
+      loadOperationsFrom(temporalDeclarer, artifactAstHelper, directedGraph, xmlDslModel, OperationVisibility.PRIVATE);
       final ExtensionModel result = createExtensionModel(temporalDeclarer);
       declarer.withModelProperty(new PrivateOperationsModelProperty(result.getOperationModels()));
     }
@@ -492,37 +507,44 @@ public final class XmlExtensionLoaderDelegate {
    *         that must be macro expanded and others which might not, but that job is left for the
    *         {@link MacroExpansionModulesModel#getDirectExpandableNamespaceDependencies(ComponentModel, Set)}
    */
-  private XmlExtensionModelProperty getXmlExtensionModelProperty(ComponentModel moduleModel,
+  private XmlExtensionModelProperty getXmlExtensionModelProperty(ArtifactAstHelper artifactAstHelper,
                                                                  XmlDslModel xmlDslModel) {
-    final Set<String> namespaceDependencies = getUsedNamespaces(moduleModel).stream()
+    final Set<String> namespaceDependencies = getUsedNamespaces(artifactAstHelper).stream()
         .filter(namespace -> !xmlDslModel.getNamespace().equals(namespace))
         .collect(Collectors.toSet());
     return new XmlExtensionModelProperty(namespaceDependencies);
   }
 
-  private XmlDslModel getXmlDslModel(ComponentModel moduleModel, String name, String version) {
-    final Optional<String> prefix = ofNullable(moduleModel.getParameters().get(MODULE_PREFIX_ATTRIBUTE));
-    final Optional<String> namespace = ofNullable(moduleModel.getParameters().get(MODULE_NAMESPACE_ATTRIBUTE));
+  private XmlDslModel getXmlDslModel(ArtifactAstHelper artifactAstHelper, String name, String version) {
+    final Optional<String> prefix = artifactAstHelper
+        .getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_NAMESPACE).namespace(MODULE_PREFIX_ATTRIBUTE).build())
+        .map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue());
+    final Optional<String> namespace = artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder()
+        .namespace(CORE_NAMESPACE).namespace(MODULE_NAMESPACE_ATTRIBUTE).build())
+        .map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue());
     return createXmlLanguageModel(prefix, namespace, name, version);
   }
 
-  private String getDescription(ComponentModel componentModel) {
-    return componentModel.getParameters().getOrDefault(DOC_DESCRIPTION, "");
+  private String getDescription(HasParametersAst hasParametersAst) {
+    return hasParametersAst
+        .getParameter(ComponentIdentifier.builder().namespace(CORE_NAMESPACE).namespace(DOC_DESCRIPTION).build())
+        .map(parameterAst -> new ParameterAstHolder(parameterAst).getSimpleParameterValueAst().getRawValue()).orElse("");
   }
 
-  private List<ComponentModel> extractGlobalElementsFrom(ComponentModel moduleModel) {
+  private List<ComponentAst> extractGlobalElementsFrom(ArtifactAstHelper artifactAstHelper) {
     final Set<ComponentIdentifier> NOT_GLOBAL_ELEMENT_IDENTIFIERS = Sets
-        .newHashSet(OPERATION_PROPERTY_IDENTIFIER, CONNECTION_PROPERTIES_IDENTIFIER, OPERATION_IDENTIFIER);
-    return moduleModel.getInnerComponents().stream()
-        .filter(child -> !NOT_GLOBAL_ELEMENT_IDENTIFIERS.contains(child.getIdentifier()))
+        .newHashSet(PROPERTY_IDENTIFIER, CONNECTION_PROPERTIES_IDENTIFIER, OPERATION_IDENTIFIER);
+    return artifactAstHelper.getArtifactAst().getGlobalComponents()
+        .stream()
+        .filter(globalComponent -> !NOT_GLOBAL_ELEMENT_IDENTIFIERS.contains(globalComponent.getComponentIdentifier()))
         .collect(Collectors.toList());
   }
 
-  private Optional<ConfigurationDeclarer> loadPropertiesFrom(ExtensionDeclarer declarer, ComponentModel moduleModel,
-                                                             List<ComponentModel> globalElementsComponentModel,
+  private Optional<ConfigurationDeclarer> loadPropertiesFrom(ExtensionDeclarer declarer, ArtifactAstHelper artifactAstHelper,
                                                              Set<ExtensionModel> extensions) {
-    List<ComponentModel> configurationProperties = extractProperties(moduleModel);
-    List<ComponentModel> connectionProperties = extractConnectionProperties(moduleModel);
+    List<ComponentAst> globalElementsComponentModel = extractGlobalElementsFrom(artifactAstHelper);
+    List<ComponentAst> configurationProperties = extractModuleProperties(artifactAstHelper);
+    List<ComponentAst> connectionProperties = extractConnectionProperties(artifactAstHelper);
     validateProperties(configurationProperties, connectionProperties);
 
     if (!configurationProperties.isEmpty() || !connectionProperties.isEmpty()) {
@@ -535,44 +557,61 @@ public final class XmlExtensionLoaderDelegate {
     return empty();
   }
 
-  private void addGlobalElementModelProperty(ExtensionDeclarer declarer, List<ComponentModel> globalElementsComponentModel) {
-    if (!globalElementsComponentModel.isEmpty()) {
-      declarer.withModelProperty(new GlobalElementComponentModelModelProperty(globalElementsComponentModel));
+  private void addGlobalElementModelProperty(ExtensionDeclarer declarer, List<ComponentAst> globalComponentsAst) {
+    if (!globalComponentsAst.isEmpty()) {
+      declarer.withModelProperty(new GlobalElementComponentModelModelProperty(globalComponentsAst));
     }
   }
 
-  private List<ComponentModel> extractProperties(ComponentModel moduleModel) {
-    return moduleModel.getInnerComponents().stream()
-        .filter(child -> child.getIdentifier().equals(OPERATION_PROPERTY_IDENTIFIER))
+  private List<ComponentAst> extractModuleProperties(ArtifactAstHelper artifactAstHelper) {
+    List<ComponentAst> moduleProperties = new ArrayList<>();
+    artifactAstHelper.executeOnGlobalComponents(componentAstHolder -> {
+      if (componentAstHolder.getComponentAst().getComponentIdentifier().equals(PROPERTY_IDENTIFIER)) {
+        moduleProperties.add(componentAstHolder.getComponentAst());
+      }
+    });
+    return moduleProperties;
+  }
+
+  private List<ComponentAst> extractModuleProperties(ComponentAstHolder componentAstHolder) {
+    return componentAstHolder.getParameters().stream()
+        .filter(parameter -> parameter.isComplexParameter()
+            || parameter.getParameterAst().getParameterIdentifier().getIdentifier().equals(PROPERTY_IDENTIFIER))
+        .map(parameter -> parameter.getCompleParameterValueAst().getComponent())
         .collect(Collectors.toList());
   }
 
-  private List<ComponentModel> extractConnectionProperties(ComponentModel moduleModel) {
-    final List<ComponentModel> connectionsComponentModel = moduleModel.getInnerComponents().stream()
-        .filter(child -> child.getIdentifier().equals(CONNECTION_PROPERTIES_IDENTIFIER))
+  private List<ComponentAst> extractConnectionProperties(ArtifactAstHelper artifactAstHelper) {
+    final List<ComponentAst> connectionsComponentAst = artifactAstHelper.getArtifactAst().getGlobalComponents().stream()
+        .filter(componentAst -> componentAst.getComponentIdentifier().equals(CONNECTION_PROPERTIES_IDENTIFIER))
         .collect(Collectors.toList());
-    if (connectionsComponentModel.size() > 1) {
+    if (connectionsComponentAst.size() > 1) {
       throw new MuleRuntimeException(createStaticMessage(format("There cannot be more than 1 child [%s] element per [%s], found [%d]",
                                                                 CONNECTION_PROPERTIES_IDENTIFIER.getName(),
                                                                 MODULE_IDENTIFIER.getName(),
-                                                                connectionsComponentModel.size())));
+                                                                connectionsComponentAst.size())));
     }
-    return connectionsComponentModel.isEmpty() ? Collections.EMPTY_LIST : extractProperties(connectionsComponentModel.get(0));
+    return connectionsComponentAst.isEmpty() ? Collections.EMPTY_LIST
+        : extractModuleProperties(new ComponentAstHolder(connectionsComponentAst.get(0))); // TODO review this new
   }
 
   /**
    * Throws exception if a <property/> for a configuration or connection have the same name.
-   * 
+   *
    * @param configurationProperties properties that will go in the configuration
    * @param connectionProperties properties that will go in the connection
    */
-  private void validateProperties(List<ComponentModel> configurationProperties, List<ComponentModel> connectionProperties) {
+  private void validateProperties(List<ComponentAst> configurationProperties, List<ComponentAst> connectionProperties) {
     final List<String> connectionPropertiesNames =
-        connectionProperties.stream().map(ComponentModel::getNameAttribute).collect(Collectors.toList());
+        connectionProperties.stream().map(componentAst -> componentAst.getParameter(NAME_ATTRIBUTE_IDENTIFIER)
+            .map(parameterAst -> new ParameterAstHolder(parameterAst).getSimpleParameterValueAst().getRawValue())
+            .orElse(null)).collect(Collectors.toList()); // TODO review of new ParameterAsTholder
     List<String> intersectedProperties = configurationProperties.stream()
-        .map(ComponentModel::getNameAttribute)
-        .filter(connectionPropertiesNames::contains)
-        .collect(Collectors.toList());
+        .map(componentAst -> componentAst.getParameter(NAME_ATTRIBUTE_IDENTIFIER)
+            .map(parameterAst -> new ParameterAstHolder(parameterAst).getSimpleParameterValueAst().getRawValue())
+            .filter(connectionPropertiesNames::contains)
+            .orElse(null))
+        .collect(Collectors.toList()); // TODO review of new ParameterAsTholder
     if (!intersectedProperties.isEmpty()) {
       throw new MuleRuntimeException(createStaticMessage(format("There cannot be properties with the same name even if they are within a <connection>, repeated properties are: [%s]",
                                                                 intersectedProperties.stream()
@@ -586,17 +625,17 @@ public final class XmlExtensionLoaderDelegate {
    *
    * @param configurationDeclarer declarer to add the {@link ConnectionProviderDeclarer} if applies.
    * @param connectionProperties collection of <property/>s that should be added to the {@link ConnectionProviderDeclarer}.
-   * @param globalElementsComponentModel collection of global elements where through {@link #getTestConnectionGlobalElement(ConfigurationDeclarer, List, Set)}
-   *                                     will look for one that supports test connectivity.
-   * @param extensions used also in {@link #getTestConnectionGlobalElement(ConfigurationDeclarer, List, Set)}, through the {@link #findTestConnectionGlobalElementFrom},
-   *                   as the XML of the extensions might change of the values that the {@link ExtensionModel} has (heavily relies
-   *                   on {@link DslSyntaxResolver#resolve(NamedObject)}).
+   * @param globalComponentsAst collection of global elements where through {@link #getTestConnectionGlobalElement(List, Set)}
+   *        will look for one that supports test connectivity.
+   * @param extensions used also in {@link #getTestConnectionGlobalElement(List, Set)}, through the
+   *        {@link #findTestConnectionGlobalElementFrom}, as the XML of the extensions might change of the values that the
+   *        {@link ExtensionModel} has (heavily relies on {@link DslSyntaxResolver#resolve(NamedObject)}).
    */
   private void addConnectionProvider(ConfigurationDeclarer configurationDeclarer,
-                                     List<ComponentModel> connectionProperties,
-                                     List<ComponentModel> globalElementsComponentModel, Set<ExtensionModel> extensions) {
-    final Optional<ComponentModel> testConnectionGlobalElementOptional =
-        getTestConnectionGlobalElement(configurationDeclarer, globalElementsComponentModel, extensions);
+                                     List<ComponentAst> connectionProperties,
+                                     List<ComponentAst> globalComponentsAst, Set<ExtensionModel> extensions) {
+    final Optional<ComponentAst> testConnectionGlobalElementOptional =
+        getTestConnectionGlobalElement(globalComponentsAst, extensions);
 
     if (testConnectionGlobalElementOptional.isPresent() || !connectionProperties.isEmpty()) {
       final ConnectionProviderDeclarer connectionProviderDeclarer =
@@ -606,23 +645,25 @@ public final class XmlExtensionLoaderDelegate {
       connectionProperties.stream().forEach(param -> extractProperty(connectionProviderDeclarer, param));
 
       testConnectionGlobalElementOptional.ifPresent(
-                                                    testConnectionGlobalElement -> {
-                                                      final String testConnectionGlobalElementName = testConnectionGlobalElement
-                                                          .getParameters().get(GLOBAL_ELEMENT_NAME_ATTRIBUTE);
+                                                    testConnectionComponentAst -> {
+                                                      final String testConnectionGlobalElementName =
+                                                          new ComponentAstHolder(testConnectionComponentAst)
+                                                              .getParameterAstHolder(NAME_ATTRIBUTE_IDENTIFIER).get()
+                                                              .getSimpleParameterValueAst().getRawValue();
                                                       connectionProviderDeclarer
                                                           .withModelProperty(new TestConnectionGlobalElementModelProperty(testConnectionGlobalElementName));
                                                     });
     }
-
   }
 
-  private Optional<ComponentModel> getTestConnectionGlobalElement(ConfigurationDeclarer configurationDeclarer,
-                                                                  List<ComponentModel> globalElementsComponentModel,
-                                                                  Set<ExtensionModel> extensions) {
-    final List<ComponentModel> markedAsTestConnectionGlobalElements =
-        globalElementsComponentModel.stream()
-            .filter(globalElementComponentModel -> Boolean
-                .parseBoolean(globalElementComponentModel.getParameters().get(MODULE_CONNECTION_MARKER_ATTRIBUTE)))
+
+  private Optional<ComponentAst> getTestConnectionGlobalElement(ConfigurationDeclarer configurationDeclarer, List<ComponentAst> globalComponentsAst, Set<ExtensionModel> extensions) {
+    final List<ComponentAst> markedAsTestConnectionGlobalElements =
+        globalComponentsAst.stream()
+            .filter(globalComponentAst -> Boolean
+                .parseBoolean(new ComponentAstHolder(globalComponentAst)
+                    .getParameterAstHolder(MODULE_CONNECTION_MARKER_ATTRIBUTE_IDENTIFIER).get().getSimpleParameterValueAst()
+                    .getRawValue())) // TODO remove new ComponentAstHolder
             .collect(Collectors.toList());
 
     if (markedAsTestConnectionGlobalElements.size() > 1) {
@@ -630,20 +671,29 @@ public final class XmlExtensionLoaderDelegate {
                                                                 MODULE_CONNECTION_MARKER_ATTRIBUTE,
                                                                 markedAsTestConnectionGlobalElements.size(),
                                                                 markedAsTestConnectionGlobalElements.stream().map(
-                                                                                                                  ComponentModel::getNameAttribute)
+                                                                                                                  componentAst -> new ParameterAstHolder(componentAst
+                                                                                                                      .getParameter(NAME_ATTRIBUTE_IDENTIFIER)
+                                                                                                                      .get())
+                                                                                                                          .getSimpleParameterValueAst()
+                                                                                                                          .getRawValue()) // TODO
+                                                                                                                                          // remove
+                                                                                                                                          // new
+                                                                                                                                          // ComponentAstHolder
                                                                     .collect(Collectors.joining(", ")))));
     }
-    Optional<ComponentModel> testConnectionGlobalElement = markedAsTestConnectionGlobalElements.stream().findFirst();
+
+    Optional<ComponentAst> testConnectionGlobalElement = markedAsTestConnectionGlobalElements.stream().findFirst();
     if (!testConnectionGlobalElement.isPresent()) {
-      testConnectionGlobalElement = findTestConnectionGlobalElementFrom(globalElementsComponentModel, extensions);
+      testConnectionGlobalElement = findTestConnectionGlobalElementFrom(globalComponentsAst);
     } else {
       //validates that the MODULE_CONNECTION_MARKER_ATTRIBUTE is on a correct XML element that supports test connection
-      Optional<ComponentModel> temporalTestConnectionGlobalElement =
-          findTestConnectionGlobalElementFrom(Collections.singletonList(testConnectionGlobalElement.get()), extensions);
+      Optional<ComponentAst> temporalTestConnectionGlobalElement =
+              findTestConnectionGlobalElementFrom(Collections.singletonList(testConnectionGlobalElement.get()));
       if ((!temporalTestConnectionGlobalElement.isPresent())
           || (!temporalTestConnectionGlobalElement.get().equals(testConnectionGlobalElement.get()))) {
-        configurationDeclarer.withModelProperty(new InvalidTestConnectionMarkerModelProperty(testConnectionGlobalElement.get()
-            .getNameAttribute(), testConnectionGlobalElement.get().getIdentifier().toString()));
+        ComponentAstHolder componentAstHolder = new ComponentAstHolder(testConnectionGlobalElement.get());
+        configurationDeclarer.withModelProperty(new InvalidTestConnectionMarkerModelProperty(componentAstHolder.getNameParameter().get().getSimpleParameterValueAst().getRawValue()
+            , componentAstHolder.getComponentAst().getComponentIdentifier().toString()));
       }
     }
     return testConnectionGlobalElement;
@@ -654,35 +704,19 @@ public final class XmlExtensionLoaderDelegate {
    * where if present looks for the {@link ExtensionModel}s validating if the element is in fact a {@link ConnectionProvider}. It
    * heavily relies on the {@link DslSyntaxResolver}, as many elements in the XML do not match to the names of the model.
    *
-   * @param globalElementsComponentModel global elements of the smart connector
-   * @param extensions set of extensions used to generate the current {@link ExtensionModel}
+   * @param globalComponentsAst global elements of the smart connector
    * @return a {@link ComponentModel} of the global element to do test connection, empty otherwise.
    */
-  private Optional<ComponentModel> findTestConnectionGlobalElementFrom(List<ComponentModel> globalElementsComponentModel,
-                                                                       Set<ExtensionModel> extensions) {
-    Optional<ComponentModel> testConnectionGlobalElement;
-    final DslResolvingContext dslResolvingContext = DslResolvingContext.getDefault(extensions);
-    final Set<ComponentModel> testConnectionComponentModels = new HashSet<>();
+  private Optional<ComponentAst> findTestConnectionGlobalElementFrom(List<ComponentAst> globalComponentsAst) {
 
-    for (ComponentModel globalElementComponentModel : globalElementsComponentModel) {
-      for (ComponentModel connectionProviderChildElement : globalElementComponentModel.getInnerComponents()) {
-        final String globalElementConfigurationModelName = globalElementComponentModel.getIdentifier().getName();
-        final String childConnectionProviderName = connectionProviderChildElement.getIdentifier().getName();
-        for (ExtensionModel extensionModel : extensions) {
-          final DslSyntaxResolver dslSyntaxResolver = DslSyntaxResolver.getDefault(extensionModel, dslResolvingContext);
-          for (ConfigurationModel configurationModel : extensionModel.getConfigurationModels()) {
 
-            if (dslSyntaxResolver.resolve(configurationModel).getElementName().equals(
-                                                                                      globalElementConfigurationModelName)) {
-              for (ConnectionProviderModel connectionProviderModel : configurationModel.getConnectionProviders()) {
-                if (dslSyntaxResolver.resolve(connectionProviderModel).getElementName()
-                    .equals(childConnectionProviderName) && connectionProviderModel.supportsConnectivityTesting()) {
-                  testConnectionComponentModels.add(globalElementComponentModel);
-                }
-              }
-            }
-          }
-        }
+    Optional<ComponentAst> testConnectionGlobalElement;
+    final Set<ComponentAst> testConnectionComponentModels = new HashSet<>();
+
+    for (ComponentAst globalComponentAst : globalComponentsAst) {
+      Optional<ConnectionProviderAst> connectionProviderAst = getConnectionProviderAst(globalComponentAst);
+      if (connectionProviderAst.isPresent() && connectionProviderAst.get().getModel().supportsConnectivityTesting()) {
+        testConnectionComponentModels.add(globalComponentAst);
       }
     }
     if (testConnectionComponentModels.size() > 1) {
@@ -690,7 +724,9 @@ public final class XmlExtensionLoaderDelegate {
                                                                 testConnectionComponentModels.size(),
                                                                 MODULE_CONNECTION_MARKER_ATTRIBUTE,
                                                                 testConnectionComponentModels.stream()
-                                                                    .map(ComponentModel::getNameAttribute)
+                                                                    .map(componentAst -> new ComponentAstHolder(componentAst)
+                                                                        .getParameterAstHolder(NAME_ATTRIBUTE_IDENTIFIER).get()
+                                                                        .getSimpleParameterValueAst().getRawValue())
                                                                     .sorted()
                                                                     .collect(Collectors.joining(", ")))));
     }
@@ -698,39 +734,45 @@ public final class XmlExtensionLoaderDelegate {
     return testConnectionGlobalElement;
   }
 
-  private void loadOperationsFrom(HasOperationDeclarer declarer, ComponentModel moduleModel,
+  private void loadOperationsFrom(HasOperationDeclarer declarer, ArtifactAstHelper artifactAstHelper,
                                   DirectedGraph<String, DefaultEdge> directedGraph, XmlDslModel xmlDslModel,
                                   final OperationVisibility visibility) {
 
-    moduleModel.getInnerComponents().stream()
-        .filter(child -> child.getIdentifier().equals(OPERATION_IDENTIFIER))
-        .filter(operationModel -> OperationVisibility
-            .valueOf(operationModel.getParameters().get(ATTRIBUTE_VISIBILITY)) == visibility)
-        .forEach(operationModel -> extractOperationExtension(declarer, operationModel, directedGraph, xmlDslModel));
+    // TODO Seems Operation may have it own AST component - think about it.
+
+    artifactAstHelper.getArtifactAst().getGlobalComponents().stream()
+        .filter(globalComponent -> globalComponent.getComponentIdentifier().equals(OPERATION_IDENTIFIER))
+        .filter(operationComponentAst -> OperationVisibility
+            .valueOf(new ParameterAstHolder(operationComponentAst.getParameter(VISIBILITY_ATTRIBUTE_ATTRIBUTE_IDENTIFIER).get())
+                .getSimpleParameterValueAst().getRawValue()) == visibility)
+        .forEach(operationAst -> extractOperationExtension(declarer, (ConstructAst) operationAst, directedGraph, xmlDslModel));
   }
 
-  private void extractOperationExtension(HasOperationDeclarer declarer, ComponentModel operationModel,
+  private void extractOperationExtension(HasOperationDeclarer declarer, ConstructAst operationAst,
                                          DirectedGraph<String, DefaultEdge> directedGraph, XmlDslModel xmlDslModel) {
-    String operationName = operationModel.getNameAttribute();
+    ComponentAstHolder operationAstHolder = new ComponentAstHolder(operationAst);
+    String operationName =
+        operationAstHolder.getParameterAstHolder(NAME_ATTRIBUTE_IDENTIFIER).get().getSimpleParameterValueAst().getRawValue();
     OperationDeclarer operationDeclarer = declarer.withOperation(operationName);
-    ComponentModel bodyComponentModel = operationModel.getInnerComponents()
+    ConstructAst bodyComponentAst = operationAst.getProcessorComponents()
         .stream()
-        .filter(child -> child.getIdentifier().equals(OPERATION_BODY_IDENTIFIER)).findFirst()
+        .filter(componentAst -> componentAst.getComponentIdentifier().equals(OPERATION_BODY_IDENTIFIER)).findFirst()
+        .map(componentAst -> (ConstructAst) componentAst)
         .orElseThrow(() -> new IllegalArgumentException(format("The operation '%s' is missing the <body> statement",
                                                                operationName)));
 
     directedGraph.addVertex(operationName);
-    fillGraphWithTnsReferences(directedGraph, operationName, bodyComponentModel.getInnerComponents());
+    fillGraphWithTnsReferences(directedGraph, operationName, bodyComponentAst.getProcessorComponents());
 
-    operationDeclarer.withModelProperty(new OperationComponentModelModelProperty(operationModel, bodyComponentModel));
-    operationDeclarer.describedAs(getDescription(operationModel));
-    operationDeclarer.getDeclaration().setDisplayModel(getDisplayModel(operationModel));
-    extractOperationParameters(operationDeclarer, operationModel);
-    extractOutputType(operationDeclarer.withOutput(), OPERATION_OUTPUT_IDENTIFIER, operationModel,
+    operationDeclarer.withModelProperty(new OperationComponentModelModelProperty(operationAst, bodyComponentAst));
+    operationDeclarer.describedAs(getDescription(operationAst));
+    operationDeclarer.getDeclaration().setDisplayModel(getDisplayModel(operationAstHolder));
+    extractOperationParameters(operationDeclarer, operationAstHolder);
+    extractOutputType(operationDeclarer.withOutput(), OPERATION_OUTPUT_IDENTIFIER, operationAstHolder,
                       getDeclarationOutputFor(operationName));
-    extractOutputType(operationDeclarer.withOutputAttributes(), OPERATION_OUTPUT_ATTRIBUTES_IDENTIFIER, operationModel,
+    extractOutputType(operationDeclarer.withOutputAttributes(), OPERATION_OUTPUT_ATTRIBUTES_IDENTIFIER, operationAstHolder,
                       getDeclarationOutputAttributesFor(operationName));
-    declareErrorModels(operationDeclarer, xmlDslModel, operationName, operationModel);
+    declareErrorModels(operationDeclarer, xmlDslModel, operationName, operationAstHolder);
   }
 
   private Optional<MetadataType> getDeclarationOutputFor(String operationName) {
@@ -755,72 +797,103 @@ public final class XmlExtensionLoaderDelegate {
    *
    * @param directedGraph graph to contain all the vertex operations and linkage with other operations
    * @param sourceOperationVertex current vertex we are working on
-   * @param innerComponents collection of elements to introspect and assembly the graph with
+   * @param innerComponentsAst collection of elements to introspect and assembly the graph with
    */
   private void fillGraphWithTnsReferences(DirectedGraph<String, DefaultEdge> directedGraph, String sourceOperationVertex,
-                                          final List<ComponentModel> innerComponents) {
-    innerComponents.forEach(childMPComponentModel -> {
-      if (TNS_PREFIX.equals(childMPComponentModel.getIdentifier().getNamespace())) {
+                                          final List<ComponentAst> innerComponentsAst) {
+    innerComponentsAst.forEach(innerComponentAst -> {
+      if (TNS_PREFIX.equals(innerComponentAst.getComponentIdentifier().getNamespace())) {
         // we will take the current component model name, as any child of it are actually TNS child references (aka: parameters)
-        final String targetOperationVertex = childMPComponentModel.getIdentifier().getName();
+        final String targetOperationVertex = innerComponentAst.getComponentIdentifier().getName();
         if (!directedGraph.containsVertex(targetOperationVertex)) {
           directedGraph.addVertex(targetOperationVertex);
         }
         directedGraph.addEdge(sourceOperationVertex, targetOperationVertex);
       } else {
         // scenario for nested scopes that might be having cyclic references to operations
-        childMPComponentModel.getInnerComponents()
-            .forEach(childChildMPComponentModel -> fillGraphWithTnsReferences(directedGraph, sourceOperationVertex,
-                                                                              childMPComponentModel.getInnerComponents()));
+        if (innerComponentAst instanceof ConstructAst) {
+          ConstructAst innerConstructAst = (ConstructAst) innerComponentAst;
+          innerConstructAst.getProcessorComponents().stream()
+              .forEach(innerConstructInnerComponent -> fillGraphWithTnsReferences(directedGraph, sourceOperationVertex,
+                                                                                  innerConstructAst.getProcessorComponents()));
+        }
       }
     });
   }
 
-  private void extractOperationParameters(OperationDeclarer operationDeclarer, ComponentModel componentModel) {
-    Optional<ComponentModel> optionalParametersComponentModel = componentModel.getInnerComponents()
+  private void extractOperationParameters(OperationDeclarer operationDeclarer, ConstructAst constructAst) {
+    Optional<ParameterAst> optionalParametersAst = constructAst.getParameters()
         .stream()
-        .filter(child -> child.getIdentifier().equals(OPERATION_PARAMETERS_IDENTIFIER)).findAny();
-    if (optionalParametersComponentModel.isPresent()) {
-      optionalParametersComponentModel.get().getInnerComponents()
-          .stream()
-          .filter(child -> child.getIdentifier().equals(OPERATION_PARAMETER_IDENTIFIER))
-          .forEach(param -> {
-            final String role = param.getParameters().get(ROLE);
-            extractParameter(operationDeclarer, param, getRole(role));
-          });
+        .filter(parameter -> parameter.getParameterIdentifier().equals(OPERATION_PARAMETERS_IDENTIFIER)).findAny();
+    if (optionalParametersAst.isPresent()) {
+      ComponentAst parametersComponentAst = new ParameterAstHolder(optionalParametersAst.get()).getCompleParameterValueAst()
+          .getComponent();
+      // parametersComponentAst //TODO see how this would work based on the extension model of the module.
+      // .stream()
+      // .filter(child -> child.getIdentifier().equals(OPERATION_PARAMETER_IDENTIFIER))
+      // .forEach(param -> {
+      // final String role = param.getParameters().get(ROLE);
+      // extractParameter(operationDeclarer, param, getRole(role));
+      // });
     }
   }
 
-  private void extractProperty(ParameterizedDeclarer parameterizedDeclarer, ComponentModel param) {
+  private void extractProperty(ParameterizedDeclarer parameterizedDeclarer, ComponentAst param) {
     extractParameter(parameterizedDeclarer, param, BEHAVIOUR);
   }
 
-  private void extractParameter(ParameterizedDeclarer parameterizedDeclarer, ComponentModel param, ParameterRole role) {
-    Map<String, String> parameters = param.getParameters();
-    String receivedInputType = parameters.get(TYPE_ATTRIBUTE);
+  private void extractParameter(ParameterizedDeclarer parameterizedDeclarer, ComponentAst parameterAst, ParameterRole role) {
+    ComponentAstHolder parameterAstHolder = new ComponentAstHolder(parameterAst); // TODO remove new of ComponentAstHolder
+    ParameterAstHolder receivedInputTypeParameter = parameterAstHolder.getParameterAstHolder(TYPE_ATTRIBUTE_IDENTIFIER).get(); // TODO
+                                                                                                                               // there
+                                                                                                                               // are
+                                                                                                                               // many
+                                                                                                                               // toods
+                                                                                                                               // about
+                                                                                                                               // being
+                                                                                                                               // careful
+                                                                                                                               // about
+                                                                                                                               // things
+                                                                                                                               // but
+                                                                                                                               // at
+                                                                                                                               // this
+                                                                                                                               // point
+                                                                                                                               // the
+                                                                                                                               // application
+                                                                                                                               // should
+                                                                                                                               // be
+                                                                                                                               // well
+                                                                                                                               // formed.
     final LayoutModel.LayoutModelBuilder layoutModelBuilder = builder();
-    if (parseBoolean(parameters.get(PASSWORD))) {
+    if (parseBoolean(parameterAstHolder.getParameterAstHolder(PASSWORD_ATTRIBUTE_IDENTIFIER).get().getSimpleParameterValueAst()
+        .getRawValue())) {
       layoutModelBuilder.asPassword();
     }
-    layoutModelBuilder.order(getOrder(parameters.get(ORDER_ATTRIBUTE)));
-    layoutModelBuilder.tabName(getTab(parameters.get(TAB_ATTRIBUTE)));
+    layoutModelBuilder.order(getOrder(parameterAstHolder.getParameterAstHolder(ORDER_ATTRIBUTE_IDENTIFIER).get()
+        .getSimpleParameterValueAst().getRawValue()));
+    layoutModelBuilder.tabName(getTab(parameterAstHolder.getParameterAstHolder(TAB_ATTRIBUTE_IDENTIFIER).get()
+        .getSimpleParameterValueAst().getRawValue()));
 
-    final DisplayModel displayModel = getDisplayModel(param);
-    MetadataType parameterType = extractType(receivedInputType);
+    final DisplayModel displayModel = getDisplayModel(parameterAstHolder);
+    MetadataType parameterType = extractType(receivedInputTypeParameter.getSimpleParameterValueAst().getRawValue());
 
-    ParameterDeclarer parameterDeclarer = getParameterDeclarer(parameterizedDeclarer, parameters);
-    parameterDeclarer.describedAs(getDescription(param))
+    ParameterDeclarer parameterDeclarer = getParameterDeclarer(parameterizedDeclarer, parameterAstHolder);
+    parameterDeclarer.describedAs(getDescription(parameterAst))
         .withLayout(layoutModelBuilder.build())
         .withDisplayModel(displayModel)
         .withRole(role)
         .ofType(parameterType);
   }
 
-  private DisplayModel getDisplayModel(ComponentModel componentModel) {
+  private DisplayModel getDisplayModel(ComponentAstHolder componentAstHolder) {
     final DisplayModel.DisplayModelBuilder displayModelBuilder = DisplayModel.builder();
-    displayModelBuilder.displayName(componentModel.getParameters().get(DISPLAY_NAME_ATTRIBUTE));
-    displayModelBuilder.summary(componentModel.getParameters().get(SUMMARY_ATTRIBUTE));
-    displayModelBuilder.example(componentModel.getParameters().get(EXAMPLE_ATTRIBUTE));
+    displayModelBuilder.displayName(componentAstHolder.getParameterAstHolder(DISPLAY_NAME_ATTRIBUTE_IDENTIFIER).get()
+        .getSimpleParameterValueAst().getRawValue());
+    displayModelBuilder.summary(componentAstHolder.getParameterAstHolder(SUMMARY_ATTRIBUTE_IDENTIFIER).get()
+        .getSimpleParameterValueAst().getRawValue());
+    displayModelBuilder
+        .example(componentAstHolder.getParameterAstHolder(EXAPLE_ATTRIBUTE_IDENTIFIER).get().getSimpleParameterValueAst()
+            .getRawValue());
     return displayModelBuilder.build();
   }
 
@@ -853,10 +926,14 @@ public final class XmlExtensionLoaderDelegate {
    * @param parameters attributes to consume the values from
    * @return the {@link ParameterDeclarer}, being created as required or optional with a default value if applies.
    */
-  private ParameterDeclarer getParameterDeclarer(ParameterizedDeclarer parameterizedDeclarer, Map<String, String> parameters) {
-    final String parameterName = parameters.get(PARAMETER_NAME);
-    final String parameterDefaultValue = parameters.get(PARAMETER_DEFAULT_VALUE);
-    final UseEnum use = UseEnum.valueOf(parameters.get(ATTRIBUTE_USE));
+  private ParameterDeclarer getParameterDeclarer(ParameterizedDeclarer parameterizedDeclarer,
+                                                 ComponentAstHolder parameterAstHolder) {
+    final String parameterName =
+        parameterAstHolder.getParameterAstHolder(NAME_ATTRIBUTE_IDENTIFIER).get().getSimpleParameterValueAst().getRawValue();
+    final String parameterDefaultValue = parameterAstHolder.getParameterAstHolder(DEFAULT_VALUE_ATTRIBUTE_IDENTIFIER).get()
+        .getSimpleParameterValueAst().getRawValue();
+    final UseEnum use = UseEnum.valueOf(parameterAstHolder.getParameterAstHolder(ATTRIBUTE_USE_ATTRIBUTE_IDENTIFIER).get()
+        .getSimpleParameterValueAst().getRawValue());
     if (UseEnum.REQUIRED.equals(use) && isNotBlank(parameterDefaultValue)) {
       throw new IllegalParameterModelDefinitionException(format("The parameter [%s] cannot have the %s attribute set to %s when it has a default value",
                                                                 parameterName, ATTRIBUTE_USE, UseEnum.REQUIRED));

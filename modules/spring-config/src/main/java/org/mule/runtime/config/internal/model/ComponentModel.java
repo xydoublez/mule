@@ -12,14 +12,6 @@ import static java.util.Collections.unmodifiableMap;
 import static java.util.Optional.ofNullable;
 import static org.mule.runtime.api.util.Preconditions.checkState;
 
-import org.mule.runtime.api.component.ComponentIdentifier;
-import org.mule.runtime.api.component.TypedComponentIdentifier;
-import org.mule.runtime.config.internal.dsl.model.SpringComponentModel;
-import org.mule.runtime.core.privileged.processor.Router;
-import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
-import org.mule.runtime.dsl.api.component.config.DefaultComponentLocation;
-import org.mule.runtime.dsl.internal.component.config.InternalComponentConfiguration;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +20,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import org.mule.runtime.api.artifact.sintax.SourceCodeLocation;
+import org.mule.runtime.api.component.ComponentIdentifier;
+import org.mule.runtime.api.component.TypedComponentIdentifier;
+import org.mule.runtime.config.internal.dsl.model.SpringComponentModel;
+import org.mule.runtime.core.privileged.processor.Router;
+import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
+import org.mule.runtime.dsl.api.component.config.DefaultComponentLocation;
+import org.mule.runtime.dsl.internal.component.config.InternalComponentConfiguration;
 
 /**
  * An {@code ComponentModel} represents the user configuration of a component (flow, config, message processor, etc) defined in an
@@ -63,24 +64,8 @@ public abstract class ComponentModel {
 
   private Object objectInstance;
   private Class<?> type;
-  private Integer lineNumber;
-  private String configFileName;
+  private SourceCodeLocation sourceCodeLocation;
   private boolean enabled = true;
-
-  /**
-   * @return the line number in which the component was defined in the configuration file. It may be empty if the component was
-   *         created pragmatically.
-   */
-  public Optional<Integer> getLineNumber() {
-    return ofNullable(lineNumber);
-  }
-
-  /**
-   * @return the config file name in which the component was defined. It may be empty if the component was created pragmatically.
-   */
-  public Optional<String> getConfigFileName() {
-    return ofNullable(configFileName);
-  }
 
   /**
    * @return the configuration identifier.
@@ -108,6 +93,10 @@ public abstract class ComponentModel {
    */
   public Map<String, Object> getCustomAttributes() {
     return copyOf(customAttributes);
+  }
+
+  public Optional<SourceCodeLocation> getSourceCodeLocation() {
+    return ofNullable(sourceCodeLocation);
   }
 
   /**
@@ -147,14 +136,16 @@ public abstract class ComponentModel {
   }
 
   /**
-   * @return the {@link org.mule.runtime.api.component.TypedComponentIdentifier.ComponentType} of the object to be created when processing this {@code ComponentModel}.
+   * @return the {@link org.mule.runtime.api.component.TypedComponentIdentifier.ComponentType} of the object to be created when
+   *         processing this {@code ComponentModel}.
    */
   public Optional<TypedComponentIdentifier.ComponentType> getComponentType() {
     return ofNullable(componentType);
   }
 
   /**
-   * @param componentType the {@link org.mule.runtime.api.component.TypedComponentIdentifier.ComponentType} of the object to be created when processing this {@code ComponentModel}.
+   * @param componentType the {@link org.mule.runtime.api.component.TypedComponentIdentifier.ComponentType} of the object to be
+   *        created when processing this {@code ComponentModel}.
    */
   public void setComponentType(TypedComponentIdentifier.ComponentType componentType) {
     this.componentType = componentType;
@@ -374,23 +365,9 @@ public abstract class ComponentModel {
       return this;
     }
 
-    /**
-     * @param configFileName the config file name in which this component was defined.
-     * @return the builder.
-     */
-    public Builder setConfigFileName(String configFileName) {
-      checkIsNotBuildingFromRootComponentModel("configFileName");
-      this.model.configFileName = configFileName;
-      return this;
-    }
-
-    /**
-     * @param lineNumber the line number within the config file in which this component was defined.
-     * @return the builder.
-     */
-    public Builder setLineNumber(int lineNumber) {
+    public Builder setSourceCodeLocation(SourceCodeLocation sourceCodeLocation) {
       checkIsNotBuildingFromRootComponentModel("lineNumber");
-      this.model.lineNumber = lineNumber;
+      this.model.sourceCodeLocation = sourceCodeLocation;
       return this;
     }
 

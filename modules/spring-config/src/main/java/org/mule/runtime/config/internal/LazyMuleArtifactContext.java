@@ -22,6 +22,15 @@ import static org.mule.runtime.config.internal.LazyValueProviderService.NON_LAZY
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_SECURITY_MANAGER;
 import static org.mule.runtime.core.api.util.ClassUtils.withContextClassLoader;
 import static org.mule.runtime.core.privileged.registry.LegacyRegistryUtils.unregisterObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
+
+import org.mule.runtime.api.artifact.ast.ArtifactAst;
 import org.mule.runtime.api.component.ConfigurationProperties;
 import org.mule.runtime.api.component.location.Location;
 import org.mule.runtime.api.connectivity.ConnectivityTestingService;
@@ -37,7 +46,6 @@ import org.mule.runtime.config.internal.dsl.model.MinimalApplicationModelGenerat
 import org.mule.runtime.config.internal.model.ApplicationModel;
 import org.mule.runtime.config.internal.model.ComponentModel;
 import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.core.api.config.ConfigResource;
 import org.mule.runtime.core.api.config.MuleDeploymentProperties;
 import org.mule.runtime.core.api.config.bootstrap.ArtifactType;
 import org.mule.runtime.core.internal.connectivity.DefaultConnectivityTestingService;
@@ -45,13 +53,6 @@ import org.mule.runtime.core.internal.metadata.MuleMetadataService;
 import org.mule.runtime.core.internal.security.DefaultMuleSecurityManager;
 import org.mule.runtime.core.internal.value.MuleValueProviderService;
 import org.mule.runtime.core.privileged.registry.RegistrationException;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,25 +82,23 @@ public class LazyMuleArtifactContext extends MuleArtifactContext
    *
    * @param muleContext the {@link MuleContext} that own this context
    * @param artifactDeclaration the mule configuration defined programmatically
+   * @param artifactAst
    * @param optionalObjectsController the {@link OptionalObjectsController} to use. Cannot be {@code null} @see
    *        org.mule.runtime.config.internal.SpringRegistry
    * @param parentConfigurationProperties
-   * @param disableXmlValidations {@code true} when loading XML configs it will not apply validations.
    * @since 4.0
    */
-  public LazyMuleArtifactContext(MuleContext muleContext, ConfigResource[] artifactConfigResources,
-                                 ArtifactDeclaration artifactDeclaration, OptionalObjectsController optionalObjectsController,
+  public LazyMuleArtifactContext(MuleContext muleContext,
+                                 ArtifactDeclaration artifactDeclaration, ArtifactAst artifactAst,
+                                 OptionalObjectsController optionalObjectsController,
                                  Map<String, String> artifactProperties, ArtifactType artifactType,
                                  List<ClassLoader> pluginsClassLoaders,
                                  Optional<ComponentModelInitializer> parentComponentModelInitializer,
-                                 Optional<ConfigurationProperties> parentConfigurationProperties, boolean disableXmlValidations)
+                                 Optional<ConfigurationProperties> parentConfigurationProperties)
       throws BeansException {
-    super(muleContext, artifactConfigResources, artifactDeclaration, optionalObjectsController,
-          extendArtifactProperties(artifactProperties), artifactType, pluginsClassLoaders, parentConfigurationProperties,
-          disableXmlValidations);
-    // Changes the component locator in order to allow accessing any component by location even when they are prototype
+    super(muleContext, artifactDeclaration, artifactAst, optionalObjectsController,
+          extendArtifactProperties(artifactProperties), artifactType, pluginsClassLoaders, parentConfigurationProperties);
     this.componentLocator = new SpringConfigurationComponentLocator();
-
     this.applicationModel.executeOnEveryMuleComponentTree(componentModel -> componentModel.setEnabled(false));
 
     this.parentComponentModelInitializer = parentComponentModelInitializer;

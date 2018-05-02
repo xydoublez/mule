@@ -12,6 +12,12 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APP;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import org.mule.runtime.api.artifact.ast.ArtifactAst;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.ConfigurationBuilder;
@@ -22,11 +28,6 @@ import org.mule.runtime.core.api.config.builders.SimpleConfigurationBuilder;
 import org.mule.runtime.core.api.context.notification.MuleContextListener;
 import org.mule.runtime.core.internal.config.builders.AutoConfigurationBuilder;
 import org.mule.runtime.core.internal.context.DefaultMuleContextBuilder;
-
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,8 +95,8 @@ public final class DefaultMuleContextFactory implements MuleContextFactory {
    * @throws InitialisationException
    * @throws ConfigurationException
    */
-  public MuleContext createMuleContext(String resource) throws InitialisationException, ConfigurationException {
-    return createMuleContext(resource, null);
+  public MuleContext createMuleContext(ArtifactAst artifactAst) throws InitialisationException, ConfigurationException {
+    return createMuleContext(artifactAst, null);
   }
 
   /**
@@ -104,7 +105,7 @@ public final class DefaultMuleContextFactory implements MuleContextFactory {
    * {@link ConfigurationBuilder} that should be used. Properties if provided are used to replace "property placeholder" value in
    * configuration files.
    */
-  public MuleContext createMuleContext(final String configResources, final Map<String, Object> properties)
+  public MuleContext createMuleContext(final ArtifactAst artifactAst, final Map<String, Object> properties)
       throws InitialisationException, ConfigurationException {
     return doCreateMuleContext(MuleContextBuilder.builder(APP), new ContextConfigurator() {
 
@@ -117,7 +118,7 @@ public final class DefaultMuleContextFactory implements MuleContextFactory {
 
         // Automatically resolve Configuration to be used and delegate configuration
         // to it.
-        new AutoConfigurationBuilder(configResources, emptyMap(), APP).configure(muleContext);
+        new AutoConfigurationBuilder(artifactAst, emptyMap(), APP).configure(muleContext);
       }
     });
   }

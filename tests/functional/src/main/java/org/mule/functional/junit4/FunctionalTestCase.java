@@ -6,10 +6,23 @@
  */
 package org.mule.functional.junit4;
 
+import static com.google.common.collect.ImmutableSet.copyOf;
 import static java.util.Collections.emptyMap;
 import static org.mule.runtime.config.api.SpringXmlConfigurationBuilderFactory.createConfigurationBuilder;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APP;
 import static org.mule.runtime.core.internal.retry.ReconnectionConfig.DISABLE_ASYNC_RETRY_POLICY_ON_SOURCES;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+
+import org.junit.After;
+import org.junit.Rule;
+
 import org.mule.functional.api.flow.FlowRunner;
 import org.mule.runtime.api.artifact.Registry;
 import org.mule.runtime.container.internal.ContainerClassLoaderFactory;
@@ -18,20 +31,14 @@ import org.mule.runtime.core.api.construct.Flow;
 import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.event.CoreEvent;
 import org.mule.runtime.core.api.util.IOUtils;
+import org.mule.runtime.core.internal.artifact.ast.ArtifactXmlBasedAstBuilder;
 import org.mule.runtime.module.artifact.api.classloader.ArtifactClassLoader;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 import org.mule.tck.junit4.rule.SystemProperty;
 import org.mule.tck.processor.FlowAssert;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Set;
+import com.google.common.collect.ImmutableSet;
 
-import javax.inject.Inject;
-
-import org.junit.After;
-import org.junit.Rule;
 
 /**
  * A base test case for tests that initialize Mule using a configuration file. The default configuration builder used is
@@ -75,17 +82,17 @@ public abstract class FunctionalTestCase extends AbstractMuleContextTestCase {
   @Override
   protected ConfigurationBuilder getBuilder() throws Exception {
     String configResources = getConfigResources();
+    Set<String> configFiles;
     if (configResources != null) {
-      return createConfigurationBuilder(configResources, emptyMap(), APP, enableLazyInit(), disableXmlValidations());
+      configFiles = copyOf(configResources.split(",")).stream().map(string -> string.trim()).collect(Collectors.toSet());
+    } else if (getConfigFile() != null) {
+      configFiles = ImmutableSet.of(getConfigFile());
+    } else {
+      configFiles = ImmutableSet.copyOf(getConfigFiles());
     }
-    configResources = getConfigFile();
-    if (configResources != null) {
-      if (configResources.contains(",")) {
-        throw new RuntimeException("Do not use this method when the config is composed of several files. Use getConfigFiles method instead.");
-      }
-      return createConfigurationBuilder(configResources, emptyMap(), APP, enableLazyInit(), disableXmlValidations());
-    }
-    return createConfigurationBuilder(getConfigFiles(), emptyMap(), APP, enableLazyInit(), disableXmlValidations());
+    ArtifactXmlBasedAstBuilder artifactXmlBasedAstBuilder = ArtifactXmlBasedAstBuilder.builder().setConfigFiles(configFiles)
+        .setClassLoader(Thread.currentThread().getContextClassLoader());
+    return createConfigurationBuilder(artifactXmlBasedAstBuilder.build(), emptyMap(), APP, enableLazyInit());
   }
 
   /**
@@ -175,8 +182,8 @@ public abstract class FunctionalTestCase extends AbstractMuleContextTestCase {
   }
 
   /**
-   * @return a boolean indicating if the Mule App should start in lazy mode. This means that the Mule App components
-   * will be initialized on demand.
+   * @return a boolean indicating if the Mule App should start in lazy mode. This means that the Mule App components will be
+   *         initialized on demand.
    */
   public boolean enableLazyInit() {
     return false;

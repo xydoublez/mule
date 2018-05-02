@@ -24,12 +24,11 @@ public final class SpringArtifactConfigurationProcessor implements ArtifactConfi
   public ArtifactContext createArtifactContext(ArtifactContextConfiguration artifactContextConfiguration)
       throws ConfigurationException {
     SpringXmlConfigurationBuilder springXmlConfigurationBuilder =
-        new SpringXmlConfigurationBuilder(artifactContextConfiguration.getConfigResources(),
+        new SpringXmlConfigurationBuilder(artifactContextConfiguration.getArtifactAst(),
                                           artifactContextConfiguration.getArtifactDeclaration(),
                                           artifactContextConfiguration.getArtifactProperties(),
                                           artifactContextConfiguration.getArtifactType(),
-                                          artifactContextConfiguration.isEnableLazyInitialization(),
-                                          artifactContextConfiguration.isDisableXmlValidations());
+                                          artifactContextConfiguration.isEnableLazyInitialization());
     artifactContextConfiguration.getParentContext()
         .ifPresent(parentMuleContext -> springXmlConfigurationBuilder.setParentContext(parentMuleContext));
     artifactContextConfiguration.getServiceConfigurators().stream()

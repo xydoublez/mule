@@ -1,0 +1,65 @@
+/*
+ * Copyright (c) MuleSoft, Inc.  All rights reserved.  http://www.mulesoft.com
+ * The software in this package is published under the terms of the CPAL v1.0
+ * license, a copy of which has been included with this distribution in the
+ * LICENSE.txt file.
+ */
+package org.mule.runtime.config.internal;
+
+import static java.util.Optional.ofNullable;
+import static org.mule.runtime.config.internal.model.ApplicationModel.CORE_NAME_PARAMETER_IDENTIFIER;
+import static org.mule.runtime.config.internal.model.ApplicationModel.CORE_VALUE_PARAMETER_IDENTIFIER;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.mule.runtime.api.artifact.ast.ComponentAst;
+import org.mule.runtime.api.component.ComponentIdentifier;
+
+public class ComponentAstHolder {
+
+  private final ComponentAst componentAst;
+  private boolean enabled = true;
+  private Map<ComponentIdentifier, ParameterAstHolder> parameterAstHolderMap = new HashMap<>();
+
+  public ComponentAstHolder(ComponentAst componentAst) {
+    this.componentAst = componentAst;
+  }
+
+  public ComponentAst getComponentAst() {
+    return componentAst;
+  }
+
+  public boolean isEnabled() {
+    return enabled;
+  }
+
+  public Optional<ParameterAstHolder> getNameParameter() {
+    // TODO review for those that have are from a custom extension
+    return getParameterAstHolder(CORE_NAME_PARAMETER_IDENTIFIER);
+  }
+
+  public Optional<ParameterAstHolder> getValueParameter() {
+    // TODO review for those that have are from a custom extension
+    return getParameterAstHolder(CORE_VALUE_PARAMETER_IDENTIFIER);
+  }
+
+  public Optional<ParameterAstHolder> getParameterAstHolder(ComponentIdentifier componentIdentifier) {
+    return Optional.ofNullable(ofNullable(parameterAstHolderMap.get(componentIdentifier))
+        .orElseGet(() -> componentAst.getParameter(componentIdentifier)
+            .map(parameterAst -> parameterAstHolderMap.put(componentIdentifier, new ParameterAstHolder(parameterAst)))
+            .orElseGet(null)));
+  }
+
+  public List<ParameterAstHolder> getParameters() {
+    return componentAst.getParameters().stream()
+        .map(parameterAst -> getParameterAstHolder(parameterAst.getParameterIdentifier().getIdentifier()))
+        .filter(optional -> optional.isPresent())
+        .map(Optional::get)
+        .collect(Collectors.toList());
+  }
+
+}

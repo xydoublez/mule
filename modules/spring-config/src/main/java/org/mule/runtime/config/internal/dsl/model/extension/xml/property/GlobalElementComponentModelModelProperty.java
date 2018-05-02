@@ -6,10 +6,11 @@
  */
 package org.mule.runtime.config.internal.dsl.model.extension.xml.property;
 
+import java.util.List;
+
+import org.mule.runtime.api.artifact.ast.ComponentAst;
 import org.mule.runtime.api.meta.model.ModelProperty;
 import org.mule.runtime.config.internal.model.ComponentModel;
-
-import java.util.List;
 
 /**
  * Property to store all Mule global elements that are contained in an extension written in XML.
@@ -18,7 +19,7 @@ import java.util.List;
  */
 public class GlobalElementComponentModelModelProperty implements ModelProperty {
 
-  private final List<ComponentModel> globalElements;
+  private final List<ComponentAst> globalElements;
 
   /**
    * Constructs a {@link ModelProperty} that will hold the Mule global elements to be later macro expanded into a Mule
@@ -26,14 +27,14 @@ public class GlobalElementComponentModelModelProperty implements ModelProperty {
    *
    * @param globalElements that will be expanded in a Mule application.
    */
-  public GlobalElementComponentModelModelProperty(List<ComponentModel> globalElements) {
+  public GlobalElementComponentModelModelProperty(List<ComponentAst> globalElements) {
     this.globalElements = globalElements;
   }
 
   /**
    * @return collection of {@link ComponentModel} that will be used to expand the current Mule application XML.
    */
-  public List<ComponentModel> getGlobalElements() {
+  public List<ComponentAst> getGlobalElements() {
     return globalElements;
   }
 

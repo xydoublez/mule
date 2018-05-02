@@ -11,6 +11,12 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APP;
 import static org.mule.runtime.deployment.model.internal.application.MuleApplicationClassLoader.resolveContextArtifactPluginClassLoaders;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.mule.runtime.api.artifact.ast.ArtifactAst;
 import org.mule.runtime.api.component.ConfigurationProperties;
 import org.mule.runtime.api.i18n.I18nMessageFactory;
 import org.mule.runtime.api.lifecycle.Startable;
@@ -28,10 +34,6 @@ import org.mule.runtime.core.internal.context.DefaultMuleContext;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.runtime.deployment.model.api.artifact.ArtifactContext;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -44,7 +46,6 @@ public class SpringXmlConfigurationBuilder extends AbstractResourceConfiguration
 
   private ArtifactDeclaration artifactDeclaration = new ArtifactDeclaration();
   private boolean enableLazyInit = false;
-  private boolean disableXmlValidations = false;
 
   private SpringRegistry registry;
 
@@ -52,55 +53,48 @@ public class SpringXmlConfigurationBuilder extends AbstractResourceConfiguration
   private MuleArtifactContext muleArtifactContext;
   private ArtifactType artifactType;
 
-  public SpringXmlConfigurationBuilder(String[] configResources, Map<String, String> artifactProperties,
-                                       ArtifactType artifactType, boolean enableLazyInit, boolean disableXmlValidations)
+  public SpringXmlConfigurationBuilder(ArtifactAst artifactAst, Map<String, String> artifactProperties,
+                                       ArtifactType artifactType, boolean enableLazyInit)
       throws ConfigurationException {
-    super(configResources, artifactProperties);
+    super(artifactAst, artifactProperties);
     this.artifactType = artifactType;
     this.enableLazyInit = enableLazyInit;
-    this.disableXmlValidations = disableXmlValidations;
   }
 
-  public SpringXmlConfigurationBuilder(String configResources, Map<String, String> artifactProperties, ArtifactType artifactType)
+  public SpringXmlConfigurationBuilder(ArtifactAst artifactAst, Map<String, String> artifactProperties, ArtifactType artifactType)
       throws ConfigurationException {
-    this(new String[] {configResources}, artifactProperties, artifactType, false, false);
+    this(artifactAst, artifactProperties, artifactType, false);
   }
 
-  public SpringXmlConfigurationBuilder(String configResource) throws ConfigurationException {
-    this(configResource, emptyMap(), APP);
+  public SpringXmlConfigurationBuilder(ArtifactAst artifactAst) throws ConfigurationException {
+    this(artifactAst, emptyMap(), APP);
   }
 
-  public SpringXmlConfigurationBuilder(String[] configFiles, Map<String, String> artifactProperties, ArtifactType artifactType)
+  public SpringXmlConfigurationBuilder(ArtifactAst artifactAst, Map<String, String> artifactProperties)
       throws ConfigurationException {
-    this(configFiles, artifactProperties, artifactType, false, false);
+    this(artifactAst, artifactProperties, APP, false);
   }
 
-  public SpringXmlConfigurationBuilder(String[] configFiles, Map<String, String> artifactProperties)
+  public SpringXmlConfigurationBuilder(ArtifactAst artifactAst, boolean enableLazyInit)
       throws ConfigurationException {
-    this(configFiles, artifactProperties, APP, false, false);
-  }
-
-  public SpringXmlConfigurationBuilder(String[] configFiles, boolean enableLazyInit, boolean disableXmlValidations)
-      throws ConfigurationException {
-    super(configFiles, emptyMap());
+    super(artifactAst, emptyMap());
     this.artifactType = APP;
     this.enableLazyInit = enableLazyInit;
-    this.disableXmlValidations = disableXmlValidations;
   }
 
-  public SpringXmlConfigurationBuilder(String[] configurationFiles, ArtifactDeclaration artifactDeclaration,
+  public SpringXmlConfigurationBuilder(ArtifactAst artifactAst, ArtifactDeclaration artifactDeclaration,
                                        Map<String, String> artifactProperties, ArtifactType artifactType,
-                                       boolean enableLazyInitialisation, boolean disableXmlValidations)
+                                       boolean enableLazyInitialisation)
       throws ConfigurationException {
-    this(configurationFiles, artifactProperties, artifactType, enableLazyInitialisation, disableXmlValidations);
+    this(artifactAst, artifactProperties, artifactType, enableLazyInitialisation);
     this.artifactDeclaration = artifactDeclaration;
   }
 
-  public static ConfigurationBuilder createConfigurationBuilder(String[] configResources, MuleContext domainContext,
-                                                                boolean enableLazyInitialisation, boolean disableXmlValidations)
+  public static ConfigurationBuilder createConfigurationBuilder(ArtifactAst artifactAst, MuleContext domainContext,
+                                                                boolean enableLazyInitialisation)
       throws ConfigurationException {
     final SpringXmlConfigurationBuilder springXmlConfigurationBuilder =
-        new SpringXmlConfigurationBuilder(configResources, emptyMap(), APP, enableLazyInitialisation, disableXmlValidations);
+        new SpringXmlConfigurationBuilder(artifactAst, emptyMap(), APP, enableLazyInitialisation);
     if (domainContext != null) {
       springXmlConfigurationBuilder.setParentContext(domainContext);
     }
@@ -135,30 +129,29 @@ public class SpringXmlConfigurationBuilder extends AbstractResourceConfiguration
 
     // TODO MULE-10084 : Refactor to only accept artifactConfiguration and not artifactConfigResources
     final MuleArtifactContext muleArtifactContext =
-        doCreateApplicationContext(muleContext, artifactDeclaration, applicationObjectcontroller);
+        doCreateApplicationContext(muleContext, artifactDeclaration, applicationObjectcontroller, artifactAst);
     serviceConfigurators.forEach(serviceConfigurator -> serviceConfigurator.configure(muleContext.getCustomizationService()));
     return muleArtifactContext;
   }
 
   private MuleArtifactContext doCreateApplicationContext(MuleContext muleContext,
                                                          ArtifactDeclaration artifactDeclaration,
-                                                         OptionalObjectsController optionalObjectsController) {
+                                                         OptionalObjectsController optionalObjectsController,
+                                                         ArtifactAst artifactAst) {
     if (enableLazyInit) {
-      return new LazyMuleArtifactContext(muleContext, resolveArtifactConfigResources(), artifactDeclaration,
+      return new LazyMuleArtifactContext(muleContext, artifactDeclaration,
+                                         artifactAst,
                                          optionalObjectsController,
                                          getArtifactProperties(), artifactType,
                                          resolveContextArtifactPluginClassLoaders(),
                                          resolveComponentModelInitializer(),
-                                         resolveParentConfigurationProperties(), disableXmlValidations);
+                                         resolveParentConfigurationProperties());
     }
 
-    return new MuleArtifactContext(muleContext, resolveArtifactConfigResources(), artifactDeclaration, optionalObjectsController,
+    return new MuleArtifactContext(muleContext, artifactDeclaration, artifactAst,
+                                   optionalObjectsController,
                                    getArtifactProperties(), artifactType, resolveContextArtifactPluginClassLoaders(),
-                                   resolveParentConfigurationProperties(), disableXmlValidations);
-  }
-
-  private ConfigResource[] resolveArtifactConfigResources() {
-    return artifactConfigResources;
+                                   resolveParentConfigurationProperties());
   }
 
   private Optional<ConfigurationProperties> resolveParentConfigurationProperties() {

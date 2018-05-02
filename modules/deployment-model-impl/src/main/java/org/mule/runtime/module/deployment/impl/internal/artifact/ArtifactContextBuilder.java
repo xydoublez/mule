@@ -24,6 +24,18 @@ import static org.mule.runtime.core.api.util.ClassUtils.withContextClassLoader;
 import static org.mule.runtime.core.api.util.UUID.getUUID;
 import static org.mule.runtime.core.internal.exception.ErrorTypeRepositoryFactory.createCompositeErrorTypeRepository;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.mule.runtime.api.artifact.ast.ArtifactAst;
 import org.mule.runtime.api.component.location.Location;
 import org.mule.runtime.api.config.custom.ServiceConfigurator;
 import org.mule.runtime.api.connectivity.ConnectivityTestingService;
@@ -56,17 +68,6 @@ import org.mule.runtime.module.deployment.impl.internal.policy.ArtifactExtension
 import org.mule.runtime.module.extension.api.manager.DefaultExtensionManagerFactory;
 import org.mule.runtime.module.extension.api.manager.ExtensionManagerFactory;
 import org.mule.runtime.module.extension.internal.loader.ExtensionModelLoaderRepository;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Builder for creating an {@link ArtifactContext}. This is the preferred mechanism to create a {@code ArtifactContext} and a
@@ -112,6 +113,7 @@ public class ArtifactContextBuilder {
   private DeployableArtifact parentArtifact;
   private Optional<Properties> properties = empty();
   private String dataFolderName;
+  private ArtifactAst artifactAst;
 
   private ArtifactContextBuilder() {}
 
@@ -427,7 +429,8 @@ public class ArtifactContextBuilder {
                     .setArtifactType(artifactType)
                     .setEnableLazyInitialization(enableLazyInit)
                     .setDisableXmlValidations(disableXmlValidations)
-                    .setServiceConfigurators(serviceConfigurators);
+                    .setServiceConfigurators(serviceConfigurators)
+                    .setArtifactAst(ArtifactContextBuilder.this.artifactAst);
             if (parentArtifact != null) {
               artifactContextConfigurationBuilder
                   .setParentContext(parentArtifact.getRegistry().lookupByType(MuleContext.class).get());
@@ -507,6 +510,11 @@ public class ArtifactContextBuilder {
   public ArtifactContextBuilder setExtensionManagerFactory(ExtensionManagerFactory extensionManagerFactory) {
     this.extensionManagerFactory = extensionManagerFactory;
 
+    return this;
+  }
+
+  public ArtifactContextBuilder setArtifactAst(ArtifactAst artifactAst) {
+    this.artifactAst = artifactAst;
     return this;
   }
 }

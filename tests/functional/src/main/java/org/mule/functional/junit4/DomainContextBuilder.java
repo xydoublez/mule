@@ -9,16 +9,20 @@ package org.mule.functional.junit4;
 import static java.util.Collections.emptyMap;
 import static org.mule.runtime.config.api.SpringXmlConfigurationBuilderFactory.createConfigurationBuilder;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.DOMAIN;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.api.config.DefaultMuleConfiguration;
 import org.mule.runtime.core.api.context.DefaultMuleContextFactory;
 import org.mule.runtime.core.api.context.MuleContextBuilder;
+import org.mule.runtime.core.internal.artifact.ast.ArtifactXmlBasedAstBuilder;
 import org.mule.tck.config.TestServicesConfigurationBuilder;
 import org.mule.tck.junit4.MockExtensionManagerConfigurationBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.google.common.collect.ImmutableSet;
 
 public class DomainContextBuilder {
 
@@ -59,6 +63,7 @@ public class DomainContextBuilder {
   }
 
   protected ConfigurationBuilder getDomainBuilder(String[] configResources) throws Exception {
-    return createConfigurationBuilder(configResources, emptyMap(), DOMAIN);
+    return createConfigurationBuilder(ArtifactXmlBasedAstBuilder.builder().setClassLoader(Thread.currentThread().getContextClassLoader())
+        .setConfigFiles(ImmutableSet.copyOf(configResources)).build(), emptyMap(), DOMAIN);
   }
 }
