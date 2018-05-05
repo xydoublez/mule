@@ -21,7 +21,7 @@ import org.mule.runtime.core.api.config.ConfigurationException;
 import org.mule.runtime.dsl.api.ResourceProvider;
 import org.mule.runtime.dsl.api.config.ConfigResource;
 import org.mule.runtime.dsl.internal.ClassLoaderResourceProvider;
-import org.mule.runtime.dsl.internal.parser.ArtifactModelFactory;
+import org.mule.runtime.dsl.internal.parser.XmlArtifactModelFactory;
 import org.mule.runtime.dsl.internal.parser.xml.XmlArtifactParser;
 import org.mule.runtime.dsl.internal.parser.xml.XmlConfigurationDocumentLoader;
 
@@ -32,7 +32,9 @@ public class ArtifactXmlBasedAstBuilder {
   private ClassLoader artifactClassLoader;
   private boolean disableXmlValidations = false;
 
-  private ArtifactXmlBasedAstBuilder() {}
+  private ArtifactXmlBasedAstBuilder() {
+    artifactClassLoader = Thread.currentThread().getContextClassLoader();
+  }
 
   public static ArtifactXmlBasedAstBuilder builder() {
     return new ArtifactXmlBasedAstBuilder();
@@ -99,7 +101,7 @@ public class ArtifactXmlBasedAstBuilder {
                               extensionModels, externalResourceProvider, value -> value);
 
     ArtifactDefinition artifactDefinition = xmlArtifactParser.parse();
-    return new ArtifactModelFactory(extensionModels).createFrom(artifactDefinition);
+    return new XmlArtifactModelFactory(extensionModels).createFrom(artifactDefinition);
   }
 
 }

@@ -54,6 +54,7 @@ import org.mule.runtime.core.api.context.notification.MuleContextListener;
 import org.mule.runtime.core.api.context.notification.MuleContextNotification;
 import org.mule.runtime.core.api.context.notification.MuleContextNotificationListener;
 import org.mule.runtime.core.api.extension.ExtensionManager;
+import org.mule.runtime.core.internal.artifact.ast.ArtifactXmlBasedAstBuilder;
 import org.mule.runtime.core.internal.lifecycle.phases.NotInLifecyclePhase;
 import org.mule.runtime.core.internal.logging.LogUtil;
 import org.mule.runtime.deployment.model.api.DeploymentInitException;
@@ -72,7 +73,6 @@ import org.mule.runtime.module.artifact.api.classloader.ClassLoaderRepository;
 import org.mule.runtime.module.artifact.api.classloader.DisposableClassLoader;
 import org.mule.runtime.module.artifact.api.classloader.MuleDeployableArtifactClassLoader;
 import org.mule.runtime.module.artifact.api.classloader.RegionClassLoader;
-import org.mule.runtime.core.internal.artifact.ast.ArtifactXmlBasedAstBuilder;
 import org.mule.runtime.module.deployment.impl.internal.artifact.ArtifactContextBuilder;
 import org.mule.runtime.module.deployment.impl.internal.artifact.ExtensionModelDiscoverer;
 import org.mule.runtime.module.deployment.impl.internal.domain.DomainRepository;
@@ -221,7 +221,7 @@ public class DefaultMuleApplication implements Application {
 
       Set<ExtensionModel> allExtensionModels = getExtensionModels(domain);
 
-      this.artifactAst = new ArtifactXmlBasedAstBuilder()
+      this.artifactAst = ArtifactXmlBasedAstBuilder.builder()
           .setClassLoader(deploymentClassLoader.getClassLoader())
           .setConfigFiles(descriptor.getConfigResources())
           .setExtensionModels(allExtensionModels)

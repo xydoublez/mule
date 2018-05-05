@@ -7,7 +7,7 @@
 package org.mule.runtime.config.internal.dsl.model.extension.xml.property;
 
 import org.mule.runtime.api.artifact.ast.ComponentAst;
-import org.mule.runtime.api.artifact.ast.ConstructAst;
+import org.mule.runtime.api.artifact.ast.RouteAst;
 import org.mule.runtime.api.meta.model.ModelProperty;
 import org.mule.runtime.config.internal.model.ComponentModel;
 import org.mule.runtime.core.api.processor.Processor;
@@ -20,18 +20,18 @@ import org.mule.runtime.core.api.processor.Processor;
 public class OperationComponentModelModelProperty implements ModelProperty {
 
   private final ComponentAst operationComponentAst;
-  private final ConstructAst bodyConstructAst;
+  private final RouteAst bodyConstructAst;
 
   /**
    * Constructs a {@link ModelProperty} that will hold the complete <operation/> and its {@link Processor}s defined in a <body/>
    * element to be later macro expanded into a Mule application.
    *
    * @param operationComponentAst <operation/> element represented through {@link ComponentModel}s.
-   * @param bodyConstructAst <body/> element with all the {@link Processor} represented through {@link ComponentModel}s.
+   * @param bodyRouteAst <body/> element with all the {@link Processor} represented through {@link ComponentModel}s.
    */
-  public OperationComponentModelModelProperty(ComponentAst operationComponentAst, ConstructAst bodyConstructAst) {
+  public OperationComponentModelModelProperty(ComponentAst operationComponentAst, RouteAst bodyRouteAst) {
     this.operationComponentAst = operationComponentAst;
-    this.bodyConstructAst = bodyConstructAst;
+    this.bodyConstructAst = bodyRouteAst;
   }
 
   /**
@@ -44,7 +44,7 @@ public class OperationComponentModelModelProperty implements ModelProperty {
   /**
    * @return the {@link ComponentModel} that's pointing to the <body/> element
    */
-  public ConstructAst getBodyComponentModel() {
+  public RouteAst getBodyConstructAst() {
     return bodyConstructAst;
   }
 

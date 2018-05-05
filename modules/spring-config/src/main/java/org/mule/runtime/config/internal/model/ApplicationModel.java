@@ -562,17 +562,17 @@ public class ApplicationModel {
                 .withSimpleParameter(parameterAstHolder.getParameterAst().getParameterIdentifier().getIdentifier().getName(),
                                      localResolver.resolveValue(parameterAstHolder.getSimpleParameterValueAst().getRawValue()));
           } else {
-            ComplexParameterValueAst complexParameterValueAst = parameterAstHolder.getCompleParameterValueAst();
+            ComplexParameterValueAst complexParameterValueAst = parameterAstHolder.getComplexParameterValueAst();
             DefaultConfigurationParameters.Builder childParametersBuilder = DefaultConfigurationParameters.builder();
             configurationParametersBuilder.withComplexParameter(complexParameterValueAst.getComponent().getComponentIdentifier(),
                                                                 resolveConfigurationParameters(childParametersBuilder,
                                                                                                new ComponentAstHolder(complexParameterValueAst
                                                                                                    .getComponent()), // TODO fix
-                                                                                                                     // the
-                                                                                                                     // creation
-                                                                                                                     // of the
-                                                                                                                     // holder
-                                                                                                                     // here.
+                                                                                               // the
+                                                                                               // creation
+                                                                                               // of the
+                                                                                               // holder
+                                                                                               // here.
                                                                                                localResolver));
           }
         });

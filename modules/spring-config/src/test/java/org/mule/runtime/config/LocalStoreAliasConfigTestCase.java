@@ -18,18 +18,19 @@ import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_STORE_MANAG
 import static org.mule.runtime.core.internal.context.DefaultMuleContext.LOCAL_OBJECT_STORE_MANAGER_KEY;
 import static org.mule.runtime.core.internal.context.DefaultMuleContext.LOCAL_QUEUE_MANAGER_KEY;
 
+import org.junit.Test;
+
+import org.mule.runtime.api.artifact.ast.ArtifactAst;
 import org.mule.runtime.config.internal.SpringXmlConfigurationBuilder;
 import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 
-import org.junit.Test;
-
 public class LocalStoreAliasConfigTestCase extends AbstractMuleContextTestCase {
 
   @Override
   protected ConfigurationBuilder getBuilder() throws Exception {
-    return new SpringXmlConfigurationBuilder(new String[0], emptyMap());
+    return new SpringXmlConfigurationBuilder(ArtifactAst.builder().build(), emptyMap());
   }
 
   @Test

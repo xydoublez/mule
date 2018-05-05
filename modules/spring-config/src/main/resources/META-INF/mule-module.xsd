@@ -127,7 +127,7 @@
     <xsd:element name="parameter" type="parameterType">
         <xsd:annotation>
             <xsd:documentation>
-                A parameter element defines an input value for the operation in which it is define. Such parameter must be defined with a meaningful name, a type which defines the kind of content the parameter must have and optionally a default value that will be used if the invocation to the operation does not defines a value for the parameter. The parameter can be accessed within the body definition of the operation using an expression such as #[mel: param.paramName]
+                A parameter element defines an input value for the operation in which it is define. Such parameter must be defined with a meaningful name, a type which defines the kind of content the parameter must have and optionally a default value that will be used if the invocation to the operation does not defines a value for the parameter. The parameter can be accessed within the body definition of the operation using an expression such as #[vars.paramName]
             </xsd:documentation>
         </xsd:annotation>
     </xsd:element>
@@ -190,14 +190,15 @@
         </xsd:annotation>
     </xsd:element>
 
-    <xsd:complexType name="propertyType">
+    <xsd:complexType name="parameterType">
         <xsd:complexContent>
             <xsd:extension base="mule:annotatedType">
                 <xsd:attribute name="name" type="xsd:string" use="required"/>
                 <xsd:attribute name="defaultValue" type="xsd:string" use="optional"/>
                 <xsd:attribute name="use" type="useType" default="AUTO"/>
-                <xsd:attribute name="type" type="xsd:string" use="required"/>
+                <xsd:attribute name="type" use="required" type="xsd:string"/>
                 <xsd:attribute name="password" type="xsd:boolean" default="false"/>
+                <xsd:attribute name="role" type="roleParameterType" default="BEHAVIOUR"/>
                 <xsd:attribute name="summary" type="xsd:string" use="optional"/>
                 <xsd:attribute name="example" type="xsd:string" use="optional"/>
                 <xsd:attribute name="displayName" type="xsd:string" use="optional"/>

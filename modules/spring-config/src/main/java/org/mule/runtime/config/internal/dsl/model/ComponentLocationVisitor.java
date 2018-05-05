@@ -277,7 +277,8 @@ public class ComponentLocationVisitor implements Consumer<ComponentModel> {
       }
       componentLocation = parentComponentLocation
           .appendLocationPart(PROCESSORS_PART_NAME, empty(), empty(), empty())
-          .appendLocationPart(findProcessorPath(componentModel), typedComponentIdentifier, componentModel.getSourceCodeLocation());
+          .appendLocationPart(findProcessorPath(componentModel), typedComponentIdentifier,
+                              componentModel.getSourceCodeLocation());
     } else if (isErrorHandler(componentModel)) {
       componentLocation = processErrorHandlerComponent(componentModel, parentComponentLocation, typedComponentIdentifier);
     } else {

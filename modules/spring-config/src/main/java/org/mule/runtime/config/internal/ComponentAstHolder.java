@@ -39,7 +39,16 @@ public class ComponentAstHolder {
 
   public Optional<ParameterAstHolder> getNameParameter() {
     // TODO review for those that have are from a custom extension
-    return getParameterAstHolder(CORE_NAME_PARAMETER_IDENTIFIER);
+    Optional<ParameterAstHolder> parameterAstHolder = getParameterAstHolder(CORE_NAME_PARAMETER_IDENTIFIER);
+    if (!parameterAstHolder.isPresent()) {
+      // TODO this is because with are not taking into account the namespacer
+      return componentAst.getParameters()
+          .stream()
+          .filter(parameterAst -> parameterAst.getParameterIdentifier().getIdentifier().getName().equals("name"))
+          .map(parameterAst -> new ParameterAstHolder(parameterAst))
+          .findAny();
+    }
+    return parameterAstHolder;
   }
 
   public Optional<ParameterAstHolder> getValueParameter() {
@@ -50,8 +59,11 @@ public class ComponentAstHolder {
   public Optional<ParameterAstHolder> getParameterAstHolder(ComponentIdentifier componentIdentifier) {
     return Optional.ofNullable(ofNullable(parameterAstHolderMap.get(componentIdentifier))
         .orElseGet(() -> componentAst.getParameter(componentIdentifier)
-            .map(parameterAst -> parameterAstHolderMap.put(componentIdentifier, new ParameterAstHolder(parameterAst)))
-            .orElseGet(null)));
+            .map(parameterAst -> {
+              ParameterAstHolder parameterAstHolder = new ParameterAstHolder(parameterAst);
+              parameterAstHolderMap.put(componentIdentifier, parameterAstHolder);
+              return parameterAstHolder;
+            }).orElse(null)));
   }
 
   public List<ParameterAstHolder> getParameters() {

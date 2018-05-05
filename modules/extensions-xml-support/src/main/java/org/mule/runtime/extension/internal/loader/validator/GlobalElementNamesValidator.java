@@ -8,16 +8,20 @@ package org.mule.runtime.extension.internal.loader.validator;
 
 import static java.lang.String.format;
 import static org.mule.runtime.internal.util.NameValidationUtil.verifyStringDoesNotContainsReservedCharacters;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.mule.runtime.api.artifact.ast.ComponentAst;
 import org.mule.runtime.api.meta.model.ExtensionModel;
+import org.mule.runtime.api.meta.model.config.ConfigurationModel;
+import org.mule.runtime.api.meta.model.util.ExtensionWalker;
+import org.mule.runtime.config.internal.ComponentAstHolder;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.GlobalElementComponentModelModelProperty;
-import org.mule.runtime.config.internal.model.ComponentModel;
 import org.mule.runtime.core.api.util.StringUtils;
 import org.mule.runtime.extension.api.loader.ExtensionModelValidator;
 import org.mule.runtime.extension.api.loader.Problem;
 import org.mule.runtime.extension.api.loader.ProblemsReporter;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * {@link ExtensionModelValidator} which applies to {@link ExtensionModel}s which are XML based. It validates global element names
@@ -35,18 +39,26 @@ public class GlobalElementNamesValidator implements ExtensionModelValidator {
 
   @Override
   public void validate(ExtensionModel extensionModel, ProblemsReporter problemsReporter) {
-    Map<String, ComponentModel> existingObjectsWithName = new HashMap<>();
-    extensionModel.getModelProperty(GlobalElementComponentModelModelProperty.class)
-        .ifPresent(globalElementComponentModelModelProperty -> {
-          globalElementComponentModelModelProperty.getGlobalElements().stream()
-              .filter(componentModel -> componentModel.getNameAttribute() != null)
-              .forEach(componentModel -> {
-                String nameAttributeValue = componentModel.getNameAttribute();
-                validateDuplicatedGlobalElements(extensionModel, componentModel, nameAttributeValue,
-                                                 existingObjectsWithName, problemsReporter);
-                validateNotReservedCharacterInName(extensionModel, nameAttributeValue, problemsReporter);
-              });
-        });
+    new ExtensionWalker() {
+
+      Map<String, ComponentAst> existingObjectsWithName = new HashMap<>();
+
+      @Override
+      protected void onConfiguration(ConfigurationModel configurationModel) {
+        configurationModel.getModelProperty(GlobalElementComponentModelModelProperty.class)
+            .ifPresent(globalElementComponentModelModelProperty -> {
+              globalElementComponentModelModelProperty.getGlobalElements().stream()
+                  .filter(componentAst -> new ComponentAstHolder(componentAst).getNameParameter().isPresent())
+                  .forEach(componentAst -> {
+                    String nameAttributeValue =
+                        new ComponentAstHolder(componentAst).getNameParameter().get().getSimpleParameterValueAst().getRawValue();
+                    validateDuplicatedGlobalElements(configurationModel, componentAst, nameAttributeValue,
+                                                     existingObjectsWithName, problemsReporter);
+                    validateNotReservedCharacterInName(configurationModel, nameAttributeValue, problemsReporter);
+                  });
+            });
+      }
+    }.walk(extensionModel);
   }
 
   private void validateNotReservedCharacterInName(ExtensionModel extensionModel, String nameAttributeValue,
@@ -60,18 +72,18 @@ public class GlobalElementNamesValidator implements ExtensionModelValidator {
     }
   }
 
-  private void validateDuplicatedGlobalElements(ExtensionModel extensionModel, ComponentModel componentModel,
-                                                String nameAttributeValue, Map<String, ComponentModel> existingObjectsWithName,
+  private void validateDuplicatedGlobalElements(ConfigurationModel configurationModel, ComponentAst componentAst,
+                                                String nameAttributeValue, Map<String, ComponentAst> existingObjectsWithName,
                                                 ProblemsReporter problemsReporter) {
     if (existingObjectsWithName.containsKey(nameAttributeValue)) {
-      problemsReporter.addError(new Problem(extensionModel, format(
-                                                                   REPEATED_GLOBAL_ELEMENT_NAME_FORMAT_MESSAGE,
-                                                                   nameAttributeValue,
-                                                                   existingObjectsWithName.get(nameAttributeValue)
-                                                                       .getIdentifier(),
-                                                                   componentModel.getIdentifier())));
+      problemsReporter.addError(new Problem(configurationModel, format(
+                                                                       REPEATED_GLOBAL_ELEMENT_NAME_FORMAT_MESSAGE,
+                                                                       nameAttributeValue,
+                                                                       existingObjectsWithName.get(nameAttributeValue)
+                                                                           .getComponentIdentifier(),
+                                                                       componentAst.getComponentIdentifier())));
     } else {
-      existingObjectsWithName.put(nameAttributeValue, componentModel);
+      existingObjectsWithName.put(nameAttributeValue, componentAst);
     }
   }
 }

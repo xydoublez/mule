@@ -25,9 +25,11 @@ import static org.mule.runtime.api.meta.model.parameter.ParameterRole.BEHAVIOUR;
 import static org.mule.runtime.config.internal.ArtifactAstHelper.getConnectionProviderAst;
 import static org.mule.runtime.config.internal.dsl.model.extension.xml.MacroExpansionModuleModel.TNS_PREFIX;
 import static org.mule.runtime.config.internal.dsl.model.extension.xml.MacroExpansionModulesModel.getUsedNamespaces;
+import static org.mule.runtime.config.internal.model.ApplicationModel.DESCRIPTION_IDENTIFIER;
 import static org.mule.runtime.config.internal.model.ApplicationModel.GLOBAL_PROPERTY;
 import static org.mule.runtime.config.internal.model.ApplicationModel.NAME_ATTRIBUTE;
 import static org.mule.runtime.core.api.exception.Errors.ComponentIdentifiers.Handleable.ANY;
+import static org.mule.runtime.core.api.extension.MuleExtensionModelProvider.MULESOFT_VENDOR;
 import static org.mule.runtime.core.internal.processor.chain.ModuleOperationMessageProcessorChainBuilder.MODULE_CONNECTION_GLOBAL_ELEMENT_NAME;
 import static org.mule.runtime.extension.api.util.XmlModelUtils.createXmlLanguageModel;
 import static org.mule.runtime.internal.dsl.DslConstants.CORE_NAMESPACE;
@@ -59,11 +61,14 @@ import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.catalog.api.TypeResolver;
 import org.mule.metadata.catalog.api.TypeResolverException;
 import org.mule.runtime.api.artifact.ast.ArtifactAst;
+import org.mule.runtime.api.artifact.ast.ComplexParameterValueAst;
 import org.mule.runtime.api.artifact.ast.ComponentAst;
 import org.mule.runtime.api.artifact.ast.ConnectionProviderAst;
 import org.mule.runtime.api.artifact.ast.ConstructAst;
 import org.mule.runtime.api.artifact.ast.HasParametersAst;
 import org.mule.runtime.api.artifact.ast.ParameterAst;
+import org.mule.runtime.api.artifact.ast.RouteAst;
+import org.mule.runtime.api.artifact.ast.SimpleParameterValueAst;
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.connection.ConnectionProvider;
 import org.mule.runtime.api.exception.MuleRuntimeException;
@@ -224,19 +229,19 @@ public final class XmlExtensionLoaderDelegate {
   private static final ComponentIdentifier OPERATION_PARAMETERS_IDENTIFIER =
       ComponentIdentifier.builder().namespace(CORE_PREFIX).name("parameters").build();
   private static final ComponentIdentifier OPERATION_PARAMETER_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(MODULE_NAMESPACE_NAME).name("parameter").build();
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("parameter").build();
   private static final ComponentIdentifier OPERATION_BODY_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(MODULE_NAMESPACE_NAME).name("body").build();
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("body").build();
   private static final ComponentIdentifier OPERATION_OUTPUT_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(MODULE_NAMESPACE_NAME).name("output").build();
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("output").build();
   private static final ComponentIdentifier OPERATION_OUTPUT_ATTRIBUTES_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(MODULE_NAMESPACE_NAME).name("output-attributes").build();
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("outputAttributes").build();
   private static final ComponentIdentifier OPERATION_ERRORS_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(MODULE_NAMESPACE_NAME).name("errors").build();
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("errors").build();
   private static final ComponentIdentifier OPERATION_ERROR_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(MODULE_NAMESPACE_NAME).name("error").build();
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("error").build();
   private static final ComponentIdentifier MODULE_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(MODULE_NAMESPACE_NAME).name(MODULE_NAMESPACE_NAME)
+      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(MODULE_NAMESPACE_NAME)
           .build();
   public static final String XSD_SUFFIX = ".xsd";
   private static final String XML_SUFFIX = ".xml";
@@ -349,7 +354,8 @@ public final class XmlExtensionLoaderDelegate {
     } catch (Exception e) {
       throw new MuleRuntimeException(
                                      createStaticMessage(format("There was an issue reading the stream for the resource %s",
-                                                                resource.getFile())));
+                                                                resource.getFile())),
+                                     e);
     }
   }
 
@@ -421,27 +427,29 @@ public final class XmlExtensionLoaderDelegate {
 
   private void loadModuleExtension(ExtensionDeclarer declarer, ArtifactAst artifactAst,
                                    Set<ExtensionModel> extensions, boolean comesFromTNS) {
-    final ApplicationModel applicationModel = getModuleComponentModel(artifactAst, extensions);
-    if (!artifactAst.getArtifactType().equals(MODULE_IDENTIFIER)) { // TODO add data to do validation
+    if (!artifactAst.getArtifactType().equals(MODULE_NAMESPACE_NAME)) { // TODO add data to do validation
       throw new MuleRuntimeException(createStaticMessage(format("The root element of a module must be '%s', but found '%s'",
                                                                 MODULE_IDENTIFIER.toString(),
                                                                 artifactAst.getArtifactType())));
     }
     ArtifactAstHelper artifactAstHelper = new ArtifactAstHelper(artifactAst);
     final String name =
-        artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_NAMESPACE)
-            .namespace(NAME_ATTRIBUTE).build()).get().getSimpleParameterValueAst().getRawValue();
+        artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX)
+            .name(NAME_ATTRIBUTE).build()).get().getSimpleParameterValueAst().getRawValue();
     final String version = "4.0.0"; // TODO(fernandezlautaro): MULE-11010 remove version from ExtensionModel
     final String category =
-        artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_NAMESPACE)
-            .namespace(CATEGORY).build()).get().getSimpleParameterValueAst().getRawValue();
+        artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX)
+            .name(CATEGORY).build()).map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue())
+            .orElse(Category.COMMUNITY.name());
     final String vendor =
-        artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_NAMESPACE)
-            .namespace(VENDOR).build()).get().getSimpleParameterValueAst().getRawValue();
+        artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX)
+            .name(VENDOR).build()).map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue())
+            .orElse(MULESOFT_VENDOR);
     final XmlDslModel xmlDslModel = getXmlDslModel(artifactAstHelper, name, version);
     final String description = getDescription(artifactAst);
-    final String xmlnsTnsValue = artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_NAMESPACE)
-        .namespace(XMLNS_TNS).build()).get().getSimpleParameterValueAst().getRawValue();
+    final String xmlnsTnsValue = artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX)
+        .name(XMLNS_TNS).build()).map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue())
+        .orElse(null);
     if (xmlnsTnsValue != null && !xmlDslModel.getNamespace().equals(xmlnsTnsValue)) {
       throw new MuleRuntimeException(createStaticMessage(format("The %s attribute value of the module must be '%s', but found '%s'",
                                                                 XMLNS_TNS,
@@ -517,17 +525,17 @@ public final class XmlExtensionLoaderDelegate {
 
   private XmlDslModel getXmlDslModel(ArtifactAstHelper artifactAstHelper, String name, String version) {
     final Optional<String> prefix = artifactAstHelper
-        .getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_NAMESPACE).namespace(MODULE_PREFIX_ATTRIBUTE).build())
+        .getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX).name(MODULE_PREFIX_ATTRIBUTE).build())
         .map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue());
     final Optional<String> namespace = artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder()
-        .namespace(CORE_NAMESPACE).namespace(MODULE_NAMESPACE_ATTRIBUTE).build())
+        .namespace(CORE_PREFIX).name(MODULE_NAMESPACE_ATTRIBUTE).build())
         .map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue());
     return createXmlLanguageModel(prefix, namespace, name, version);
   }
 
   private String getDescription(HasParametersAst hasParametersAst) {
     return hasParametersAst
-        .getParameter(ComponentIdentifier.builder().namespace(CORE_NAMESPACE).namespace(DOC_DESCRIPTION).build())
+        .getParameter(ComponentIdentifier.builder().namespace(CORE_PREFIX).name(DOC_DESCRIPTION).build())
         .map(parameterAst -> new ParameterAstHolder(parameterAst).getSimpleParameterValueAst().getRawValue()).orElse("");
   }
 
@@ -551,7 +559,7 @@ public final class XmlExtensionLoaderDelegate {
       declarer.withModelProperty(new NoReconnectionStrategyModelProperty());
       ConfigurationDeclarer configurationDeclarer = declarer.withConfig(CONFIG_NAME);
       configurationProperties.forEach(param -> extractProperty(configurationDeclarer, param));
-      addConnectionProvider(configurationDeclarer, connectionProperties, globalElementsComponentModel, extensions);
+      addConnectionProvider(configurationDeclarer, connectionProperties, globalElementsComponentModel);
       return of(configurationDeclarer);
     }
     return empty();
@@ -577,7 +585,7 @@ public final class XmlExtensionLoaderDelegate {
     return componentAstHolder.getParameters().stream()
         .filter(parameter -> parameter.isComplexParameter()
             || parameter.getParameterAst().getParameterIdentifier().getIdentifier().equals(PROPERTY_IDENTIFIER))
-        .map(parameter -> parameter.getCompleParameterValueAst().getComponent())
+        .map(parameter -> parameter.getComplexParameterValueAst().getComponent())
         .collect(Collectors.toList());
   }
 
@@ -633,9 +641,9 @@ public final class XmlExtensionLoaderDelegate {
    */
   private void addConnectionProvider(ConfigurationDeclarer configurationDeclarer,
                                      List<ComponentAst> connectionProperties,
-                                     List<ComponentAst> globalComponentsAst, Set<ExtensionModel> extensions) {
+                                     List<ComponentAst> globalComponentsAst) {
     final Optional<ComponentAst> testConnectionGlobalElementOptional =
-        getTestConnectionGlobalElement(globalComponentsAst, extensions);
+        getTestConnectionGlobalElement(globalComponentsAst);
 
     if (testConnectionGlobalElementOptional.isPresent() || !connectionProperties.isEmpty()) {
       final ConnectionProviderDeclarer connectionProviderDeclarer =
@@ -648,7 +656,7 @@ public final class XmlExtensionLoaderDelegate {
                                                     testConnectionComponentAst -> {
                                                       final String testConnectionGlobalElementName =
                                                           new ComponentAstHolder(testConnectionComponentAst)
-                                                              .getParameterAstHolder(NAME_ATTRIBUTE_IDENTIFIER).get()
+                                                              .getNameParameter().get()
                                                               .getSimpleParameterValueAst().getRawValue();
                                                       connectionProviderDeclarer
                                                           .withModelProperty(new TestConnectionGlobalElementModelProperty(testConnectionGlobalElementName));
@@ -662,8 +670,8 @@ public final class XmlExtensionLoaderDelegate {
         globalComponentsAst.stream()
             .filter(globalComponentAst -> Boolean
                 .parseBoolean(new ComponentAstHolder(globalComponentAst)
-                    .getParameterAstHolder(MODULE_CONNECTION_MARKER_ATTRIBUTE_IDENTIFIER).get().getSimpleParameterValueAst()
-                    .getRawValue())) // TODO remove new ComponentAstHolder
+                    .getParameterAstHolder(MODULE_CONNECTION_MARKER_ATTRIBUTE_IDENTIFIER)
+                    .map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue()).orElse("false")))
             .collect(Collectors.toList());
 
     if (markedAsTestConnectionGlobalElements.size() > 1) {
@@ -676,9 +684,9 @@ public final class XmlExtensionLoaderDelegate {
                                                                                                                       .get())
                                                                                                                           .getSimpleParameterValueAst()
                                                                                                                           .getRawValue()) // TODO
-                                                                                                                                          // remove
-                                                                                                                                          // new
-                                                                                                                                          // ComponentAstHolder
+                                                                    // remove
+                                                                    // new
+                                                                    // ComponentAstHolder
                                                                     .collect(Collectors.joining(", ")))));
     }
 
@@ -743,36 +751,66 @@ public final class XmlExtensionLoaderDelegate {
     artifactAstHelper.getArtifactAst().getGlobalComponents().stream()
         .filter(globalComponent -> globalComponent.getComponentIdentifier().equals(OPERATION_IDENTIFIER))
         .filter(operationComponentAst -> OperationVisibility
-            .valueOf(new ParameterAstHolder(operationComponentAst.getParameter(VISIBILITY_ATTRIBUTE_ATTRIBUTE_IDENTIFIER).get())
-                .getSimpleParameterValueAst().getRawValue()) == visibility)
+            .valueOf(operationComponentAst.getParameter(VISIBILITY_ATTRIBUTE_ATTRIBUTE_IDENTIFIER)
+                .map(parameterAst -> ((SimpleParameterValueAst) parameterAst.getValue()).getRawValue())
+                .orElse(OperationVisibility.PUBLIC.name())) == visibility)
         .forEach(operationAst -> extractOperationExtension(declarer, (ConstructAst) operationAst, directedGraph, xmlDslModel));
   }
 
-  private void extractOperationExtension(HasOperationDeclarer declarer, ConstructAst operationAst,
+  private void extractOperationExtension(HasOperationDeclarer declarer, ConstructAst constructAst,
                                          DirectedGraph<String, DefaultEdge> directedGraph, XmlDslModel xmlDslModel) {
-    ComponentAstHolder operationAstHolder = new ComponentAstHolder(operationAst);
+    ComponentAstHolder constructAstHolder = new ComponentAstHolder(constructAst);
     String operationName =
-        operationAstHolder.getParameterAstHolder(NAME_ATTRIBUTE_IDENTIFIER).get().getSimpleParameterValueAst().getRawValue();
+        constructAstHolder.getParameterAstHolder(NAME_ATTRIBUTE_IDENTIFIER).get().getSimpleParameterValueAst().getRawValue();
     OperationDeclarer operationDeclarer = declarer.withOperation(operationName);
-    ConstructAst bodyComponentAst = operationAst.getProcessorComponents()
+    RouteAst bodyComponentAst = constructAst.getProcessorComponents()
         .stream()
         .filter(componentAst -> componentAst.getComponentIdentifier().equals(OPERATION_BODY_IDENTIFIER)).findFirst()
-        .map(componentAst -> (ConstructAst) componentAst)
+        .map(componentAst -> (RouteAst) componentAst)
         .orElseThrow(() -> new IllegalArgumentException(format("The operation '%s' is missing the <body> statement",
                                                                operationName)));
 
     directedGraph.addVertex(operationName);
     fillGraphWithTnsReferences(directedGraph, operationName, bodyComponentAst.getProcessorComponents());
 
-    operationDeclarer.withModelProperty(new OperationComponentModelModelProperty(operationAst, bodyComponentAst));
-    operationDeclarer.describedAs(getDescription(operationAst));
-    operationDeclarer.getDeclaration().setDisplayModel(getDisplayModel(operationAstHolder));
-    extractOperationParameters(operationDeclarer, operationAstHolder);
-    extractOutputType(operationDeclarer.withOutput(), OPERATION_OUTPUT_IDENTIFIER, operationAstHolder,
-                      getDeclarationOutputFor(operationName));
-    extractOutputType(operationDeclarer.withOutputAttributes(), OPERATION_OUTPUT_ATTRIBUTES_IDENTIFIER, operationAstHolder,
-                      getDeclarationOutputAttributesFor(operationName));
-    declareErrorModels(operationDeclarer, xmlDslModel, operationName, operationAstHolder);
+    operationDeclarer.withModelProperty(new OperationComponentModelModelProperty(constructAst, bodyComponentAst));
+    operationDeclarer.describedAs(getDescription(constructAst));
+    operationDeclarer.getDeclaration().setDisplayModel(getDisplayModel(constructAstHolder));
+    extractOperationParameters(operationDeclarer, constructAstHolder.getComponentAst());
+    extractOperationOutputType(constructAstHolder, operationDeclarer, getDeclarationOutputFor(operationName),
+                               getDeclarationOutputAttributesFor(operationName));
+    declareErrorModels(operationDeclarer, xmlDslModel, operationName, constructAstHolder);
+  }
+
+  private void extractOperationOutputType(ComponentAstHolder operationComponentAstHolder, OperationDeclarer operationDeclarer,
+                                          Optional<MetadataType> calculatedOutputMetadataTypeOptional,
+                                          Optional<MetadataType> calculatedOutputAttributesMetadataTypeOptional) {
+    Optional<ParameterAstHolder> outputParameterAstHolderOptional =
+        operationComponentAstHolder.getParameterAstHolder(OPERATION_OUTPUT_IDENTIFIER);
+    Optional<ParameterAstHolder> outputAttributeParameterAstHolderOptional =
+        operationComponentAstHolder.getParameterAstHolder(OPERATION_OUTPUT_ATTRIBUTES_IDENTIFIER);
+
+    extractOutputType(operationDeclarer.withOutput(), calculatedOutputMetadataTypeOptional, outputParameterAstHolderOptional);
+    extractOutputType(operationDeclarer.withOutputAttributes(), calculatedOutputAttributesMetadataTypeOptional,
+                      outputAttributeParameterAstHolderOptional);
+  }
+
+  private void extractOutputType(OutputDeclarer outputDeclarer, Optional<MetadataType> calculatedOutputMetadataTypeOptional,
+                                 Optional<ParameterAstHolder> outputParameterAstHolderOptional) {
+    outputParameterAstHolderOptional.ifPresent(outputParameterAstHolder -> {
+      ComplexParameterValueAst outputComplexParameterValueAst = outputParameterAstHolder.getComplexParameterValueAst();
+      ComponentAstHolder componentAstHolder = new ComponentAstHolder(outputComplexParameterValueAst.getComponent());
+
+      Optional<ParameterAstHolder> typeParameterHolderOptional =
+          componentAstHolder.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX).name("type").build());
+      Optional<ParameterAstHolder> descriptionParameterHolderOptional =
+          componentAstHolder.getParameterAstHolder(DESCRIPTION_IDENTIFIER);
+      typeParameterHolderOptional.ifPresent(parameterAstHolder -> {
+        outputDeclarer.ofType(getMetadataType(typeParameterHolderOptional, calculatedOutputMetadataTypeOptional));
+        descriptionParameterHolderOptional.ifPresent(descriptionParameter -> outputDeclarer
+            .describedAs(descriptionParameter.getSimpleParameterValueAst().getRawValue()));
+      });
+    });
   }
 
   private Optional<MetadataType> getDeclarationOutputFor(String operationName) {
@@ -821,12 +859,12 @@ public final class XmlExtensionLoaderDelegate {
     });
   }
 
-  private void extractOperationParameters(OperationDeclarer operationDeclarer, ConstructAst constructAst) {
-    Optional<ParameterAst> optionalParametersAst = constructAst.getParameters()
+  private void extractOperationParameters(OperationDeclarer operationDeclarer, ComponentAst componentAst) {
+    Optional<ParameterAst> optionalParametersAst = componentAst.getParameters()
         .stream()
         .filter(parameter -> parameter.getParameterIdentifier().equals(OPERATION_PARAMETERS_IDENTIFIER)).findAny();
     if (optionalParametersAst.isPresent()) {
-      ComponentAst parametersComponentAst = new ParameterAstHolder(optionalParametersAst.get()).getCompleParameterValueAst()
+      ComponentAst parametersComponentAst = new ParameterAstHolder(optionalParametersAst.get()).getComplexParameterValueAst()
           .getComponent();
       // parametersComponentAst //TODO see how this would work based on the extension model of the module.
       // .stream()
@@ -887,13 +925,13 @@ public final class XmlExtensionLoaderDelegate {
 
   private DisplayModel getDisplayModel(ComponentAstHolder componentAstHolder) {
     final DisplayModel.DisplayModelBuilder displayModelBuilder = DisplayModel.builder();
-    displayModelBuilder.displayName(componentAstHolder.getParameterAstHolder(DISPLAY_NAME_ATTRIBUTE_IDENTIFIER).get()
-        .getSimpleParameterValueAst().getRawValue());
-    displayModelBuilder.summary(componentAstHolder.getParameterAstHolder(SUMMARY_ATTRIBUTE_IDENTIFIER).get()
-        .getSimpleParameterValueAst().getRawValue());
+    displayModelBuilder.displayName(componentAstHolder.getParameterAstHolder(DISPLAY_NAME_ATTRIBUTE_IDENTIFIER)
+        .map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue()).orElse(null));
+    displayModelBuilder.summary(componentAstHolder.getParameterAstHolder(SUMMARY_ATTRIBUTE_IDENTIFIER)
+        .map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue()).orElse(null));
     displayModelBuilder
-        .example(componentAstHolder.getParameterAstHolder(EXAPLE_ATTRIBUTE_IDENTIFIER).get().getSimpleParameterValueAst()
-            .getRawValue());
+        .example(componentAstHolder.getParameterAstHolder(EXAPLE_ATTRIBUTE_IDENTIFIER)
+            .map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue()).orElse(null));
     return displayModelBuilder.build();
   }
 
@@ -945,19 +983,7 @@ public final class XmlExtensionLoaderDelegate {
             .defaultingTo(parameterDefaultValue);
   }
 
-  private void extractOutputType(OutputDeclarer outputDeclarer, ComponentIdentifier componentIdentifier,
-                                 ComponentModel operationModel, Optional<MetadataType> calculatedOutput) {
-    Optional<ComponentModel> outputAttributesComponentModel = operationModel.getInnerComponents()
-        .stream()
-        .filter(child -> child.getIdentifier().equals(componentIdentifier)).findFirst();
-    outputAttributesComponentModel
-        .ifPresent(outputComponentModel -> outputDeclarer.describedAs(getDescription(outputComponentModel)));
-
-    MetadataType metadataType = getMetadataType(outputAttributesComponentModel, calculatedOutput);
-    outputDeclarer.ofType(metadataType);
-  }
-
-  private MetadataType getMetadataType(Optional<ComponentModel> outputAttributesComponentModel,
+  private MetadataType getMetadataType(Optional<ParameterAstHolder> outputTypeParameterAstHolder,
                                        Optional<MetadataType> declarationMetadataType) {
     MetadataType metadataType;
     // the calculated metadata has precedence over the one configured in the xml
@@ -965,8 +991,8 @@ public final class XmlExtensionLoaderDelegate {
       metadataType = declarationMetadataType.get();
     } else {
       // if tye element is absent, it will default to the VOID type
-      if (outputAttributesComponentModel.isPresent()) {
-        String receivedOutputAttributeType = outputAttributesComponentModel.get().getParameters().get(TYPE_ATTRIBUTE);
+      if (outputTypeParameterAstHolder.isPresent()) {
+        String receivedOutputAttributeType = outputTypeParameterAstHolder.get().getSimpleParameterValueAst().getRawValue();
         metadataType = extractType(receivedOutputAttributeType);
       } else {
         metadataType = BaseTypeBuilder.create(JAVA).voidType().build();
@@ -995,47 +1021,37 @@ public final class XmlExtensionLoaderDelegate {
   }
 
   private void declareErrorModels(OperationDeclarer operationDeclarer, XmlDslModel xmlDslModel, String operationName,
-                                  ComponentModel operationModel) {
-    Optional<ComponentModel> optionalParametersComponentModel = operationModel.getInnerComponents()
-        .stream()
-        .filter(child -> child.getIdentifier().equals(OPERATION_ERRORS_IDENTIFIER)).findAny();
-    optionalParametersComponentModel.ifPresent(componentModel -> componentModel.getInnerComponents()
-        .stream()
-        .filter(child -> child.getIdentifier().equals(OPERATION_ERROR_IDENTIFIER))
-        .forEach(param -> {
-          final String namespace = xmlDslModel.getPrefix().toUpperCase();
-          final String typeName = param.getParameters().get(ERROR_TYPE_ATTRIBUTE);
-          if (StringUtils.isBlank(typeName)) {
-            throw new IllegalModelDefinitionException(format("The operation [%s] cannot have an <error> with an empty 'type' attribute",
-                                                             operationName));
-          }
-          if (typeName.contains(NAMESPACE_SEPARATOR)) {
-            throw new IllegalModelDefinitionException(format("The operation [%s] cannot have an <error> [%s] that contains a reserved character [%s]",
-                                                             operationName, typeName,
-                                                             NAMESPACE_SEPARATOR));
-          }
-          operationDeclarer.withErrorModel(ErrorModelBuilder.newError(typeName, namespace)
-              .withParent(ErrorModelBuilder.newError(ANY).build())
-              .build());
-        }));
-  }
+                                  ComponentAstHolder operationAstHolder) {
+    Optional<ParameterAstHolder> errorsParameterAstHolderOptional =
+        operationAstHolder.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX).name("errors").build());
 
-  /**
-   * Utility class to read the XML module entirely so that if there's any usage of configurations properties, such as
-   * "${someProperty}", the {@link ForbiddenConfigurationPropertiesValidator} can show the errors consistently, Without this dull
-   * implementation, the {@link ComponentModelReader#extractComponentDefinitionModel(ConfigLine, String)} method fails while
-   * reading ANY parametrization throwing a {@link PropertyNotFoundException} eagerly.
-   */
-  private class XmlExtensionConfigurationPropertiesResolver implements ConfigurationPropertiesResolver {
-
-    @Override
-    public Object resolveValue(String value) {
-      return value;
-    }
-
-    @Override
-    public Object resolvePlaceholderKeyValue(String placeholderKey) {
-      return placeholderKey;
-    }
+    errorsParameterAstHolderOptional.ifPresent(errorsParameterAstHolder -> {
+      ComplexParameterValueAst complexParameterValueAst = errorsParameterAstHolder.getComplexParameterValueAst();
+      ComponentAst errorComponentAst = complexParameterValueAst.getComponent();
+      errorComponentAst.getParameters()
+          .stream()
+          .forEach(errorParameter -> {
+            ComponentAstHolder errorAstHolder = new ComponentAstHolder(errorComponentAst);
+            final String namespace = xmlDslModel.getPrefix().toUpperCase();
+            final String typeName = errorAstHolder
+                .getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX).namespace(ERROR_TYPE_ATTRIBUTE) // TODO
+                    // review
+                    // namespace
+                    .build())
+                .map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue()).orElse(null);
+            if (StringUtils.isBlank(typeName)) {
+              throw new IllegalModelDefinitionException(format("The operation [%s] cannot have an <error> with an empty 'type' attribute",
+                                                               operationName));
+            }
+            if (typeName.contains(NAMESPACE_SEPARATOR)) {
+              throw new IllegalModelDefinitionException(format("The operation [%s] cannot have an <error> [%s] that contains a reserved character [%s]",
+                                                               operationName, typeName,
+                                                               NAMESPACE_SEPARATOR));
+            }
+            operationDeclarer.withErrorModel(ErrorModelBuilder.newError(typeName, namespace)
+                .withParent(ErrorModelBuilder.newError(ANY).build())
+                .build());
+          });
+    });
   }
 }

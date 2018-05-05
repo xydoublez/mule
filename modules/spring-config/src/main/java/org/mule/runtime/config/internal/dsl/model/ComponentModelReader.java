@@ -12,7 +12,6 @@ import org.mule.runtime.api.artifact.ast.ComplexParameterValueAst;
 import org.mule.runtime.api.component.ConfigurationProperties;
 import org.mule.runtime.config.api.dsl.processor.ConfigLine;
 import org.mule.runtime.config.internal.ComponentAstHolder;
-import org.mule.runtime.config.internal.dsl.model.config.ConfigurationPropertiesResolver;
 import org.mule.runtime.config.internal.model.ComponentModel;
 
 /**
@@ -44,7 +43,7 @@ public class ComponentModelReader {
                                  resolveValueIfIsPlaceHolder(parameterAstHolder.getSimpleParameterValueAst().getRawValue()),
                                  false); // TODO review this false.
           } else {
-            ComplexParameterValueAst compleParameterValueAst = parameterAstHolder.getCompleParameterValueAst();
+            ComplexParameterValueAst compleParameterValueAst = parameterAstHolder.getComplexParameterValueAst();
             builder.addChildComponentModel(extractComponentDefinitionModel(new ComponentAstHolder(compleParameterValueAst
                 .getComponent()))); // TODO review this new ComponentstHolder
           }

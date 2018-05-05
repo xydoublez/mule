@@ -38,7 +38,7 @@ public class ParameterAstHolder {
     return parameterAst.getValue() instanceof SimpleParameterValueAst;
   }
 
-  public ComplexParameterValueAst getCompleParameterValueAst() {
+  public ComplexParameterValueAst getComplexParameterValueAst() {
     if (isComplexParameter()) {
       return (ComplexParameterValueAst) parameterAst.getValue();
     }

@@ -283,7 +283,7 @@ public class MacroExpansionModuleModel {
     final OperationComponentModelModelProperty operationComponentModelModelProperty =
         operationModel.getModelProperty(OperationComponentModelModelProperty.class).get();
     //final ComponentModel operationModuleComponentModel = operationComponentModelModelProperty
-    //    .getBodyComponentModel();
+    //    .getBodyConstructAst();
     final ComponentModel operationModuleComponentModel = null;
     List<ComponentModel> bodyProcessors = operationModuleComponentModel.getInnerComponents();
     Optional<String> configRefName =

@@ -8,6 +8,7 @@ package org.mule.runtime.core.api.extension;
 
 import static org.mule.runtime.core.api.config.MuleManifest.getProductVersion;
 import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
+
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.util.LazyValue;
 import org.mule.runtime.extension.internal.loader.DefaultExtensionLoadingContext;

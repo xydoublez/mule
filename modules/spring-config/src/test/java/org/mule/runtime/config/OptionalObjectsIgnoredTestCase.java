@@ -13,6 +13,14 @@ import static org.junit.Assert.assertThat;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.disposeIfNeeded;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.util.Calendar;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+
+import org.mule.runtime.api.artifact.ast.ArtifactAst;
 import org.mule.runtime.config.internal.SpringXmlConfigurationBuilder;
 import org.mule.runtime.core.api.context.DefaultMuleContextFactory;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
@@ -20,13 +28,7 @@ import org.mule.tck.config.TestServicesConfigurationBuilder;
 import org.mule.tck.junit4.AbstractMuleTestCase;
 import org.mule.tck.junit4.MockExtensionManagerConfigurationBuilder;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
 import org.slf4j.Logger;
-
-import java.util.Calendar;
 
 public class OptionalObjectsIgnoredTestCase extends AbstractMuleTestCase {
 
@@ -42,9 +44,10 @@ public class OptionalObjectsIgnoredTestCase extends AbstractMuleTestCase {
   public void before() throws Exception {
     muleContext =
         (MuleContextWithRegistry) new DefaultMuleContextFactory().createMuleContext(testServicesConfigurationBuilder,
-                                                                                    new MockExtensionManagerConfigurationBuilder(),
-                                                                                    new SpringXmlConfigurationBuilder(new String[0],
-                                                                                                                      emptyMap()));
+                                                                                      new MockExtensionManagerConfigurationBuilder(),
+                                                                                      new SpringXmlConfigurationBuilder(ArtifactAst
+                                                                                          .builder().build(),
+                                                                                                                        emptyMap()));
     muleContext.start();
     muleContext.getRegistry().lookupByType(Calendar.class);
   }

@@ -78,9 +78,9 @@ public class ApplicationContextBuilder {
 
   protected ConfigurationBuilder getAppBuilder(String[] configResource) throws Exception {
     ArtifactAst artifactAst = ArtifactXmlBasedAstBuilder.builder()
-            .setClassLoader(Thread.currentThread().getContextClassLoader())
-            .setConfigFiles(ImmutableSet.copyOf(configResource))
-            .build();
+        .setClassLoader(Thread.currentThread().getContextClassLoader())
+        .setConfigFiles(ImmutableSet.copyOf(configResource))
+        .build();
     return createConfigurationBuilder(artifactAst, domainContext);
   }
 

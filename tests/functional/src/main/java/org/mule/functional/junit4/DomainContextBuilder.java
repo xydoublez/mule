@@ -63,7 +63,8 @@ public class DomainContextBuilder {
   }
 
   protected ConfigurationBuilder getDomainBuilder(String[] configResources) throws Exception {
-    return createConfigurationBuilder(ArtifactXmlBasedAstBuilder.builder().setClassLoader(Thread.currentThread().getContextClassLoader())
+    return createConfigurationBuilder(ArtifactXmlBasedAstBuilder.builder()
+        .setClassLoader(Thread.currentThread().getContextClassLoader())
         .setConfigFiles(ImmutableSet.copyOf(configResources)).build(), emptyMap(), DOMAIN);
   }
 }

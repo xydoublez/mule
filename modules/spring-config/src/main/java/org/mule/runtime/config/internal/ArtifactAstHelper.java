@@ -19,6 +19,7 @@ import org.mule.runtime.api.artifact.ast.ArtifactAst;
 import org.mule.runtime.api.artifact.ast.ComponentAst;
 import org.mule.runtime.api.artifact.ast.ConfigurationAst;
 import org.mule.runtime.api.artifact.ast.ConnectionProviderAst;
+import org.mule.runtime.api.artifact.ast.ConstructAst;
 import org.mule.runtime.api.component.ComponentIdentifier;
 
 public class ArtifactAstHelper {
@@ -39,19 +40,36 @@ public class ArtifactAstHelper {
         .forEach(task);
   }
 
+  public static void executeOnNestedProcessors(ComponentAst componentAst, Consumer<ComponentAstHolder> task) {
+    if (componentAst instanceof ConstructAst) {
+      ConstructAst constructAst = (ConstructAst) componentAst;
+      constructAst.getProcessorComponents().stream()
+          .forEach(innerComponentAst -> {
+            task.accept(new ComponentAstHolder(innerComponentAst));
+            executeOnNestedProcessors(innerComponentAst, task);
+          });
+    }
+  }
+
   public ComponentAstHolder toHolder(ComponentAst componentAst) {
     int objectId = identityHashCode(componentAst);
     if (componentAstHolderMap.containsKey(objectId)) {
       return componentAstHolderMap.get(objectId);
     }
-    return componentAstHolderMap.put(objectId, new ComponentAstHolder(componentAst));
+    ComponentAstHolder componentAstHolder = new ComponentAstHolder(componentAst);
+    componentAstHolderMap.put(objectId, componentAstHolder);
+    return componentAstHolder;
   }
 
   public Optional<ParameterAstHolder> getParameterAstHolder(ComponentIdentifier componentIdentifier) {
-    return Optional.ofNullable(ofNullable(parameterAstHolderMap.get(componentIdentifier))
+    return ofNullable(ofNullable(parameterAstHolderMap.get(componentIdentifier))
         .orElseGet(() -> artifactAst.getParameter(componentIdentifier)
-            .map(parameterAst -> parameterAstHolderMap.put(componentIdentifier, new ParameterAstHolder(parameterAst)))
-            .orElseGet(null)));
+            .map(parameterAst -> {
+              ParameterAstHolder parameterAstHolder = new ParameterAstHolder(parameterAst);
+              parameterAstHolderMap.put(componentIdentifier, parameterAstHolder);
+              return parameterAstHolder;
+            })
+            .orElse(null)));
   }
 
   public ArtifactAst getArtifactAst() {

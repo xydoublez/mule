@@ -8,7 +8,16 @@ package org.mule.runtime.extension.internal.loader.enricher;
 
 import static org.mule.runtime.core.api.util.ClassUtils.withContextClassLoader;
 import static org.mule.runtime.extension.api.loader.DeclarationEnricherPhase.POST_STRUCTURE;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.mule.metadata.api.model.StringType;
+import org.mule.runtime.api.artifact.ast.ComponentAst;
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.dsl.DslResolvingContext;
 import org.mule.runtime.api.el.BindingContextUtils;
@@ -29,20 +38,15 @@ import org.mule.runtime.api.meta.model.util.IdempotentExtensionWalker;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.GlobalElementComponentModelModelProperty;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.OperationComponentModelModelProperty;
 import org.mule.runtime.config.internal.model.ComponentModel;
+import org.mule.runtime.config.internal.ArtifactAstHelper;
+import org.mule.runtime.config.internal.ComponentAstHolder;
+import org.mule.runtime.config.internal.dsl.model.extension.xml.property.GlobalElementComponentModelModelProperty;
 import org.mule.runtime.core.api.el.ExpressionManager;
 import org.mule.runtime.extension.api.declaration.fluent.util.IdempotentDeclarationWalker;
 import org.mule.runtime.extension.api.dsl.syntax.resolver.DslSyntaxResolver;
 import org.mule.runtime.extension.api.loader.DeclarationEnricher;
 import org.mule.runtime.extension.api.loader.DeclarationEnricherPhase;
 import org.mule.runtime.extension.api.loader.ExtensionLoadingContext;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 
 /**
@@ -118,24 +122,24 @@ public class StereotypesDiscoveryDeclarationEnricher implements DeclarationEnric
     }
 
     /**
-     * Given a {@code parameterDeclaration} it will look up all the usages in the elements of the smart connector where
-     * for each occurrence it will extract the stereotypes of the underlying connector's parameter to copy into the current
-     * declaration.
-     * <br/>
+     * Given a {@code propertyDeclaration} it will look up all the usages in the global elements of the smart connector where for
+     * each occurrence it will extract the stereotypes of the underlying connector's parameter to copy into the current
+     * declaration. <br/>
      * If the result of those finding throws repeated stereotypes, then it will reduce that collection by taking the intersection,
      * making its usage within the smart connector compliant.
      *
-     * @param componentModels elements of the smart connector to read the possible usages of the parametrization
-     * @param parameterDeclaration parameter used to look up in the elements' usages, and the one that will hold the
-     *                             stereotypes if found.
+     * @param globalComponentsAst global elements of the smart connector to read the possible usages of the property.
+     * @param parameterDeclaration property used to look up in the global elements' usages, and the one that will hold the
+     *        stereotypes if found.
      */
-    private void traverseProperty(List<ComponentModel> componentModels,
+    private void traverseProperty(List<ComponentAst> globalComponentsAst,
                                   ParameterDeclaration parameterDeclaration) {
       final List<List<StereotypeModel>> allowedStereotypeModels = new ArrayList<>();
-      componentModels.forEach(componentModel -> {
-        allowedStereotypeModels.add(findStereotypes(componentModel, parameterDeclaration));
-        componentModel.executedOnEveryInnerComponent(innerComponentModel -> allowedStereotypeModels
-            .add(findStereotypes(innerComponentModel, parameterDeclaration)));
+      globalComponentsAst.forEach(globalComponentAst -> {
+        allowedStereotypeModels.add(findStereotypes(new ComponentAstHolder(globalComponentAst), parameterDeclaration));
+        ArtifactAstHelper.executeOnNestedProcessors(globalComponentAst, innerComponentAst -> {
+          allowedStereotypeModels.add(findStereotypes(innerComponentAst, parameterDeclaration));
+        });
       });
 
       allowedStereotypeModels.stream()
@@ -145,15 +149,33 @@ public class StereotypesDiscoveryDeclarationEnricher implements DeclarationEnric
             partialIntersection.retainAll(stereotypeModels2);
             return partialIntersection;
           }).ifPresent(parameterDeclaration::setAllowedStereotypeModels);
+
+
+      // final List<List<StereotypeModel>> allowedStereotypeModels = new ArrayList<>();
+      // globalElements.forEach(componentModel -> {
+      // allowedStereotypeModels.add(findStereotypes(componentModel, propertyDeclaration));
+      // componentModel.executedOnEveryInnerComponent(innerComponentModel -> allowedStereotypeModels
+      // .add(findStereotypes(innerComponentModel, propertyDeclaration)));
+      // });
+      //
+      // allowedStereotypeModels.stream()
+      // .filter(stereotypeModels -> !stereotypeModels.isEmpty())
+      // .reduce((stereotypeModels, stereotypeModels2) -> {
+      // final List<StereotypeModel> partialIntersection = new ArrayList<>(stereotypeModels);
+      // partialIntersection.retainAll(stereotypeModels2);
+      // return partialIntersection;
+      // }).ifPresent(propertyDeclaration::setAllowedStereotypeModels);
     }
 
-    private List<StereotypeModel> findStereotypes(ComponentModel componentModel, ParameterDeclaration propertyDeclaration) {
+    private List<StereotypeModel> findStereotypes(ComponentAstHolder componentAstHolder,
+                                                  ParameterDeclaration propertyDeclaration) {
       final String expectedPropertyReference = ExpressionManager.DEFAULT_EXPRESSION_PREFIX + BindingContextUtils.VARS + "."
           + propertyDeclaration.getName() + ExpressionManager.DEFAULT_EXPRESSION_POSTFIX;
-      return componentModel.getParameters().entrySet().stream()
-          .filter(stringStringEntry -> stringStringEntry.getValue().equals(expectedPropertyReference))
-          .map(Map.Entry::getKey)
-          .map(attributeName -> findStereotypes(componentModel.getIdentifier(), attributeName))
+      return componentAstHolder.getParameters().stream()
+          .filter(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue()
+              .equals(expectedPropertyReference))
+          .map(parameterAst -> parameterAst.getParameterAst().getParameterIdentifier().getIdentifier().getName())
+          .map(parameterName -> findStereotypes(componentAstHolder.getComponentAst().getComponentIdentifier(), parameterName))
           .flatMap(Collection::stream)
           .collect(Collectors.toList());
     }
