@@ -51,6 +51,13 @@
         <dependency>
             <groupId>org.mule.springframework</groupId>
             <artifactId>spring-jms</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-messaging</artifactId>
+                </exclusion>
+
+            </exclusions>
         </dependency>
 
         <!-- Unit tests only -->

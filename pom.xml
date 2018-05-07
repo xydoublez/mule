@@ -357,6 +357,10 @@
                         <groupId>org.springframework</groupId>
                         <artifactId>spring-support</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-messaging</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
