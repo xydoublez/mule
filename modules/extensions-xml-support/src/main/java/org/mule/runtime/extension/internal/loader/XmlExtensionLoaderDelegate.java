@@ -32,8 +32,7 @@ import static org.mule.runtime.core.api.exception.Errors.ComponentIdentifiers.Ha
 import static org.mule.runtime.core.api.extension.MuleExtensionModelProvider.MULESOFT_VENDOR;
 import static org.mule.runtime.core.internal.processor.chain.ModuleOperationMessageProcessorChainBuilder.MODULE_CONNECTION_GLOBAL_ELEMENT_NAME;
 import static org.mule.runtime.extension.api.util.XmlModelUtils.createXmlLanguageModel;
-import static org.mule.runtime.internal.dsl.DslConstants.CORE_NAMESPACE;
-import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
+import static org.mule.runtime.internal.dsl.DslConstants.MODULE_PREFIX;
 
 import java.io.IOException;
 import java.net.URL;
@@ -96,11 +95,8 @@ import org.mule.runtime.config.api.dsl.processor.ConfigLine;
 import org.mule.runtime.config.internal.ArtifactAstHelper;
 import org.mule.runtime.config.internal.ComponentAstHolder;
 import org.mule.runtime.config.internal.ParameterAstHolder;
-import org.mule.runtime.config.internal.dsl.model.ComponentModelReader;
-import org.mule.runtime.config.internal.dsl.model.config.ConfigurationPropertiesResolver;
 import org.mule.runtime.config.internal.dsl.model.config.DefaultConfigurationProperty;
 import org.mule.runtime.config.internal.dsl.model.config.GlobalPropertyConfigurationPropertiesProvider;
-import org.mule.runtime.config.internal.dsl.model.config.PropertyNotFoundException;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.MacroExpansionModuleModel;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.MacroExpansionModulesModel;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.GlobalElementComponentModelModelProperty;
@@ -197,51 +193,51 @@ public final class XmlExtensionLoaderDelegate {
   }
 
   private static final ComponentIdentifier OPERATION_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("operation").build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name("operation").build();
   private static final ComponentIdentifier PROPERTY_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("property").build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name("property").build();
   private static final ComponentIdentifier NAME_ATTRIBUTE_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("name").build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name("name").build();
   private static final ComponentIdentifier TYPE_ATTRIBUTE_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(TYPE_ATTRIBUTE).build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name(TYPE_ATTRIBUTE).build();
   private static final ComponentIdentifier VISIBILITY_ATTRIBUTE_ATTRIBUTE_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(ATTRIBUTE_VISIBILITY).build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name(ATTRIBUTE_VISIBILITY).build();
   private static final ComponentIdentifier PASSWORD_ATTRIBUTE_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(PASSWORD).build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name(PASSWORD).build();
   private static final ComponentIdentifier ORDER_ATTRIBUTE_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(ORDER_ATTRIBUTE).build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name(ORDER_ATTRIBUTE).build();
   private static final ComponentIdentifier TAB_ATTRIBUTE_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(TAB_ATTRIBUTE).build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name(TAB_ATTRIBUTE).build();
   private static final ComponentIdentifier DISPLAY_NAME_ATTRIBUTE_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(DISPLAY_NAME_ATTRIBUTE).build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name(DISPLAY_NAME_ATTRIBUTE).build();
   private static final ComponentIdentifier SUMMARY_ATTRIBUTE_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(SUMMARY_ATTRIBUTE).build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name(SUMMARY_ATTRIBUTE).build();
   private static final ComponentIdentifier EXAPLE_ATTRIBUTE_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(EXAMPLE_ATTRIBUTE).build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name(EXAMPLE_ATTRIBUTE).build();
   private static final ComponentIdentifier DEFAULT_VALUE_ATTRIBUTE_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(PARAMETER_DEFAULT_VALUE).build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name(PARAMETER_DEFAULT_VALUE).build();
   private static final ComponentIdentifier ATTRIBUTE_USE_ATTRIBUTE_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(ATTRIBUTE_USE).build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name(ATTRIBUTE_USE).build();
   private static final ComponentIdentifier MODULE_CONNECTION_MARKER_ATTRIBUTE_IDENTIFIER =
       ComponentIdentifier.builder().namespace("xmlns").name("connection").build();
   private static final ComponentIdentifier CONNECTION_PROPERTIES_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("connection").build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name("connection").build();
   private static final ComponentIdentifier OPERATION_PARAMETERS_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("parameters").build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name("parameters").build();
   private static final ComponentIdentifier OPERATION_PARAMETER_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("parameter").build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name("parameter").build();
   private static final ComponentIdentifier OPERATION_BODY_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("body").build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name("body").build();
   private static final ComponentIdentifier OPERATION_OUTPUT_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("output").build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name("output").build();
   private static final ComponentIdentifier OPERATION_OUTPUT_ATTRIBUTES_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("outputAttributes").build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name("outputAttributes").build();
   private static final ComponentIdentifier OPERATION_ERRORS_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("errors").build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name("errors").build();
   private static final ComponentIdentifier OPERATION_ERROR_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name("error").build();
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name("error").build();
   private static final ComponentIdentifier MODULE_IDENTIFIER =
-      ComponentIdentifier.builder().namespace(CORE_PREFIX).name(MODULE_NAMESPACE_NAME)
+      ComponentIdentifier.builder().namespace(MODULE_PREFIX).name(MODULE_NAMESPACE_NAME)
           .build();
   public static final String XSD_SUFFIX = ".xsd";
   private static final String XML_SUFFIX = ".xml";
@@ -427,27 +423,27 @@ public final class XmlExtensionLoaderDelegate {
 
   private void loadModuleExtension(ExtensionDeclarer declarer, ArtifactAst artifactAst,
                                    Set<ExtensionModel> extensions, boolean comesFromTNS) {
-    if (!artifactAst.getArtifactType().equals(MODULE_NAMESPACE_NAME)) { // TODO add data to do validation
+    if (!artifactAst.getArtifactType().equals(MODULE_PREFIX)) { // TODO add data to do validation
       throw new MuleRuntimeException(createStaticMessage(format("The root element of a module must be '%s', but found '%s'",
                                                                 MODULE_IDENTIFIER.toString(),
                                                                 artifactAst.getArtifactType())));
     }
     ArtifactAstHelper artifactAstHelper = new ArtifactAstHelper(artifactAst);
     final String name =
-        artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX)
+        artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(MODULE_PREFIX)
             .name(NAME_ATTRIBUTE).build()).get().getSimpleParameterValueAst().getRawValue();
     final String version = "4.0.0"; // TODO(fernandezlautaro): MULE-11010 remove version from ExtensionModel
     final String category =
-        artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX)
+        artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(MODULE_PREFIX)
             .name(CATEGORY).build()).map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue())
             .orElse(Category.COMMUNITY.name());
     final String vendor =
-        artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX)
+        artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(MODULE_PREFIX)
             .name(VENDOR).build()).map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue())
             .orElse(MULESOFT_VENDOR);
     final XmlDslModel xmlDslModel = getXmlDslModel(artifactAstHelper, name, version);
     final String description = getDescription(artifactAst);
-    final String xmlnsTnsValue = artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX)
+    final String xmlnsTnsValue = artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder().namespace(MODULE_PREFIX)
         .name(XMLNS_TNS).build()).map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue())
         .orElse(null);
     if (xmlnsTnsValue != null && !xmlDslModel.getNamespace().equals(xmlnsTnsValue)) {
@@ -525,17 +521,17 @@ public final class XmlExtensionLoaderDelegate {
 
   private XmlDslModel getXmlDslModel(ArtifactAstHelper artifactAstHelper, String name, String version) {
     final Optional<String> prefix = artifactAstHelper
-        .getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX).name(MODULE_PREFIX_ATTRIBUTE).build())
+        .getParameterAstHolder(ComponentIdentifier.builder().namespace(MODULE_PREFIX).name(MODULE_PREFIX_ATTRIBUTE).build())
         .map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue());
     final Optional<String> namespace = artifactAstHelper.getParameterAstHolder(ComponentIdentifier.builder()
-        .namespace(CORE_PREFIX).name(MODULE_NAMESPACE_ATTRIBUTE).build())
+        .namespace(MODULE_PREFIX).name(MODULE_NAMESPACE_ATTRIBUTE).build())
         .map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue());
     return createXmlLanguageModel(prefix, namespace, name, version);
   }
 
   private String getDescription(HasParametersAst hasParametersAst) {
     return hasParametersAst
-        .getParameter(ComponentIdentifier.builder().namespace(CORE_PREFIX).name(DOC_DESCRIPTION).build())
+        .getParameter(ComponentIdentifier.builder().namespace(MODULE_PREFIX).name(DOC_DESCRIPTION).build())
         .map(parameterAst -> new ParameterAstHolder(parameterAst).getSimpleParameterValueAst().getRawValue()).orElse("");
   }
 
@@ -802,7 +798,7 @@ public final class XmlExtensionLoaderDelegate {
       ComponentAstHolder componentAstHolder = new ComponentAstHolder(outputComplexParameterValueAst.getComponent());
 
       Optional<ParameterAstHolder> typeParameterHolderOptional =
-          componentAstHolder.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX).name("type").build());
+          componentAstHolder.getParameterAstHolder(ComponentIdentifier.builder().namespace(MODULE_PREFIX).name("type").build());
       Optional<ParameterAstHolder> descriptionParameterHolderOptional =
           componentAstHolder.getParameterAstHolder(DESCRIPTION_IDENTIFIER);
       typeParameterHolderOptional.ifPresent(parameterAstHolder -> {
@@ -1023,7 +1019,7 @@ public final class XmlExtensionLoaderDelegate {
   private void declareErrorModels(OperationDeclarer operationDeclarer, XmlDslModel xmlDslModel, String operationName,
                                   ComponentAstHolder operationAstHolder) {
     Optional<ParameterAstHolder> errorsParameterAstHolderOptional =
-        operationAstHolder.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX).name("errors").build());
+        operationAstHolder.getParameterAstHolder(ComponentIdentifier.builder().namespace(MODULE_PREFIX).name("errors").build());
 
     errorsParameterAstHolderOptional.ifPresent(errorsParameterAstHolder -> {
       ComplexParameterValueAst complexParameterValueAst = errorsParameterAstHolder.getComplexParameterValueAst();
@@ -1034,7 +1030,7 @@ public final class XmlExtensionLoaderDelegate {
             ComponentAstHolder errorAstHolder = new ComponentAstHolder(errorComponentAst);
             final String namespace = xmlDslModel.getPrefix().toUpperCase();
             final String typeName = errorAstHolder
-                .getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX).namespace(ERROR_TYPE_ATTRIBUTE) // TODO
+                .getParameterAstHolder(ComponentIdentifier.builder().namespace(MODULE_PREFIX).namespace(ERROR_TYPE_ATTRIBUTE) // TODO
                     // review
                     // namespace
                     .build())

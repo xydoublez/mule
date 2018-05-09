@@ -54,7 +54,7 @@ public class GlobalElementNamesValidator implements ExtensionModelValidator {
                         new ComponentAstHolder(componentAst).getNameParameter().get().getSimpleParameterValueAst().getRawValue();
                     validateDuplicatedGlobalElements(configurationModel, componentAst, nameAttributeValue,
                                                      existingObjectsWithName, problemsReporter);
-                    validateNotReservedCharacterInName(configurationModel, nameAttributeValue, problemsReporter);
+                    validateNotReservedCharacterInName(extensionModel, nameAttributeValue, problemsReporter);
                   });
             });
       }

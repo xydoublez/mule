@@ -100,7 +100,7 @@
                 <xsd:attribute name="visibility" type="visibilityType" default="PUBLIC">
                     <xsd:annotation>
                         <xsd:documentation>
-                        Describes weather the operation can be accessible outside the module or not.
+                            Describes weather the operation can be accessible outside the module or not.
                         </xsd:documentation>
                     </xsd:annotation>
                 </xsd:attribute>
@@ -127,7 +127,7 @@
     <xsd:element name="parameter" type="parameterType">
         <xsd:annotation>
             <xsd:documentation>
-                A parameter element defines an input value for the operation in which it is define. Such parameter must be defined with a meaningful name, a type which defines the kind of content the parameter must have and optionally a default value that will be used if the invocation to the operation does not defines a value for the parameter. The parameter can be accessed within the body definition of the operation using an expression such as #[vars.paramName]
+                A parameter element defines an input value for the operation in which it is define. Such parameter must be defined with a meaningful name, a type which defines the kind of content the parameter must have and optionally a default value that will be used if the invocation to the operation does not defines a value for the parameter. The parameter can be accessed within the body definition of the operation using an expression such as #[mel: param.paramName]
             </xsd:documentation>
         </xsd:annotation>
     </xsd:element>
@@ -190,15 +190,14 @@
         </xsd:annotation>
     </xsd:element>
 
-    <xsd:complexType name="parameterType">
+    <xsd:complexType name="propertyType">
         <xsd:complexContent>
             <xsd:extension base="mule:annotatedType">
                 <xsd:attribute name="name" type="xsd:string" use="required"/>
                 <xsd:attribute name="defaultValue" type="xsd:string" use="optional"/>
                 <xsd:attribute name="use" type="useType" default="AUTO"/>
-                <xsd:attribute name="type" use="required" type="xsd:string"/>
+                <xsd:attribute name="type" type="xsd:string" use="required"/>
                 <xsd:attribute name="password" type="xsd:boolean" default="false"/>
-                <xsd:attribute name="role" type="roleParameterType" default="BEHAVIOUR"/>
                 <xsd:attribute name="summary" type="xsd:string" use="optional"/>
                 <xsd:attribute name="example" type="xsd:string" use="optional"/>
                 <xsd:attribute name="displayName" type="xsd:string" use="optional"/>
@@ -336,9 +335,9 @@
     <xsd:simpleType name="visibilityType">
         <xsd:annotation>
             <xsd:documentation>
-            Set of defined visibilities for a given operation.
-            PUBLIC will render the operation in the UI and can be consumed from the application.
-            PRIVATE implies no visibility of the operation from the UI neither being consumed by the application, but it can be accessed by the internals of the current module through the TNS support
+                Set of defined visibilities for a given operation.
+                PUBLIC will render the operation in the UI and can be consumed from the application.
+                PRIVATE implies no visibility of the operation from the UI neither being consumed by the application, but it can be accessed by the internals of the current module through the TNS support
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:string">

@@ -10,26 +10,10 @@ package org.mule.test.runner.infrastructure;
 import static com.google.common.collect.ImmutableList.copyOf;
 import static java.lang.String.format;
 import static java.lang.Thread.currentThread;
-import static java.util.Collections.singleton;
 import static org.mule.runtime.api.dsl.DslResolvingContext.getDefault;
 import static org.mule.runtime.core.api.config.MuleManifest.getProductVersion;
 import static org.mule.runtime.module.extension.api.loader.java.DefaultJavaExtensionModelLoader.TYPE_PROPERTY_NAME;
 import static org.mule.runtime.module.extension.api.loader.java.DefaultJavaExtensionModelLoader.VERSION;
-import org.mule.runtime.api.dsl.DslResolvingContext;
-import org.mule.runtime.api.meta.model.ExtensionModel;
-import org.mule.runtime.core.api.config.MuleManifest;
-import org.mule.runtime.core.api.extension.ExtensionManager;
-import org.mule.runtime.core.api.extension.MuleExtensionModelProvider;
-import org.mule.runtime.core.api.registry.ServiceRegistry;
-import org.mule.runtime.core.api.registry.SpiServiceRegistry;
-import org.mule.runtime.core.api.util.FileUtils;
-import org.mule.runtime.extension.api.dsl.syntax.resources.spi.DslResourceFactory;
-import org.mule.runtime.extension.api.dsl.syntax.resources.spi.ExtensionSchemaGenerator;
-import org.mule.runtime.extension.api.loader.ExtensionModelLoader;
-import org.mule.runtime.extension.api.resources.GeneratedResource;
-import org.mule.runtime.extension.api.resources.ResourcesGenerator;
-import org.mule.runtime.extension.api.resources.spi.GeneratedResourceFactory;
-import org.mule.runtime.internal.dsl.NullDslResolvingContext;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -41,6 +25,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.Manifest;
+
+import org.mule.runtime.api.dsl.DslResolvingContext;
+import org.mule.runtime.api.meta.model.ExtensionModel;
+import org.mule.runtime.core.api.config.MuleManifest;
+import org.mule.runtime.core.api.extension.ExtensionManager;
+import org.mule.runtime.core.api.extension.MuleExtensionModelProvider;
+import org.mule.runtime.core.api.extension.MuleModuleExtensionModelProvider;
+import org.mule.runtime.core.api.registry.ServiceRegistry;
+import org.mule.runtime.core.api.registry.SpiServiceRegistry;
+import org.mule.runtime.core.api.util.FileUtils;
+import org.mule.runtime.extension.api.dsl.syntax.resources.spi.DslResourceFactory;
+import org.mule.runtime.extension.api.dsl.syntax.resources.spi.ExtensionSchemaGenerator;
+import org.mule.runtime.extension.api.loader.ExtensionModelLoader;
+import org.mule.runtime.extension.api.resources.GeneratedResource;
+import org.mule.runtime.extension.api.resources.ResourcesGenerator;
+import org.mule.runtime.extension.api.resources.spi.GeneratedResourceFactory;
+import org.mule.runtime.internal.dsl.NullDslResolvingContext;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Discovers and registers the extensions to a {@link org.mule.runtime.core.api.extension.ExtensionManager}.
@@ -82,7 +85,8 @@ public class ExtensionsTestInfrastructureDiscoverer {
     Map<String, Object> params = new HashMap<>();
     params.put(TYPE_PROPERTY_NAME, annotatedClass.getName());
     params.put(VERSION, getProductVersion());
-    DslResolvingContext dslResolvingContext = getDefault(singleton(MuleExtensionModelProvider.getExtensionModel()));
+    DslResolvingContext dslResolvingContext = getDefault(ImmutableSet.of(MuleExtensionModelProvider.getExtensionModel(),
+                                                                         MuleModuleExtensionModelProvider.getExtensionModel()));
     ExtensionModel model = loader.loadExtensionModel(annotatedClass.getClassLoader(), dslResolvingContext, params);
     extensionManager.registerExtension(model);
     return model;
@@ -106,6 +110,7 @@ public class ExtensionsTestInfrastructureDiscoverer {
       ExtensionSchemaGenerator schemaGenerator = getSchemaGenerator();
       Set<ExtensionModel> models = new HashSet<>(extensionManager.getExtensions());
       models.add(MuleExtensionModelProvider.getExtensionModel());
+      models.add(MuleModuleExtensionModelProvider.getExtensionModel());
       String schema = schemaGenerator.generate(model, DslResolvingContext.getDefault(models));
       File xsd = FileUtils.newFile(generatedResourcesDirectory, xsdFileName);
       FileUtils.copyStreamToFile(new ByteArrayInputStream(schema.getBytes()), xsd);
@@ -119,6 +124,7 @@ public class ExtensionsTestInfrastructureDiscoverer {
     if (extensionManager.getExtensions().stream().anyMatch(e -> !e.getImportedTypes().isEmpty())) {
       HashSet<ExtensionModel> models = new HashSet<>(extensionManager.getExtensions());
       models.add(MuleExtensionModelProvider.getExtensionModel());
+      models.add(MuleModuleExtensionModelProvider.getExtensionModel());
       context = DslResolvingContext.getDefault(models);
     } else {
       context = new NullDslResolvingContext();

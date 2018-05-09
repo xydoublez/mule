@@ -15,6 +15,8 @@ import java.util.stream.StreamSupport;
 
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.meta.model.ExtensionModel;
+import org.mule.runtime.api.meta.model.config.ConfigurationModel;
+import org.mule.runtime.api.meta.model.util.ExtensionWalker;
 import org.mule.runtime.config.api.dsl.model.properties.ConfigurationPropertiesProviderFactory;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.GlobalElementComponentModelModelProperty;
 import org.mule.runtime.extension.api.loader.ExtensionModelValidator;
@@ -50,6 +52,8 @@ public class ForbiddenConfigurationPropertiesValidator implements ExtensionModel
           });
         });
       }
+    };
+  }
 
   private Set<ComponentIdentifier> getConfigurationPropertiesIdentifiers() {
     final ServiceLoader<ConfigurationPropertiesProviderFactory> providerFactories =
