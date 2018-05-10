@@ -476,6 +476,20 @@
                         </xsd:documentation>
                     </xsd:annotation>
                 </xsd:attribute>
+                <xsd:attribute name="init-method" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>
+                            Method to be called for object initialization
+                        </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:attribute>
+                <xsd:attribute name="destroy-method" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>
+                            Method to be called for object destruction
+                        </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:attribute>
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>

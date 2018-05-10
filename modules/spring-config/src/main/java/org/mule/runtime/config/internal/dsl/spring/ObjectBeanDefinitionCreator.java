@@ -30,6 +30,8 @@ class ObjectBeanDefinitionCreator extends BeanDefinitionCreator {
 
   private static final String REF_PARAMETER = "ref";
   private static final String CLASS_PARAMETER = "class";
+  private static final String INIT_METHOD_PARAMETER = "init-method";
+  private static final String DESTROY_METHOD_PARAMETER = "destroy-method";
 
   @Override
   boolean handleRequest(CreateBeanDefinitionRequest createBeanDefinitionRequest) {
@@ -63,8 +65,18 @@ class ObjectBeanDefinitionCreator extends BeanDefinitionCreator {
                                                                            classParameterValue,
                                                                            componentModel.getComponentLocation())));
       }
-
       beanDefinitionBuilder = rootBeanDefinition(addAnnotationsToClass(classParameter));
+
+      String initMethodValue = componentModel.getParameters().get(INIT_METHOD_PARAMETER);
+      if(initMethodValue != null) {
+        beanDefinitionBuilder.setInitMethodName(initMethodValue);
+      }
+
+      String destroyMethodValue = componentModel.getParameters().get(DESTROY_METHOD_PARAMETER);
+      if(destroyMethodValue != null) {
+        beanDefinitionBuilder.setDestroyMethodName(destroyMethodValue);
+      }
+      
       processMuleProperties(componentModel, beanDefinitionBuilder, null);
       componentModel.setBeanDefinition(beanDefinitionBuilder.getBeanDefinition());
     }
