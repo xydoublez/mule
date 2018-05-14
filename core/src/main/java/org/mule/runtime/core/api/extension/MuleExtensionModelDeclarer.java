@@ -7,6 +7,7 @@
 package org.mule.runtime.core.api.extension;
 
 import static java.util.Collections.singletonList;
+import static org.mule.metadata.api.builder.BaseTypeBuilder.create;
 import static org.mule.metadata.api.model.MetadataFormat.JAVA;
 import static org.mule.runtime.api.meta.Category.COMMUNITY;
 import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
@@ -69,6 +70,7 @@ import static org.mule.runtime.internal.dsl.DslConstants.FLOW_ELEMENT_IDENTIFIER
 import static org.mule.runtime.internal.dsl.DslConstants.OPERATION_ELEMENT_IDENTIFIER;
 
 import org.mule.metadata.api.ClassTypeLoader;
+import org.mule.metadata.api.annotation.TypeAliasAnnotation;
 import org.mule.metadata.api.builder.ArrayTypeBuilder;
 import org.mule.metadata.api.builder.BaseTypeBuilder;
 import org.mule.metadata.api.builder.ObjectTypeBuilder;
@@ -174,7 +176,33 @@ class MuleExtensionModelDeclarer {
     // errors
     declareErrors(extensionDeclarer);
 
+    // global elements
+    declareGlobalProperty(extensionDeclarer);
+
     return extensionDeclarer;
+  }
+
+  private void declareGlobalProperty(ExtensionDeclarer extensionDeclarer) {
+    ObjectTypeBuilder globalPropertyObjectBuilder = create(JAVA)
+        .objectType()
+        .id("global_property")
+        .with(new TypeAliasAnnotation("GlobalProperty"))
+        .with(new TypeDslAnnotation(false, true, null, null))
+        .description("A global property is a named string. It can be inserted in most attribute values using standard placeholders.");
+
+    globalPropertyObjectBuilder.addField()
+        .key("name")
+        .value(this::stringType)
+        .required(true)
+        .description("The name of the property. This is used inside Spring placeholders.");
+
+    globalPropertyObjectBuilder.addField()
+        .key("value")
+        .value(this::stringType)
+        .required(true)
+        .description("The value of the property. This replaces each occurence of a Spring placeholder.");
+
+    extensionDeclarer.getDeclaration().addType(globalPropertyObjectBuilder.build());
   }
 
   private void declareExportedTypes(ClassTypeLoader typeLoader, ExtensionDeclarer extensionDeclarer) {
