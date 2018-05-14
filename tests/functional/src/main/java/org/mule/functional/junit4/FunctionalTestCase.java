@@ -26,12 +26,12 @@ import org.junit.Rule;
 import org.mule.functional.api.flow.FlowRunner;
 import org.mule.runtime.api.artifact.Registry;
 import org.mule.runtime.container.internal.ContainerClassLoaderFactory;
+import org.mule.runtime.core.api.artifact.dsl.xml.ArtifactXmlBasedAstBuilder;
 import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.api.construct.Flow;
 import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.event.CoreEvent;
 import org.mule.runtime.core.api.util.IOUtils;
-import org.mule.runtime.core.internal.artifact.ast.ArtifactXmlBasedAstBuilder;
 import org.mule.runtime.module.artifact.api.classloader.ArtifactClassLoader;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 import org.mule.tck.junit4.rule.SystemProperty;
@@ -90,9 +90,13 @@ public abstract class FunctionalTestCase extends AbstractMuleContextTestCase {
     } else {
       configFiles = ImmutableSet.copyOf(getConfigFiles());
     }
-    ArtifactXmlBasedAstBuilder artifactXmlBasedAstBuilder = ArtifactXmlBasedAstBuilder.builder().setConfigFiles(configFiles)
-        .setClassLoader(Thread.currentThread().getContextClassLoader());
+    ArtifactXmlBasedAstBuilder artifactXmlBasedAstBuilder = createArtifactAstBuilder(configFiles);
     return createConfigurationBuilder(artifactXmlBasedAstBuilder.build(), emptyMap(), APP, enableLazyInit());
+  }
+
+  protected ArtifactXmlBasedAstBuilder createArtifactAstBuilder(Set<String> configFiles) {
+    return ArtifactXmlBasedAstBuilder.builder().setConfigFiles(configFiles)
+        .setClassLoader(Thread.currentThread().getContextClassLoader());
   }
 
   /**

@@ -22,17 +22,6 @@ import static org.mule.runtime.core.internal.processor.chain.ModuleOperationMess
 import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
 import static org.mule.runtime.internal.dsl.DslConstants.KEY_ATTRIBUTE_NAME;
 import static org.mule.runtime.internal.dsl.DslConstants.VALUE_ATTRIBUTE_NAME;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import org.mule.runtime.api.artifact.ast.ComponentAst;
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.dsl.DslResolvingContext;
 import org.mule.runtime.api.exception.MuleRuntimeException;
@@ -43,7 +32,6 @@ import org.mule.runtime.api.meta.model.operation.HasOperationModels;
 import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterRole;
-import org.mule.runtime.config.internal.ComponentAstHolder;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.GlobalElementComponentModelModelProperty;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.OperationComponentModelModelProperty;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.PrivateOperationsModelProperty;
@@ -56,6 +44,15 @@ import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.internal.processor.chain.ModuleOperationMessageProcessorChainBuilder;
 import org.mule.runtime.extension.api.dsl.syntax.resolver.DslSyntaxResolver;
 import org.mule.runtime.extension.api.property.XmlExtensionModelProperty;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * A {@link MacroExpansionModuleModel} works tightly with a {@link ApplicationModel} to go over all the registered
@@ -87,7 +84,7 @@ public class MacroExpansionModuleModel {
 
   /**
    * Used to leave breadcrumbs of which is the flow's name containing the macro expanded chain.
-   * 
+   *
    * @see CommonBeanDefinitionCreator#processMacroExpandedAnnotations(ComponentModel, java.util.Map)
    */
   public static final String ROOT_MACRO_EXPANDED_FLOW_CONTAINER_NAME = "ROOT_MACRO_EXPANDED_FLOW_CONTAINER_NAME";
@@ -115,14 +112,11 @@ public class MacroExpansionModuleModel {
   }
 
   public void expand() {
-    final List<ComponentAst> moduleGlobalComponentsAst = getModuleGlobalElements();
+    final List<ComponentModel> moduleGlobalElements = getModuleGlobalElements();
     final Set<String> moduleGlobalElementsNames =
-        moduleGlobalComponentsAst.stream()
-            .map(componentAst -> new ComponentAstHolder(componentAst).getNameParameter()
-                .map(parameterAstHolder -> parameterAstHolder.getSimpleParameterValueAst().getRawValue()).orElse(null))
-            .collect(toSet());
+            moduleGlobalElements.stream().map(ComponentModel::getNameAttribute).collect(toSet());
     expandOperations(moduleGlobalElementsNames);
-    expandGlobalElements(moduleGlobalComponentsAst, moduleGlobalElementsNames);
+    expandGlobalElements(moduleGlobalElements, moduleGlobalElementsNames);
   }
 
   private void expandOperations(Set<String> moduleGlobalElementsNames) {
@@ -131,13 +125,13 @@ public class MacroExpansionModuleModel {
       IntStream.range(0, containerComponentModel.getInnerComponents().size()).forEach(i -> {
         ComponentModel operationRefModel = containerComponentModel.getInnerComponents().get(i);
         lookForOperation(operationRefModel)
-            .ifPresent(operationModel -> {
-              final String containerName = calculateContainerRootName(containerComponentModel, operationModel);
-              final ComponentModel moduleOperationChain =
-                  createModuleOperationChain(operationRefModel, operationModel, moduleGlobalElementsNames, empty(),
-                                             containerName);
-              componentModelsToReplaceByIndex.put(i, moduleOperationChain);
-            });
+                .ifPresent(operationModel -> {
+                  final String containerName = calculateContainerRootName(containerComponentModel, operationModel);
+                  final ComponentModel moduleOperationChain =
+                          createModuleOperationChain(operationRefModel, operationModel, moduleGlobalElementsNames, empty(),
+                                                     containerName);
+                  componentModelsToReplaceByIndex.put(i, moduleOperationChain);
+                });
       });
       for (Map.Entry<Integer, ComponentModel> entry : componentModelsToReplaceByIndex.entrySet()) {
         entry.getValue().setParent(containerComponentModel);
@@ -149,15 +143,15 @@ public class MacroExpansionModuleModel {
   }
 
   /**
-   * Returns the rootest flow/subflow/munit:test/etc.'s name for the module chain that will be macro expanded. By default, it will
-   * assume it's a flow or even an already macro expanded element, but if not it will ask for the parent component model, making
-   * any scope (such as foreach, async, etc.) look for the flow in which is contained.
+   * Returns the rootest flow/subflow/munit:test/etc.'s name for the module chain that will be macro expanded.
+   * By default, it will assume it's a flow or even an already macro expanded element, but if not it will ask for the parent
+   * component model, making any scope (such as foreach, async, etc.) look for the flow in which is contained.
    *
    * @param containerComponentModel container element to look for the root element that contains it
    * @param operationModel the operation just to log if something went bad
    * @return the name of the root element that contains the {@code containerComponentModel}. Not null.
    * @throws MuleRuntimeException if it cannot find the root element. It should never happen, as the macro expansion for
-   *         operations ONLY happens when being consumed from within a flow/subflow/etc.
+   * operations ONLY happens when being consumed from within a flow/subflow/etc.
    */
   private String calculateContainerRootName(ComponentModel containerComponentModel, OperationModel operationModel) {
     String nameAttribute;
@@ -179,40 +173,40 @@ public class MacroExpansionModuleModel {
     if (extensionModel.getConfigurationModels().isEmpty() &&
         extensionModel.getModelProperty(GlobalElementComponentModelModelProperty.class).isPresent()) {
       defaultElementName = extensionModel.getModelProperty(GlobalElementComponentModelModelProperty.class)
-          .map(globalElementComponentModelModelProperty -> format(
-                                                                  DEFAULT_CONFIG_GLOBAL_ELEMENT_SUFFIX,
-                                                                  extensionModel.getName()));
+              .map(globalElementComponentModelModelProperty -> format(
+                      DEFAULT_CONFIG_GLOBAL_ELEMENT_SUFFIX,
+                      extensionModel.getName()));
     }
     return defaultElementName;
   }
 
-  private void expandGlobalElements(List<ComponentAst> moduleComponentsAst, Set<String> moduleGlobalElementsNames) {
+  private void expandGlobalElements(List<ComponentModel> moduleComponentModels, Set<String> moduleGlobalElementsNames) {
     if (defaultGlobalElementName().isPresent()) {
       addDefaultGlobalElements(moduleGlobalElementsNames);
     } else {
-      macroExpandGlobalElements(moduleComponentsAst, moduleGlobalElementsNames);
+      macroExpandGlobalElements(moduleComponentModels, moduleGlobalElementsNames);
     }
   }
 
   private void addDefaultGlobalElements(Set<String> moduleGlobalElementsNames) {
-    // scenario where it will macro expand the default elements of a <module/>
+    //scenario where it will macro expand the default elements of a <module/>
     String defaultGlobalElementSuffix = defaultGlobalElementName().get();
     ComponentModel rootComponentModel = applicationModel.getRootComponentModel();
-    List<ComponentAst> globalElements =
-        extensionModel.getModelProperty(GlobalElementComponentModelModelProperty.class).get().getGlobalElements();
+    List<ComponentModel> globalElements =
+            extensionModel.getModelProperty(GlobalElementComponentModelModelProperty.class).get().getGlobalElements();
 
     globalElements.forEach(globalElementComponenModel -> {
       final ComponentModel macroExpandedImplicitGlobalElement =
-          copyGlobalElementComponentModel(globalElementComponenModel, defaultGlobalElementSuffix, moduleGlobalElementsNames,
-                                          new HashMap<>());
+              copyGlobalElementComponentModel(globalElementComponenModel, defaultGlobalElementSuffix, moduleGlobalElementsNames,
+                                              new HashMap<>());
       macroExpandedImplicitGlobalElement.setRoot(true);
       macroExpandedImplicitGlobalElement.setParent(rootComponentModel);
       rootComponentModel.getInnerComponents().add(macroExpandedImplicitGlobalElement);
     });
   }
 
-  private void macroExpandGlobalElements(List<ComponentAst> moduleComponentsAst, Set<String> moduleGlobalElementsNames) {
-    // scenario where it will macro expand as many times as needed all the references of the smart connector configurations
+  private void macroExpandGlobalElements(List<ComponentModel> moduleComponentModels, Set<String> moduleGlobalElementsNames) {
+    //scenario where it will macro expand as many times as needed all the references of the smart connector configurations
     applicationModel.executeOnEveryMuleComponentTree(muleRootComponentModel -> {
       HashMap<ComponentModel, List<ComponentModel>> componentModelsToReplaceByIndex = new HashMap<>();
       for (ComponentModel configRefModel : muleRootComponentModel.getInnerComponents()) {
@@ -224,7 +218,7 @@ public class MacroExpansionModuleModel {
           propertiesMap.putAll(connectionPropertiesMap);
           final Map<String, String> literalsParameters = getLiteralParameters(propertiesMap, emptyMap());
           List<ComponentModel> replacementGlobalElements =
-              createGlobalElementsInstance(configRefModel, moduleComponentsAst, moduleGlobalElementsNames, literalsParameters);
+                  createGlobalElementsInstance(configRefModel, moduleComponentModels, moduleGlobalElementsNames, literalsParameters);
           componentModelsToReplaceByIndex.put(configRefModel, replacementGlobalElements);
         });
       }
@@ -238,30 +232,30 @@ public class MacroExpansionModuleModel {
 
   private Optional<ConfigurationModel> getConfigurationModel() {
     return extensionModel
-        .getConfigurationModel(MODULE_CONFIG_GLOBAL_ELEMENT_NAME);
+            .getConfigurationModel(MODULE_CONFIG_GLOBAL_ELEMENT_NAME);
   }
 
   private List<ComponentModel> createGlobalElementsInstance(ComponentModel configRefModel,
-                                                            List<ComponentAst> moduleGlobalComponentsAst,
+                                                            List<ComponentModel> moduleGlobalElements,
                                                             Set<String> moduleGlobalElementsNames,
                                                             Map<String, String> literalsParameters) {
     ComponentModel muleRootElement = configRefModel.getParent();
-    return moduleGlobalComponentsAst.stream()
-        .map(globalElementModel -> {
-          final ComponentModel macroExpandedGlobalElement =
-              copyGlobalElementComponentModel(globalElementModel, configRefModel.getNameAttribute(), moduleGlobalElementsNames,
-                                              literalsParameters);
-          macroExpandedGlobalElement.setRoot(true);
-          macroExpandedGlobalElement.setParent(muleRootElement);
-          return macroExpandedGlobalElement;
-        }).collect(Collectors.toList());
+    return moduleGlobalElements.stream()
+            .map(globalElementModel -> {
+              final ComponentModel macroExpandedGlobalElement =
+                      copyGlobalElementComponentModel(globalElementModel, configRefModel.getNameAttribute(), moduleGlobalElementsNames,
+                                                      literalsParameters);
+              macroExpandedGlobalElement.setRoot(true);
+              macroExpandedGlobalElement.setParent(muleRootElement);
+              return macroExpandedGlobalElement;
+            }).collect(Collectors.toList());
 
   }
 
-  private List<ComponentAst> getModuleGlobalElements() {
+  private List<ComponentModel> getModuleGlobalElements() {
     return extensionModel.getModelProperty(GlobalElementComponentModelModelProperty.class)
-        .map(GlobalElementComponentModelModelProperty::getGlobalElements)
-        .orElse(new ArrayList<>());
+            .map(GlobalElementComponentModelModelProperty::getGlobalElements)
+            .orElse(new ArrayList<>());
   }
 
   /**
@@ -284,36 +278,35 @@ public class MacroExpansionModuleModel {
                                                     Optional<String> configRefParentTnsName,
                                                     String containerName) {
     final OperationComponentModelModelProperty operationComponentModelModelProperty =
-        operationModel.getModelProperty(OperationComponentModelModelProperty.class).get();
-    // final ComponentModel operationModuleComponentModel = operationComponentModelModelProperty
-    // .getBodyConstructAst();
-    final ComponentModel operationModuleComponentModel = null;
+            operationModel.getModelProperty(OperationComponentModelModelProperty.class).get();
+    final ComponentModel operationModuleComponentModel = operationComponentModelModelProperty
+            .getBodyComponentModel();
     List<ComponentModel> bodyProcessors = operationModuleComponentModel.getInnerComponents();
     Optional<String> configRefName =
-        referencesOperationsWithinModule(operationRefModel) ? configRefParentTnsName : getConfigRefName(operationRefModel);
+            referencesOperationsWithinModule(operationRefModel) ? configRefParentTnsName : getConfigRefName(operationRefModel);
     ComponentModel.Builder processorChainBuilder = new ComponentModel.Builder();
     processorChainBuilder
-        .setIdentifier(builder().namespace(CORE_PREFIX).name("module-operation-chain").build());
+            .setIdentifier(builder().namespace(CORE_PREFIX).name("module-operation-chain").build());
 
     processorChainBuilder.addParameter("moduleName", extensionModel.getXmlDslModel().getPrefix(), false);
     processorChainBuilder.addParameter("moduleOperation", operationModel.getName(), false);
     Map<String, String> propertiesMap = extractProperties(configRefName);
     Map<String, String> parametersMap = extractParameters(operationRefModel, operationModel.getAllParameterModels());
     ComponentModel propertiesComponentModel =
-        getParameterChild(propertiesMap, "module-operation-properties", "module-operation-property-entry");
+            getParameterChild(propertiesMap, "module-operation-properties", "module-operation-property-entry");
     ComponentModel parametersComponentModel =
-        getParameterChild(parametersMap, "module-operation-parameters", "module-operation-parameter-entry");
+            getParameterChild(parametersMap, "module-operation-parameters", "module-operation-parameter-entry");
     processorChainBuilder.addChildComponentModel(propertiesComponentModel);
     processorChainBuilder.addChildComponentModel(parametersComponentModel);
 
     for (ComponentModel bodyProcessor : bodyProcessors) {
       ComponentModel childMPcomponentModel =
-          lookForTNSOperation(bodyProcessor)
-              .map(tnsOperation -> createModuleOperationChain(bodyProcessor, tnsOperation, moduleGlobalElementsNames,
-                                                              configRefName, containerName))
-              .orElseGet(() -> copyOperationComponentModel(bodyProcessor, configRefName, moduleGlobalElementsNames,
-                                                           getLiteralParameters(propertiesMap, parametersMap),
-                                                           containerName));
+              lookForTNSOperation(bodyProcessor)
+                      .map(tnsOperation -> createModuleOperationChain(bodyProcessor, tnsOperation, moduleGlobalElementsNames,
+                                                                      configRefName, containerName))
+                      .orElseGet(() -> copyOperationComponentModel(bodyProcessor, configRefName, moduleGlobalElementsNames,
+                                                                   getLiteralParameters(propertiesMap, parametersMap),
+                                                                   containerName));
       processorChainBuilder.addChildComponentModel(childMPcomponentModel);
     }
     copyErrorMappings(operationRefModel, processorChainBuilder);
@@ -327,7 +320,8 @@ public class MacroExpansionModuleModel {
       processorChainModelChild.setParent(processorChainModel);
     }
 
-    operationRefModel.getSourceCodeLocation().ifPresent(processorChainBuilder::setSourceCodeLocation);
+    operationRefModel.getConfigFileName().ifPresent(processorChainBuilder::setConfigFileName);
+    operationRefModel.getLineNumber().ifPresent(processorChainBuilder::setLineNumber);
     processorChainBuilder.addCustomAttribute(ORIGINAL_IDENTIFIER, operationRefModel.getIdentifier());
     return processorChainModel;
   }
@@ -335,14 +329,12 @@ public class MacroExpansionModuleModel {
   /**
    * Looks for the value of the {@link #MODULE_OPERATION_CONFIG_REF} in the current <operation/>, if not found then tries to
    * fallback to the default global element name. See {@link #defaultGlobalElementName()} method.
-   * 
    * @param operationRefModel <operaton/> to lookup the expected string reference, if exists.
    * @return the suffix needed to be used when macro expanding elements, or {@link Optional#empty()} otherwise.
    */
   private Optional<String> getConfigRefName(ComponentModel operationRefModel) {
     return operationRefModel.getParameters().containsKey(MODULE_OPERATION_CONFIG_REF)
-        ? of(operationRefModel.getParameters().get(MODULE_OPERATION_CONFIG_REF))
-        : defaultGlobalElementName();
+           ? of(operationRefModel.getParameters().get(MODULE_OPERATION_CONFIG_REF)) : defaultGlobalElementName();
   }
 
   /**
@@ -355,9 +347,9 @@ public class MacroExpansionModuleModel {
    */
   private void copyErrorMappings(ComponentModel operationRefModel, ComponentModel.Builder processorChainBuilder) {
     operationRefModel.getInnerComponents().stream()
-        .filter(componentModel -> componentModel.getIdentifier().equals(ApplicationModel.ERROR_MAPPING_IDENTIFIER))
-        .forEach(errorMappingComponentModel -> processorChainBuilder
-            .addChildComponentModel(copyComponentModel(errorMappingComponentModel)));
+            .filter(componentModel -> componentModel.getIdentifier().equals(ApplicationModel.ERROR_MAPPING_IDENTIFIER))
+            .forEach(errorMappingComponentModel -> processorChainBuilder
+                    .addChildComponentModel(copyComponentModel(errorMappingComponentModel)));
   }
 
   /**
@@ -368,16 +360,15 @@ public class MacroExpansionModuleModel {
    *         accordingly (both global components updates plus the line number, and so on). If the value for some parameter
    */
   private ComponentModel copyComponentModel(ComponentModel modelToCopy) {
-    return null;
-    // ComponentModel.Builder operationReplacementModel = getComponentModelBuilderFrom(modelToCopy);
-    // for (Map.Entry<String, String> entry : modelToCopy.getParameters().entrySet()) {
-    // operationReplacementModel.addParameter(entry.getKey(), entry.getValue(), false);
-    // }
-    // for (ComponentModel operationChildModel : modelToCopy.getInnerComponents()) {
-    // operationReplacementModel.addChildComponentModel(
-    // copyComponentModel(operationChildModel));
-    // }
-    // return buildFrom(modelToCopy, operationReplacementModel);
+    ComponentModel.Builder operationReplacementModel = getComponentModelBuilderFrom(modelToCopy);
+    for (Map.Entry<String, String> entry : modelToCopy.getParameters().entrySet()) {
+      operationReplacementModel.addParameter(entry.getKey(), entry.getValue(), false);
+    }
+    for (ComponentModel operationChildModel : modelToCopy.getInnerComponents()) {
+      operationReplacementModel.addChildComponentModel(
+              copyComponentModel(operationChildModel));
+    }
+    return buildFrom(modelToCopy, operationReplacementModel);
   }
 
   /**
@@ -387,16 +378,16 @@ public class MacroExpansionModuleModel {
    */
   private Map<String, String> getLiteralParameters(Map<String, String> propertiesMap, Map<String, String> parametersMap) {
     final Map<String, String> literalsParameters = propertiesMap.entrySet().stream()
-        .filter(entry -> !isExpression(entry.getValue()))
-        .collect(Collectors.toMap(e -> getReplaceableExpression(e.getKey(), VARS),
-                                  Map.Entry::getValue));
+            .filter(entry -> !isExpression(entry.getValue()))
+            .collect(Collectors.toMap(e -> getReplaceableExpression(e.getKey(), VARS),
+                                      Map.Entry::getValue));
 
     literalsParameters.putAll(
-                              parametersMap.entrySet().stream()
-                                  .filter(entry -> !isExpression(entry.getValue()))
-                                  .collect(Collectors.toMap(
-                                                            e -> getReplaceableExpression(e.getKey(), VARS),
-                                                            Map.Entry::getValue)));
+            parametersMap.entrySet().stream()
+                    .filter(entry -> !isExpression(entry.getValue()))
+                    .collect(Collectors.toMap(
+                            e -> getReplaceableExpression(e.getKey(), VARS),
+                            Map.Entry::getValue)));
     return literalsParameters;
   }
 
@@ -420,11 +411,11 @@ public class MacroExpansionModuleModel {
   private ComponentModel getParameterChild(Map<String, String> parameters, String wrapperParameters, String entryParameter) {
     ComponentModel.Builder parametersBuilder = new ComponentModel.Builder();
     parametersBuilder
-        .setIdentifier(builder().namespace(CORE_PREFIX).name(wrapperParameters).build());
+            .setIdentifier(builder().namespace(CORE_PREFIX).name(wrapperParameters).build());
     parameters.forEach((paramName, paramValue) -> {
       ComponentModel.Builder parameterBuilder = new ComponentModel.Builder();
       parameterBuilder.setIdentifier(builder().namespace(CORE_PREFIX)
-          .name(entryParameter).build());
+                                             .name(entryParameter).build());
 
       parameterBuilder.addParameter(KEY_ATTRIBUTE_NAME, paramName, false);
       parameterBuilder.addParameter(VALUE_ATTRIBUTE_NAME, paramValue, false);
@@ -447,23 +438,23 @@ public class MacroExpansionModuleModel {
   private Map<String, String> extractProperties(Optional<String> configRefName) {
     Map<String, String> valuesMap = new HashMap<>();
     configRefName
-        .filter(configParameter -> defaultGlobalElementName()
-            .map(defaultGlobalElementName -> !defaultGlobalElementName.equals(configParameter)).orElse(true))
-        .ifPresent(configParameter -> {
-          // look for the global element which "name" attribute maps to "configParameter" value
-          ComponentModel configRefComponentModel = applicationModel.getRootComponentModel().getInnerComponents().stream()
-              .filter(componentModel -> looForConfiguration(componentModel).isPresent()
-                  && configParameter.equals(componentModel.getParameters().get(NAME_ATTRIBUTE)))
-              .findFirst()
-              .orElseThrow(() -> new IllegalArgumentException(
-                                                              format("There's no <%s:config> named [%s] in the current mule app",
-                                                                     extensionModel.getXmlDslModel().getPrefix(),
-                                                                     configParameter)));
-          // as configParameter != null, a ConfigurationModel must exists
-          final ConfigurationModel configurationModel = getConfigurationModel().get();
-          valuesMap.putAll(extractParameters(configRefComponentModel, configurationModel.getAllParameterModels()));
-          valuesMap.putAll(extractConnectionProperties(configRefComponentModel, configurationModel));
-        });
+            .filter(configParameter -> defaultGlobalElementName()
+                    .map(defaultGlobalElementName -> !defaultGlobalElementName.equals(configParameter)).orElse(true))
+            .ifPresent(configParameter -> {
+              // look for the global element which "name" attribute maps to "configParameter" value
+              ComponentModel configRefComponentModel = applicationModel.getRootComponentModel().getInnerComponents().stream()
+                      .filter(componentModel -> looForConfiguration(componentModel).isPresent()
+                                                && configParameter.equals(componentModel.getParameters().get(NAME_ATTRIBUTE)))
+                      .findFirst()
+                      .orElseThrow(() -> new IllegalArgumentException(
+                              format("There's no <%s:config> named [%s] in the current mule app",
+                                     extensionModel.getXmlDslModel().getPrefix(),
+                                     configParameter)));
+              // as configParameter != null, a ConfigurationModel must exists
+              final ConfigurationModel configurationModel = getConfigurationModel().get();
+              valuesMap.putAll(extractParameters(configRefComponentModel, configurationModel.getAllParameterModels()));
+              valuesMap.putAll(extractConnectionProperties(configRefComponentModel, configurationModel));
+            });
     return valuesMap;
   }
 
@@ -480,15 +471,15 @@ public class MacroExpansionModuleModel {
                                                           ConfigurationModel configurationModel) {
     Map<String, String> connectionValuesMap = new HashMap<>();
     configurationModel.getConnectionProviderModel(MODULE_CONNECTION_GLOBAL_ELEMENT_NAME)
-        .ifPresent(
-                   connectionProviderModel -> configRefComponentModel.getInnerComponents().stream()
-                       .filter(componentModel -> MODULE_CONNECTION_GLOBAL_ELEMENT_NAME
-                           .equals(componentModel.getIdentifier().getName()))
-                       .findFirst()
-                       .ifPresent(connectionComponentModel -> connectionValuesMap
-                           .putAll(extractParameters(connectionComponentModel,
-                                                     connectionProviderModel
-                                                         .getAllParameterModels()))));
+            .ifPresent(
+                    connectionProviderModel -> configRefComponentModel.getInnerComponents().stream()
+                            .filter(componentModel -> MODULE_CONNECTION_GLOBAL_ELEMENT_NAME
+                                    .equals(componentModel.getIdentifier().getName()))
+                            .findFirst()
+                            .ifPresent(connectionComponentModel -> connectionValuesMap
+                                    .putAll(extractParameters(connectionComponentModel,
+                                                              connectionProviderModel
+                                                                      .getAllParameterModels()))));
 
     return connectionValuesMap;
   }
@@ -523,8 +514,8 @@ public class MacroExpansionModuleModel {
           final DslSyntaxResolver dslSyntaxResolver = DslSyntaxResolver.getDefault(extensionModel, dslResolvingContext);
           final String resolvedName = dslSyntaxResolver.resolve(parameterExtension).getElementName();
           final Optional<ComponentModel> childComponentModel = componentModel.getInnerComponents().stream()
-              .filter(cm -> resolvedName.equals(cm.getIdentifier().getName()))
-              .findFirst();
+                  .filter(cm -> paramName.equals(cm.getIdentifier().getName()))
+                  .findFirst();
           if (childComponentModel.isPresent()) {
             value = childComponentModel.get().getTextContent();
           }
@@ -556,25 +547,24 @@ public class MacroExpansionModuleModel {
    *         can be optimized by replacing it for the literal's value, it will be done as well using the
    *         {@code literalsParameters}
    */
-  private ComponentModel copyGlobalElementComponentModel(ComponentAst modelToCopy, String configRefName,
+  private ComponentModel copyGlobalElementComponentModel(ComponentModel modelToCopy, String configRefName,
                                                          Set<String> moduleGlobalElementsNames,
                                                          Map<String, String> literalsParameters) {
-    return null;
-    // ComponentModel.Builder globalElementReplacementModel = getComponentModelBuilderFrom(modelToCopy);
-    //
-    // for (Map.Entry<String, String> entry : modelToCopy.getParameters().entrySet()) {
-    // String value =
-    // calculateAttributeValue(configRefName, moduleGlobalElementsNames, entry.getValue());
-    // final String optimizedValue = literalsParameters.getOrDefault(value, value);
-    // globalElementReplacementModel.addParameter(entry.getKey(), optimizedValue, false);
-    // }
-    // for (ComponentModel operationChildModel : modelToCopy.getInnerComponents()) {
-    // globalElementReplacementModel.addChildComponentModel(
-    // copyGlobalElementComponentModel(operationChildModel, configRefName,
-    // moduleGlobalElementsNames,
-    // literalsParameters));
-    // }
-    // return buildFrom(modelToCopy, globalElementReplacementModel);
+    ComponentModel.Builder globalElementReplacementModel = getComponentModelBuilderFrom(modelToCopy);
+
+    for (Map.Entry<String, String> entry : modelToCopy.getParameters().entrySet()) {
+      String value =
+              calculateAttributeValue(configRefName, moduleGlobalElementsNames, entry.getValue());
+      final String optimizedValue = literalsParameters.getOrDefault(value, value);
+      globalElementReplacementModel.addParameter(entry.getKey(), optimizedValue, false);
+    }
+    for (ComponentModel operationChildModel : modelToCopy.getInnerComponents()) {
+      globalElementReplacementModel.addChildComponentModel(
+              copyGlobalElementComponentModel(operationChildModel, configRefName,
+                                              moduleGlobalElementsNames,
+                                              literalsParameters));
+    }
+    return buildFrom(modelToCopy, globalElementReplacementModel);
   }
 
   /**
@@ -597,41 +587,40 @@ public class MacroExpansionModuleModel {
   private ComponentModel copyOperationComponentModel(ComponentModel modelToCopy, Optional<String> configRefName,
                                                      Set<String> moduleGlobalElementsNames,
                                                      Map<String, String> literalsParameters, String containerName) {
-    return null;
-    // ComponentModel.Builder operationReplacementModel = getComponentModelBuilderFrom(modelToCopy);
-    // for (Map.Entry<String, String> entry : modelToCopy.getParameters().entrySet()) {
-    // String value = configRefName
-    // .map(s -> calculateAttributeValue(s, moduleGlobalElementsNames, entry.getValue()))
-    // .orElseGet(entry::getValue);
-    // final String optimizedValue = literalsParameters.getOrDefault(value, value);
-    // operationReplacementModel.addParameter(entry.getKey(), optimizedValue, false);
-    // }
-    // for (ComponentModel operationChildModel : modelToCopy.getInnerComponents()) {
-    // ComponentModel childMPcomponentModel =
-    // lookForTNSOperation(operationChildModel)
-    // .map(tnsOperation -> createModuleOperationChain(operationChildModel, tnsOperation, moduleGlobalElementsNames,
-    // configRefName, containerName))
-    // .orElseGet(() -> copyOperationComponentModel(operationChildModel, configRefName, moduleGlobalElementsNames,
-    // literalsParameters, containerName));
-    // operationReplacementModel.addChildComponentModel(childMPcomponentModel);
-    // }
-    // return buildFrom(modelToCopy, operationReplacementModel);
+    ComponentModel.Builder operationReplacementModel = getComponentModelBuilderFrom(modelToCopy);
+    for (Map.Entry<String, String> entry : modelToCopy.getParameters().entrySet()) {
+      String value = configRefName
+              .map(s -> calculateAttributeValue(s, moduleGlobalElementsNames, entry.getValue()))
+              .orElseGet(entry::getValue);
+      final String optimizedValue = literalsParameters.getOrDefault(value, value);
+      operationReplacementModel.addParameter(entry.getKey(), optimizedValue, false);
+    }
+    for (ComponentModel operationChildModel : modelToCopy.getInnerComponents()) {
+      ComponentModel childMPcomponentModel =
+              lookForTNSOperation(operationChildModel)
+                      .map(tnsOperation -> createModuleOperationChain(operationChildModel, tnsOperation, moduleGlobalElementsNames,
+                                                                      configRefName, containerName))
+                      .orElseGet(() -> copyOperationComponentModel(operationChildModel, configRefName, moduleGlobalElementsNames,
+                                                                   literalsParameters, containerName));
+      operationReplacementModel.addChildComponentModel(childMPcomponentModel);
+    }
+    return buildFrom(modelToCopy, operationReplacementModel);
   }
 
-  private ComponentModel.Builder getComponentModelBuilderFrom(ComponentAst componentAstOrigin) {
-    return null;
-    // ComponentModel.Builder operationReplacementModel = new ComponentModel.Builder();
-    // operationReplacementModel
-    // .setIdentifier(componentAstOrigin.getComponentIdentifier())
-    // .setTextContent(componentAstOrigin.getTextContent());
-    // for (Map.Entry<String, Object> entry : componentAstOrigin.getCustomAttributes().entrySet()) {
-    // operationReplacementModel.addCustomAttribute(entry.getKey(), entry.getValue());
-    // }
-    // return operationReplacementModel;
+  private ComponentModel.Builder getComponentModelBuilderFrom(ComponentModel componentModelOrigin) {
+    ComponentModel.Builder operationReplacementModel = new ComponentModel.Builder();
+    operationReplacementModel
+            .setIdentifier(componentModelOrigin.getIdentifier())
+            .setTextContent(componentModelOrigin.getTextContent());
+    for (Map.Entry<String, Object> entry : componentModelOrigin.getCustomAttributes().entrySet()) {
+      operationReplacementModel.addCustomAttribute(entry.getKey(), entry.getValue());
+    }
+    return operationReplacementModel;
   }
 
   private ComponentModel buildFrom(ComponentModel componentModelOrigin, ComponentModel.Builder operationReplacementModel) {
-    componentModelOrigin.getSourceCodeLocation().ifPresent(operationReplacementModel::setSourceCodeLocation);
+    componentModelOrigin.getConfigFileName().ifPresent(operationReplacementModel::setConfigFileName);
+    componentModelOrigin.getLineNumber().ifPresent(operationReplacementModel::setLineNumber);
     ComponentModel componentModel = operationReplacementModel.build();
     for (ComponentModel child : componentModel.getInnerComponents()) {
       child.setParent(componentModel);
@@ -652,8 +641,7 @@ public class MacroExpansionModuleModel {
   private Optional<ConfigurationModel> looForConfiguration(ComponentModel componentModel) {
     final ComponentIdentifier identifier = componentModel.getIdentifier();
     return identifier.getNamespace().equals(extensionModel.getXmlDslModel().getPrefix())
-        ? extensionModel.getConfigurationModel(identifier.getName())
-        : empty();
+           ? extensionModel.getConfigurationModel(identifier.getName()) : empty();
   }
 
   /**
@@ -693,9 +681,9 @@ public class MacroExpansionModuleModel {
     if (operationIdentifier.getNamespace().equals(prefix)) {
       // As the operation can be inside the extension or the config, it has to be looked up in both elements.
       final HasOperationModels hasOperationModels =
-          getConfigurationModel()
-              .map(configurationModel -> (HasOperationModels) configurationModel)
-              .orElse(extensionModel);
+              getConfigurationModel()
+                      .map(configurationModel -> (HasOperationModels) configurationModel)
+                      .orElse(extensionModel);
       result = hasOperationModels.getOperationModel(operationName);
     }
     // If the operation is not present, it might be a private one and it must be looked inside of the model property
@@ -733,15 +721,15 @@ public class MacroExpansionModuleModel {
    */
   private Optional<String> getTestConnectionGlobalElement() {
     return getConfigurationModel()
-        .flatMap(this::getTestConnectionGlobalElement);
+            .flatMap(this::getTestConnectionGlobalElement);
   }
 
   private Optional<String> getTestConnectionGlobalElement(ConfigurationModel configurationModel) {
     final Optional<ConnectionProviderModel> connectionProviderModel =
-        configurationModel.getConnectionProviderModel(MODULE_CONNECTION_GLOBAL_ELEMENT_NAME);
+            configurationModel.getConnectionProviderModel(MODULE_CONNECTION_GLOBAL_ELEMENT_NAME);
     if (connectionProviderModel.isPresent()) {
       final Optional<TestConnectionGlobalElementModelProperty> modelProperty =
-          connectionProviderModel.get().getModelProperty(TestConnectionGlobalElementModelProperty.class);
+              connectionProviderModel.get().getModelProperty(TestConnectionGlobalElementModelProperty.class);
       return modelProperty.map(TestConnectionGlobalElementModelProperty::getGlobalElementName);
     } else {
       return empty();

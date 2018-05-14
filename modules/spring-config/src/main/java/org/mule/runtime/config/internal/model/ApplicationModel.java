@@ -58,10 +58,6 @@ import javax.xml.namespace.QName;
 
 import org.apache.commons.lang3.ClassUtils;
 
-import org.mule.runtime.api.artifact.ast.ArtifactAst;
-import org.mule.runtime.api.artifact.ast.ComplexParameterValueAst;
-import org.mule.runtime.api.artifact.ast.ComponentAst;
-import org.mule.runtime.api.artifact.sintax.SourceCodeLocation;
 import org.mule.runtime.api.component.AbstractComponent;
 import org.mule.runtime.api.component.Component;
 import org.mule.runtime.api.component.ComponentIdentifier;
@@ -81,8 +77,8 @@ import org.mule.runtime.config.api.dsl.model.properties.ConfigurationPropertiesP
 import org.mule.runtime.config.api.dsl.model.properties.ConfigurationPropertiesProviderFactory;
 import org.mule.runtime.config.api.dsl.model.properties.ConfigurationProperty;
 import org.mule.runtime.config.api.dsl.processor.ArtifactConfig;
-import org.mule.runtime.config.internal.ArtifactAstHelper;
-import org.mule.runtime.config.internal.ComponentAstHolder;
+import org.mule.runtime.config.api.dsl.processor.ConfigFile;
+import org.mule.runtime.config.api.dsl.processor.ConfigLine;
 import org.mule.runtime.config.internal.dsl.model.ComponentLocationVisitor;
 import org.mule.runtime.config.internal.dsl.model.ComponentModelReader;
 import org.mule.runtime.config.internal.dsl.model.DefaultConfigurationParameters;
@@ -103,10 +99,13 @@ import org.mule.runtime.config.internal.dsl.processor.xml.XmlCustomAttributeHand
 import org.mule.runtime.core.api.config.ConfigurationException;
 import org.mule.runtime.core.api.extension.MuleExtensionModelProvider;
 <<<<<<< HEAD
+<<<<<<< HEAD
 import org.mule.runtime.core.api.util.ClassUtils;
 import org.mule.runtime.dsl.api.ResourceProvider;
 =======
 import org.mule.runtime.core.api.extension.MuleModuleExtensionModelProvider;
+>>>>>>> sdf
+=======
 >>>>>>> sdf
 import org.mule.runtime.dsl.api.component.ComponentBuildingDefinition;
 import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
@@ -300,7 +299,6 @@ public class ApplicationModel {
           .build();
 
   private final Optional<ComponentBuildingDefinitionRegistry> componentBuildingDefinitionRegistry;
-  private final ArtifactAstHelper artifactAstHelper;
   private List<ComponentModel> muleComponentModels = new LinkedList<>();
   private PropertiesResolverConfigurationProperties configurationProperties;
   private ResourceProvider externalResourceProvider;
@@ -316,10 +314,10 @@ public class ApplicationModel {
    * @param artifactDeclaration an {@link ArtifactDeclaration}
    * @throws Exception when the application configuration has semantic errors.
    */
-  public ApplicationModel(ArtifactAst artifactAst, ArtifactDeclaration artifactDeclaration,
+  public ApplicationModel(ArtifactConfig artifactConfig, ArtifactDeclaration artifactDeclaration,
                           ResourceProvider externalResourceProvider)
       throws Exception {
-    this(artifactAst, artifactDeclaration, emptySet(), emptyMap(), empty(), of(new ComponentBuildingDefinitionRegistry()),
+    this(artifactConfig, artifactDeclaration, emptySet(), emptyMap(), empty(), of(new ComponentBuildingDefinitionRegistry()),
          true, externalResourceProvider);
   }
 
@@ -341,7 +339,7 @@ public class ApplicationModel {
    * @throws Exception when the application configuration has semantic errors.
    */
   // TODO: MULE-9638 remove this optional
-  public ApplicationModel(ArtifactAst artifactAst, ArtifactDeclaration artifactDeclaration,
+  public ApplicationModel(ArtifactConfig artifactConfig, ArtifactDeclaration artifactDeclaration,
                           Set<ExtensionModel> extensionModels,
                           Map<String, String> deploymentProperties,
                           Optional<ConfigurationProperties> parentConfigurationProperties,
@@ -351,10 +349,8 @@ public class ApplicationModel {
 
     this.componentBuildingDefinitionRegistry = componentBuildingDefinitionRegistry;
     this.externalResourceProvider = externalResourceProvider;
-    this.artifactAstHelper = new ArtifactAstHelper(artifactAst);
-    this.configurationProperties = createConfigurationAttributeResolver(artifactAstHelper, parentConfigurationProperties,
-                                                                        deploymentProperties, externalResourceProvider);
-    convertConfigFileToComponentModel(artifactAstHelper);
+    createConfigurationAttributeResolver(artifactConfig, parentConfigurationProperties, deploymentProperties);
+    convertConfigFileToComponentModel(artifactConfig);
     convertArtifactDeclarationToComponentModel(extensionModels, artifactDeclaration);
     resolveRegistrationNames();
     createEffectiveModel();
@@ -398,10 +394,9 @@ public class ApplicationModel {
     });
   }
 
-  public static PropertiesResolverConfigurationProperties createConfigurationAttributeResolver(ArtifactAstHelper artifactAstHelper,
-                                                                                               Optional<ConfigurationProperties> parentConfigurationProperties,
-                                                                                               Map<String, String> deploymentProperties,
-                                                                                               ResourceProvider externalResourceProvider) {
+  private void createConfigurationAttributeResolver(ArtifactConfig artifactConfig,
+                                                    Optional<ConfigurationProperties> parentConfigurationProperties,
+                                                    Map<String, String> deploymentProperties) {
 
     ConfigurationPropertiesProvider deploymentPropertiesConfigurationProperties = null;
     if (!deploymentProperties.isEmpty()) {
@@ -413,10 +408,14 @@ public class ApplicationModel {
     EnvironmentPropertiesConfigurationProvider environmentPropertiesConfigurationProvider =
         new EnvironmentPropertiesConfigurationProvider();
     ConfigurationPropertiesProvider globalPropertiesConfigurationAttributeProvider =
+<<<<<<< HEAD
           createProviderFromGlobalProperties(artifactAstHelper);
 
     DefaultConfigurationPropertiesResolver environmentPropertiesConfigurationPropertiesResolver =
         new DefaultConfigurationPropertiesResolver(empty(), environmentPropertiesConfigurationProvider);
+=======
+        createProviderFromGlobalProperties(artifactConfig);
+>>>>>>> sdf
     DefaultConfigurationPropertiesResolver localResolver =
         new DefaultConfigurationPropertiesResolver(of(new DefaultConfigurationPropertiesResolver(
                                                                                                  deploymentPropertiesConfigurationProperties != null
@@ -426,7 +425,7 @@ public class ApplicationModel {
                                                                                                  globalPropertiesConfigurationAttributeProvider)),
                                                    environmentPropertiesConfigurationProvider);
     List<ConfigurationPropertiesProvider> configConfigurationPropertiesProviders =
-        getConfigurationPropertiesProvidersFromComponents(artifactAstHelper, localResolver, externalResourceProvider);
+        getConfigurationPropertiesProvidersFromComponents(artifactConfig, localResolver);
     FileConfigurationPropertiesProvider externalPropertiesConfigurationProvider =
         new FileConfigurationPropertiesProvider(externalResourceProvider, "External files");
 
@@ -486,23 +485,26 @@ public class ApplicationModel {
                                                        : of(systemPropertiesResolver),
                                                    externalPropertiesConfigurationProvider);
     if (deploymentPropertiesConfigurationProperties == null) {
-      return new PropertiesResolverConfigurationProperties(externalPropertiesResolver);
+      this.configurationProperties = new PropertiesResolverConfigurationProperties(externalPropertiesResolver);
     } else {
       // finally the first configuration properties resolver should be deployment properties as they have precedence over the rest
-      return new PropertiesResolverConfigurationProperties(new DefaultConfigurationPropertiesResolver(of(externalPropertiesResolver),
-                                                                                                      deploymentPropertiesConfigurationProperties));
+      this.configurationProperties =
+          new PropertiesResolverConfigurationProperties(new DefaultConfigurationPropertiesResolver(of(externalPropertiesResolver),
+                                                                                                   deploymentPropertiesConfigurationProperties));
     }
+<<<<<<< HEAD
 
     try {
       initialiseIfNeeded(configurationProperties.getConfigurationPropertiesResolver());
     } catch (InitialisationException e) {
       throw new MuleRuntimeException(e);
     }
+=======
+>>>>>>> sdf
   }
 
-  private static List<ConfigurationPropertiesProvider> getConfigurationPropertiesProvidersFromComponents(ArtifactAstHelper artifactAstHelper,
-                                                                                                         ConfigurationPropertiesResolver localResolver,
-                                                                                                         ResourceProvider externalResourceProvider) {
+  private List<ConfigurationPropertiesProvider> getConfigurationPropertiesProvidersFromComponents(ArtifactConfig artifactConfig,
+                                                                                                  ConfigurationPropertiesResolver localResolver) {
 
     Map<ComponentIdentifier, ConfigurationPropertiesProviderFactory> providerFactoriesMap = new HashMap<>();
     ServiceLoader<ConfigurationPropertiesProviderFactory> providerFactories =
@@ -517,70 +519,65 @@ public class ApplicationModel {
     });
 
     List<ConfigurationPropertiesProvider> configConfigurationPropertiesProviders = new ArrayList<>();
+    artifactConfig.getConfigFiles().stream()
+        .forEach(configFile -> configFile.getConfigLines().stream()
+            .forEach(configLine -> {
+              for (ConfigLine componentConfigLine : configLine.getChildren()) {
+                if (componentConfigLine.getNamespace() == null) {
+                  continue;
+                }
 
-    artifactAstHelper.executeOnGlobalComponents(componentAstHolder -> {
-      if (providerFactoriesMap.containsKey(componentAstHolder.getComponentAst().getComponentIdentifier())) {
-        DefaultConfigurationParameters.Builder configurationParametersBuilder =
-            DefaultConfigurationParameters.builder();
-        ConfigurationParameters configurationParameters =
-            resolveConfigurationParameters(configurationParametersBuilder, componentAstHolder, localResolver);
-        ComponentIdentifier componentIdentifier = componentAstHolder.getComponentAst().getComponentIdentifier();
-        ConfigurationPropertiesProvider provider = providerFactoriesMap.get(componentIdentifier)
-            .createProvider(configurationParameters, externalResourceProvider);
-        if (provider instanceof Component) {
-          Component providerComponent = (Component) provider;
-          TypedComponentIdentifier typedComponentIdentifier = TypedComponentIdentifier.builder()
-              .type(UNKNOWN).identifier(componentIdentifier).build();
-          DefaultComponentLocation.DefaultLocationPart locationPart =
-              new DefaultComponentLocation.DefaultLocationPart(componentIdentifier.getName(),
-                                                               of(typedComponentIdentifier),
-                                                               of(componentAstHolder.getComponentAst().getSourceCodeLocation()
-                                                                   .getFilename()),
-                                                               of(componentAstHolder.getComponentAst().getSourceCodeLocation()
-                                                                   .getStartColumn()));
-          providerComponent.setAnnotations(ImmutableMap.<QName, Object>builder()
-              .put(AbstractComponent.LOCATION_KEY,
-                   new DefaultComponentLocation(of(componentIdentifier.getName()),
-                                                singletonList(locationPart)))
-              .build());
-        }
-        configConfigurationPropertiesProviders.add(provider);
+                ComponentIdentifier componentIdentifier = ComponentIdentifier.builder()
+                    .namespace(componentConfigLine.getNamespace()).name(componentConfigLine.getIdentifier()).build();
+                if (!providerFactoriesMap.containsKey(componentIdentifier)) {
+                  continue;
+                }
 
-        try {
-          initialiseIfNeeded(provider);
-        } catch (InitialisationException e) {
-          throw new MuleRuntimeException(e);
-        }
-      }
-    });
+                DefaultConfigurationParameters.Builder configurationParametersBuilder =
+                    DefaultConfigurationParameters.builder();
+                ConfigurationParameters configurationParameters =
+                    resolveConfigurationParameters(configurationParametersBuilder, componentConfigLine, localResolver);
+                ConfigurationPropertiesProvider provider = providerFactoriesMap.get(componentIdentifier)
+                    .createProvider(configurationParameters, externalResourceProvider);
+                if (provider instanceof Component) {
+                  Component providerComponent = (Component) provider;
+                  TypedComponentIdentifier typedComponentIdentifier = TypedComponentIdentifier.builder()
+                      .type(UNKNOWN).identifier(componentIdentifier).build();
+                  DefaultComponentLocation.DefaultLocationPart locationPart =
+                      new DefaultComponentLocation.DefaultLocationPart(componentIdentifier.getName(),
+                                                                       of(typedComponentIdentifier),
+                                                                       of(configFile.getFilename()),
+                                                                       of(configLine.getLineNumber()));
+                  providerComponent.setAnnotations(ImmutableMap.<QName, Object>builder()
+                      .put(AbstractComponent.LOCATION_KEY,
+                           new DefaultComponentLocation(of(componentIdentifier.getName()),
+                                                        singletonList(locationPart)))
+                      .build());
+                }
+                configConfigurationPropertiesProviders.add(provider);
+
+                try {
+                  initialiseIfNeeded(provider);
+                } catch (InitialisationException e) {
+                  throw new MuleRuntimeException(e);
+                }
+              }
+            }));
     return configConfigurationPropertiesProviders;
   }
 
-  private static ConfigurationParameters resolveConfigurationParameters(DefaultConfigurationParameters.Builder configurationParametersBuilder,
-                                                                        ComponentAstHolder componentAstHolder,
-                                                                        ConfigurationPropertiesResolver localResolver) {
-    componentAstHolder.getParameters()
-        .stream().forEach(parameterAstHolder -> {
-          if (parameterAstHolder.isSimpleParameter()) {
-            configurationParametersBuilder
-                .withSimpleParameter(parameterAstHolder.getParameterAst().getParameterIdentifier().getIdentifier().getName(),
-                                     localResolver.resolveValue(parameterAstHolder.getSimpleParameterValueAst().getRawValue()));
-          } else {
-            ComplexParameterValueAst complexParameterValueAst = parameterAstHolder.getComplexParameterValueAst();
-            DefaultConfigurationParameters.Builder childParametersBuilder = DefaultConfigurationParameters.builder();
-            configurationParametersBuilder.withComplexParameter(complexParameterValueAst.getComponent().getComponentIdentifier(),
-                                                                resolveConfigurationParameters(childParametersBuilder,
-                                                                                               new ComponentAstHolder(complexParameterValueAst
-                                                                                                   .getComponent()), // TODO fix
-                                                                                               // the
-                                                                                               // creation
-                                                                                               // of the
-                                                                                               // holder
-                                                                                               // here.
-                                                                                               localResolver));
-          }
-        });
-
+  private ConfigurationParameters resolveConfigurationParameters(DefaultConfigurationParameters.Builder configurationParametersBuilder,
+                                                                 ConfigLine componentConfigLine,
+                                                                 ConfigurationPropertiesResolver localResolver) {
+    componentConfigLine.getConfigAttributes().forEach((key, value) -> configurationParametersBuilder
+        .withSimpleParameter(key, localResolver.resolveValue(value.getValue())));
+    for (ConfigLine childConfigLine : componentConfigLine.getChildren()) {
+      DefaultConfigurationParameters.Builder childParametersBuilder = DefaultConfigurationParameters.builder();
+      configurationParametersBuilder.withComplexParameter(ComponentIdentifier.builder().name(childConfigLine.getIdentifier())
+          .namespace(childConfigLine.getNamespace()).build(),
+                                                          resolveConfigurationParameters(childParametersBuilder, childConfigLine,
+                                                                                         localResolver));
+    }
     return configurationParametersBuilder.build();
   }
 
@@ -647,7 +644,6 @@ public class ApplicationModel {
       if (!extensionModels.contains(muleModel)) {
         extensionModels = new HashSet<>(extensionModels);
         extensionModels.add(muleModel);
-        extensionModels.add(MuleModuleExtensionModelProvider.getExtensionModel());
       }
 
       DslElementModelFactory elementFactory = DslElementModelFactory.getDefault(DslResolvingContext.getDefault(extensionModels));
@@ -702,23 +698,20 @@ public class ApplicationModel {
   }
 
 
-  private static ConfigurationPropertiesProvider createProviderFromGlobalProperties(ArtifactAstHelper artifactAstHelper) {
+  private ConfigurationPropertiesProvider createProviderFromGlobalProperties(ArtifactConfig artifactConfig) {
     final Map<String, ConfigurationProperty> globalProperties = new HashMap<>();
 
-    artifactAstHelper.executeOnGlobalComponents(componentAstHolder -> {
-      ComponentAst componentAst = componentAstHolder.getComponentAst();
-      if (componentAst.getComponentIdentifier().equals(GLOBAL_PROPERTY_IDENTIFIER)) {
-        componentAstHolder.getNameParameter()
-            .ifPresent(nameParameterAst -> componentAstHolder.getValueParameter().ifPresent(valueParameterAst -> {
-              globalProperties.put(nameParameterAst.getSimpleParameterValueAst().getRawValue(),
-                                   new DefaultConfigurationProperty(format("global-property - file: %s - lineNumber %s",
-                                                                           componentAst.getSourceCodeLocation().getFilename(),
-                                                                           componentAst.getSourceCodeLocation().getStartLine()),
-                                                                    nameParameterAst.getSimpleParameterValueAst().getRawValue(),
-                                                                    valueParameterAst.getSimpleParameterValueAst()
-                                                                        .getRawValue()));
-            }));
-      }
+    artifactConfig.getConfigFiles().stream().forEach(configFile -> {
+      configFile.getConfigLines().get(0).getChildren().stream().forEach(configLine -> {
+        if (GLOBAL_PROPERTY.equals(configLine.getIdentifier())) {
+          String key = configLine.getConfigAttributes().get("name").getValue();
+          String rawValue = configLine.getConfigAttributes().get("value").getValue();
+          globalProperties.put(key,
+                               new DefaultConfigurationProperty(format("global-property - file: %s - lineNumber %s",
+                                                                       configFile.getFilename(), configLine.getLineNumber()),
+                                                                key, rawValue));
+        }
+      });
     });
     return new GlobalPropertyConfigurationPropertiesProvider(globalProperties);
   }
@@ -740,13 +733,13 @@ public class ApplicationModel {
         .filter(componentModel -> componentModel.getIdentifier().equals(componentIdentifier)).findFirst();
   }
 
-  private void convertConfigFileToComponentModel(ArtifactAstHelper artifactAstHelper) {
-
+  private void convertConfigFileToComponentModel(ArtifactConfig artifactConfig) {
+    List<ConfigFile> configFiles = artifactConfig.getConfigFiles();
     ComponentModelReader componentModelReader =
-        new ComponentModelReader(configurationProperties);
-    artifactAstHelper.executeOnGlobalComponents(componentAstHolder -> {
+        new ComponentModelReader(configurationProperties.getConfigurationPropertiesResolver());
+    configFiles.stream().forEach(configFile -> {
       ComponentModel componentModel =
-          componentModelReader.extractComponentDefinitionModel(componentAstHolder);
+          componentModelReader.extractComponentDefinitionModel(configFile.getConfigLines().get(0), configFile.getFilename());
       if (muleComponentModels.isEmpty()) {
         muleComponentModels.add(componentModel);
       } else {
@@ -755,6 +748,7 @@ public class ApplicationModel {
         muleComponentModels.set(0, new ComponentModel.Builder(rootComponentModel).merge(componentModel).build());
       }
     });
+
   }
 
   private void validateModel(Optional<ComponentBuildingDefinitionRegistry> componentBuildingDefinitionRegistry)
@@ -786,12 +780,9 @@ public class ApplicationModel {
           Optional<ComponentModel> referencedFlow = findTopLevelNamedComponent(nameAttribute);
           referencedFlow
               .orElseThrow(() -> new MuleRuntimeException(createStaticMessage("flow-ref at %s:%s is pointing to %s which does not exist",
-                                                                              componentModel.getSourceCodeLocation()
-                                                                                  .map(SourceCodeLocation::getFilename)
+                                                                              componentModel.getConfigFileName()
                                                                                   .orElse("unknown"),
-                                                                              componentModel.getSourceCodeLocation()
-                                                                                  .map(SourceCodeLocation::getStartColumn)
-                                                                                  .orElse(-1),
+                                                                              componentModel.getLineNumber().orElse(-1),
                                                                               nameAttribute)));
         }
       }
@@ -836,15 +827,15 @@ public class ApplicationModel {
 
         if (existingObjectsWithName.containsKey(nameAttributeValue)) {
           ComponentModel otherComponentModel = existingObjectsWithName.get(nameAttributeValue);
-          if (componentModel.getSourceCodeLocation().isPresent() &&
-              otherComponentModel.getSourceCodeLocation().isPresent()) {
+          if (componentModel.getConfigFileName().isPresent() && componentModel.getLineNumber().isPresent() &&
+              otherComponentModel.getConfigFileName().isPresent() && otherComponentModel.getLineNumber().isPresent()) {
             throw new MuleRuntimeException(createStaticMessage(
                                                                "The configuration element [%s] can only appear once, but was present in both [%s:%d] and [%s:%d]",
                                                                componentModel.getIdentifier(),
-                                                               otherComponentModel.getSourceCodeLocation().get().getFilename(),
-                                                               otherComponentModel.getSourceCodeLocation().get().getStartLine(),
-                                                               componentModel.getSourceCodeLocation().get().getFilename(),
-                                                               componentModel.getSourceCodeLocation().get().getStartLine()));
+                                                               otherComponentModel.getConfigFileName().get(),
+                                                               otherComponentModel.getLineNumber().get(),
+                                                               componentModel.getConfigFileName().get(),
+                                                               componentModel.getLineNumber().get()));
           } else {
             throw new MuleRuntimeException(createStaticMessage(
                                                                "The configuration element [%s] can only appear once, but was present multiple times",
@@ -1063,7 +1054,7 @@ public class ApplicationModel {
     Map<String, Map<ComponentIdentifier, ComponentModel>> existingComponentsPerFile = new HashMap<>();
 
     executeOnEveryMuleComponentTree(componentModel -> {
-      String configFileName = componentModel.getSourceCodeLocation().get().getFilename();
+      String configFileName = componentModel.getConfigFileName().get();
       ComponentIdentifier identifier = componentModel.getIdentifier();
 
       if (componentIdentifier.getNamespace().equals(identifier.getNamespace())

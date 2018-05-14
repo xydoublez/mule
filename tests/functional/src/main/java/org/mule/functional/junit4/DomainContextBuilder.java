@@ -18,7 +18,7 @@ import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.api.config.DefaultMuleConfiguration;
 import org.mule.runtime.core.api.context.DefaultMuleContextFactory;
 import org.mule.runtime.core.api.context.MuleContextBuilder;
-import org.mule.runtime.core.internal.artifact.ast.ArtifactXmlBasedAstBuilder;
+import org.mule.runtime.core.api.artifact.dsl.xml.ArtifactXmlBasedAstBuilder;
 import org.mule.tck.config.TestServicesConfigurationBuilder;
 import org.mule.tck.junit4.MockExtensionManagerConfigurationBuilder;
 

@@ -47,7 +47,7 @@ public class GlobalElementNamesValidator implements ExtensionModelValidator {
       protected void onConfiguration(ConfigurationModel configurationModel) {
         configurationModel.getModelProperty(GlobalElementComponentModelModelProperty.class)
             .ifPresent(globalElementComponentModelModelProperty -> {
-              globalElementComponentModelModelProperty.getGlobalElements().stream()
+              globalElementComponentModelModelProperty.getGlobalComponentsAst().stream()
                   .filter(componentAst -> new ComponentAstHolder(componentAst).getNameParameter().isPresent())
                   .forEach(componentAst -> {
                     String nameAttributeValue =

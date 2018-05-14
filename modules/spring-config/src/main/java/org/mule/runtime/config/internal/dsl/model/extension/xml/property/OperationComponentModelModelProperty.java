@@ -6,7 +6,7 @@
  */
 package org.mule.runtime.config.internal.dsl.model.extension.xml.property;
 
-import org.mule.runtime.api.artifact.ast.ComponentAst;
+import org.mule.runtime.api.artifact.ast.ConstructAst;
 import org.mule.runtime.api.artifact.ast.RouteAst;
 import org.mule.runtime.api.meta.model.ModelProperty;
 import org.mule.runtime.config.internal.model.ComponentModel;
@@ -19,33 +19,46 @@ import org.mule.runtime.core.api.processor.Processor;
  */
 public class OperationComponentModelModelProperty implements ModelProperty {
 
-  private final ComponentAst operationComponentAst;
-  private final RouteAst bodyConstructAst;
+  private final ConstructAst operationConstructAst;
+  private final RouteAst bodyAst;
+  private final ComponentModel operationComponentModel;
+  private final ComponentModel bodyComponentModel;
 
   /**
    * Constructs a {@link ModelProperty} that will hold the complete <operation/> and its {@link Processor}s defined in a <body/>
    * element to be later macro expanded into a Mule application.
    *
-   * @param operationComponentAst <operation/> element represented through {@link ComponentModel}s.
-   * @param bodyRouteAst <body/> element with all the {@link Processor} represented through {@link ComponentModel}s.
+   * @param operationComponentModel <operation/> element represented through {@link ComponentModel}s.
+   * @param bodyComponentModel <body/> element with all the {@link Processor} represented through {@link ComponentModel}s.
    */
-  public OperationComponentModelModelProperty(ComponentAst operationComponentAst, RouteAst bodyRouteAst) {
-    this.operationComponentAst = operationComponentAst;
-    this.bodyConstructAst = bodyRouteAst;
+  public OperationComponentModelModelProperty(ConstructAst constructAst, RouteAst bodyComponentAst,
+                                              ComponentModel operationComponentModel, ComponentModel bodyComponentModel) {
+    this.operationComponentModel = operationComponentModel;
+    this.bodyComponentModel = bodyComponentModel;
+    this.operationConstructAst = constructAst;
+    this.bodyAst = bodyComponentAst;
   }
 
   /**
    * @return the {@link ComponentModel} that's pointing to the <operation/> element
    */
-  public ComponentAst getOperationComponentModel() {
-    return operationComponentAst;
+  public ComponentModel getOperationComponentModel() {
+    return operationComponentModel;
   }
 
   /**
    * @return the {@link ComponentModel} that's pointing to the <body/> element
    */
-  public RouteAst getBodyConstructAst() {
-    return bodyConstructAst;
+  public ComponentModel getBodyComponentModel() {
+    return bodyComponentModel;
+  }
+
+  public ConstructAst getOperationConstructAst() {
+    return operationConstructAst;
+  }
+
+  public RouteAst getBodyAst() {
+    return bodyAst;
   }
 
   @Override

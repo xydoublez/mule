@@ -15,9 +15,22 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_CLASSLOADER_REPOSITORY;
 import static org.mule.test.runner.utils.AnnotationUtils.getAnnotationAttributeFrom;
+
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import org.junit.After;
+import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
+
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.serialization.ObjectSerializer;
 import org.mule.runtime.api.service.Service;
+import org.mule.runtime.core.api.artifact.dsl.xml.ArtifactXmlBasedAstBuilder;
 import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.api.config.builders.SimpleConfigurationBuilder;
 import org.mule.runtime.module.artifact.api.classloader.ArtifactClassLoader;
@@ -36,16 +49,6 @@ import org.mule.test.runner.ServiceClassLoadersAware;
 import org.mule.test.runner.api.ClassPathClassifier;
 import org.mule.test.runner.api.IsolatedClassLoaderExtensionsManagerConfigurationBuilder;
 import org.mule.test.runner.api.IsolatedServiceProviderDiscoverer;
-
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import org.junit.After;
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
 
 /**
  * Base class for running {@link FunctionalTestCase} with class loader isolation using {@link ArtifactClassLoaderRunner}, a JUnit
@@ -244,6 +247,13 @@ public abstract class ArtifactFunctionalTestCase extends FunctionalTestCase {
                                                                            pluginClassLoaders));
 
     builders.add(0, new SimpleConfigurationBuilder(singletonMap(OBJECT_CLASSLOADER_REPOSITORY, classLoaderRepository)));
+  }
+
+  @Override
+  protected ArtifactXmlBasedAstBuilder createArtifactAstBuilder(Set<String> configFiles) {
+    return super.createArtifactAstBuilder(configFiles)
+        .setExtensionModels(extensionsManagerConfigurationBuilder.getExtensionModels())
+        .setClassLoader(applicationClassLoader);
   }
 
   /**

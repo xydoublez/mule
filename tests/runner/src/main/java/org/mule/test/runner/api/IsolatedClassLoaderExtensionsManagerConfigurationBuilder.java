@@ -11,6 +11,13 @@ import static java.util.stream.Collectors.toList;
 import static org.mule.runtime.api.dsl.DslResolvingContext.getDefault;
 import static org.mule.runtime.core.api.util.ClassUtils.withContextClassLoader;
 import static org.mule.runtime.deployment.model.api.plugin.ArtifactPluginDescriptor.MULE_AUTO_GENERATED_ARTIFACT_PATH_INSIDE_JAR;
+
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.core.api.MuleContext;
@@ -23,15 +30,10 @@ import org.mule.runtime.module.artifact.api.classloader.ArtifactClassLoader;
 import org.mule.runtime.module.extension.api.manager.DefaultExtensionManagerFactory;
 import org.mule.runtime.module.extension.api.manager.ExtensionManagerFactory;
 
-import com.google.common.collect.ImmutableSet;
-
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * A {@link org.mule.runtime.core.api.config.ConfigurationBuilder} that creates an
@@ -47,7 +49,7 @@ public class IsolatedClassLoaderExtensionsManagerConfigurationBuilder extends Ab
 
   private final ExtensionManagerFactory extensionManagerFactory;
   private final List<ArtifactClassLoader> pluginsClassLoaders;
-  private final List<ExtensionModel> extensionModels = new ArrayList<>();
+  private final Set<ExtensionModel> extensionModels = new HashSet<>();
 
   /**
    * Creates an instance of the builder with the list of plugin class loaders. If an {@link ArtifactClassLoader} has a extension
@@ -138,6 +140,11 @@ public class IsolatedClassLoaderExtensionsManagerConfigurationBuilder extends Ab
     }
   }
 
+  public Set<ExtensionModel> getExtensionModels() {
+    return extensionModels;
+  }
+
+  // TODO unify with the other parts
   private List<ExtensionModel> loadRuntimeExtensionModels() {
     return new SpiServiceRegistry()
         .lookupProviders(RuntimeExtensionModelProvider.class, Thread.currentThread().getContextClassLoader())

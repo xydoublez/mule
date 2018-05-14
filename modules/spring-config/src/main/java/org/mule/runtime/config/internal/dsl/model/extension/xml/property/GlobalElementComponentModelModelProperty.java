@@ -19,7 +19,8 @@ import org.mule.runtime.config.internal.model.ComponentModel;
  */
 public class GlobalElementComponentModelModelProperty implements ModelProperty {
 
-  private final List<ComponentAst> globalElements;
+  private final List<ComponentModel> globalElements;
+  private final List<ComponentAst> globalComponentsAst;
 
   /**
    * Constructs a {@link ModelProperty} that will hold the Mule global elements to be later macro expanded into a Mule
@@ -27,15 +28,20 @@ public class GlobalElementComponentModelModelProperty implements ModelProperty {
    *
    * @param globalElements that will be expanded in a Mule application.
    */
-  public GlobalElementComponentModelModelProperty(List<ComponentAst> globalElements) {
+  public GlobalElementComponentModelModelProperty(List<ComponentModel> globalElements, List<ComponentAst> globalComponentsAst) {
     this.globalElements = globalElements;
+    this.globalComponentsAst = globalComponentsAst;
   }
 
   /**
    * @return collection of {@link ComponentModel} that will be used to expand the current Mule application XML.
    */
-  public List<ComponentAst> getGlobalElements() {
+  public List<ComponentModel> getGlobalElements() {
     return globalElements;
+  }
+
+  public List<ComponentAst> getGlobalComponentsAst() {
+    return globalComponentsAst;
   }
 
   @Override

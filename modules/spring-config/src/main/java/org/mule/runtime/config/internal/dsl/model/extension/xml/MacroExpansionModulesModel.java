@@ -13,7 +13,6 @@ import static org.apache.commons.lang3.StringUtils.repeat;
 import static org.mule.runtime.config.internal.dsl.model.extension.xml.ComponentModelReaderHelper.toXml;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,6 @@ import org.jgrapht.traverse.GraphIterator;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 
 import org.mule.runtime.api.artifact.ast.SimpleParameterValueAst;
-import org.mule.runtime.api.artifact.sintax.SourceCodeLocation;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.config.internal.ArtifactAstHelper;
 import org.mule.runtime.config.internal.model.ApplicationModel;
@@ -96,8 +94,7 @@ public class MacroExpansionModulesModel {
 
           buf.append(lineSeparator()).append(FILE_MACRO_EXPANSION_DELIMITER);
           buf.append(lineSeparator()).append(FILE_MACRO_EXPANSION_SECTION_DELIMITER);
-          buf.append("Filename: ")
-              .append(rootComponentModel.getSourceCodeLocation().map(SourceCodeLocation::getFilename).orElse("<unnamed>"));
+          buf.append("Filename: ").append(rootComponentModel.getConfigFileName().orElse("<unnamed>"));
           buf.append(lineSeparator()).append(FILE_MACRO_EXPANSION_SECTION_DELIMITER);
           buf.append(toXml(rootComponentModel));
           buf.append(lineSeparator()).append(FILE_MACRO_EXPANSION_DELIMITER);
@@ -183,10 +180,9 @@ public class MacroExpansionModulesModel {
    */
   private Set<String> getDirectExpandableNamespaceDependencies(ComponentModel rootComponentModel,
                                                                Set<String> namespacesExtensions) {
-    //return getUsedNamespaces(rootComponentModel).stream()
-    //    .filter(namespacesExtensions::contains)
-    //    .collect(Collectors.toSet());
-    return Collections.emptySet();
+    return getUsedNamespaces(rootComponentModel).stream()
+        .filter(namespacesExtensions::contains)
+        .collect(Collectors.toSet());
   }
 
   /**
@@ -196,10 +192,18 @@ public class MacroExpansionModulesModel {
    * @param rootComponentModel element to look for the attributes.
    * @return a collection of used namespaces.
    */
+  public static Set<String> getUsedNamespaces(ComponentModel rootComponentModel) {
+    return rootComponentModel.getParameters().entrySet().stream()
+        .filter(parameter -> parameter.getKey().startsWith(XMLNS_ATTRIBUTE + ":"))
+        .map(Map.Entry::getValue)
+        .collect(Collectors.toSet());
+  }
+
   public static Set<String> getUsedNamespaces(ArtifactAstHelper artifactAstHelper) {
     return artifactAstHelper.getArtifactAst().getParameters().stream()
         .filter(parameter -> parameter.getParameterIdentifier().getIdentifier().getName().startsWith(XMLNS_ATTRIBUTE + ":"))
         .map(parameter -> ((SimpleParameterValueAst) parameter.getValue()).getRawValue())
         .collect(Collectors.toSet());
   }
+
 }

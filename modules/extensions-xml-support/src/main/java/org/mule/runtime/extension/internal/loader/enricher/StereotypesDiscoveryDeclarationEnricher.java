@@ -117,7 +117,7 @@ public class StereotypesDiscoveryDeclarationEnricher implements DeclarationEnric
                                  List<ParameterDeclaration> allParameters) {
       globalElementModelProperty.ifPresent(modelProperty -> allParameters.stream()
           .filter(parameterDeclaration -> parameterDeclaration.getType() instanceof StringType)
-          .forEach(parameterDeclaration -> traverseProperty(globalElementModelProperty.get().getGlobalElements(),
+          .forEach(parameterDeclaration -> traverseProperty(globalElementModelProperty.get().getGlobalComponentsAst(),
                                                             parameterDeclaration)));
     }
 

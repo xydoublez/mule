@@ -21,7 +21,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import org.mule.runtime.api.artifact.sintax.SourceCodeLocation;
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.component.TypedComponentIdentifier;
 import org.mule.runtime.config.internal.dsl.model.SpringComponentModel;
@@ -64,8 +63,24 @@ public abstract class ComponentModel {
 
   private Object objectInstance;
   private Class<?> type;
-  private SourceCodeLocation sourceCodeLocation;
+  private Integer lineNumber;
+  private String configFileName;
   private boolean enabled = true;
+
+  /**
+   * @return the line number in which the component was defined in the configuration file. It may be empty if the component was
+   *         created pragmatically.
+   */
+  public Optional<Integer> getLineNumber() {
+    return ofNullable(lineNumber);
+  }
+
+  /**
+   * @return the config file name in which the component was defined. It may be empty if the component was created pragmatically.
+   */
+  public Optional<String> getConfigFileName() {
+    return ofNullable(configFileName);
+  }
 
   /**
    * @return the configuration identifier.
@@ -93,10 +108,6 @@ public abstract class ComponentModel {
    */
   public Map<String, Object> getCustomAttributes() {
     return copyOf(customAttributes);
-  }
-
-  public Optional<SourceCodeLocation> getSourceCodeLocation() {
-    return ofNullable(sourceCodeLocation);
   }
 
   /**
@@ -365,9 +376,23 @@ public abstract class ComponentModel {
       return this;
     }
 
-    public Builder setSourceCodeLocation(SourceCodeLocation sourceCodeLocation) {
+    /**
+     * @param configFileName the config file name in which this component was defined.
+     * @return the builder.
+     */
+    public Builder setConfigFileName(String configFileName) {
+      checkIsNotBuildingFromRootComponentModel("configFileName");
+      this.model.configFileName = configFileName;
+      return this;
+    }
+
+    /**
+     * @param lineNumber the line number within the config file in which this component was defined.
+     * @return the builder.
+     */
+    public Builder setLineNumber(int lineNumber) {
       checkIsNotBuildingFromRootComponentModel("lineNumber");
-      this.model.sourceCodeLocation = sourceCodeLocation;
+      this.model.lineNumber = lineNumber;
       return this;
     }
 

@@ -9,7 +9,7 @@ package org.mule.runtime.core.api.context;
 import java.util.Set;
 
 import org.mule.runtime.api.artifact.ast.ArtifactAst;
-import org.mule.runtime.core.internal.artifact.ast.ArtifactXmlBasedAstBuilder;
+import org.mule.runtime.core.api.artifact.dsl.xml.ArtifactXmlBasedAstBuilder;
 
 public class TestArtifactAstBuilder {
 

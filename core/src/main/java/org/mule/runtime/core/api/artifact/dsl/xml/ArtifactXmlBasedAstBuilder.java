@@ -4,13 +4,15 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.core.internal.artifact.ast;
+package org.mule.runtime.core.api.artifact.dsl.xml;
 
 import static java.util.Collections.emptySet;
 import static org.mule.runtime.dsl.internal.parser.xml.XmlConfigurationDocumentLoader.noValidationDocumentLoader;
 import static org.mule.runtime.dsl.internal.parser.xml.XmlConfigurationDocumentLoader.schemaValidatingDocumentLoader;
 
 import java.io.IOException;
+import java.net.URL;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.mule.runtime.api.artifact.ast.ArtifactAst;
@@ -27,7 +29,9 @@ import org.mule.runtime.dsl.internal.parser.xml.XmlConfigurationDocumentLoader;
 
 public class ArtifactXmlBasedAstBuilder {
 
+  private Set<URL> configFiles = new HashSet<>();
   private ConfigResource[] configResources;
+  private ConfigResource[] applicationModelConfigResources;
   private Set<ExtensionModel> extensionModels = emptySet();
   private ClassLoader artifactClassLoader;
   private boolean disableXmlValidations = false;
@@ -50,9 +54,18 @@ public class ArtifactXmlBasedAstBuilder {
     return this;
   }
 
+  // TODO review this name
+  public ArtifactXmlBasedAstBuilder setConfigUrls(Set<URL> configFiles) {
+    this.configFiles = configFiles;
+    this.configResources = loadConfigResourcesFromUrls(configFiles);
+    this.applicationModelConfigResources = loadConfigResourcesFromUrls(configFiles);
+    return this;
+  }
+
   public ArtifactXmlBasedAstBuilder setConfigFiles(Set<String> configFiles) {
     try {
       this.configResources = loadConfigResources(configFiles);
+      this.applicationModelConfigResources = loadConfigResources(configFiles);
       return this;
     } catch (ConfigurationException e) {
       throw new MuleRuntimeException(e);
@@ -71,6 +84,17 @@ public class ArtifactXmlBasedAstBuilder {
     } catch (IOException e) {
       throw new ConfigurationException(e);
     }
+  }
+
+  // TODO revie wthis name and loading from both URLs and Strings
+  private ConfigResource[] loadConfigResourcesFromUrls(Set<URL> configs) {
+    ConfigResource[] artifactConfigResources = new ConfigResource[configs.size()];
+    int i = 0;
+    for (URL config : configs) {
+      artifactConfigResources[i] = new ConfigResource(config);
+      i++;
+    }
+    return artifactConfigResources;
   }
 
   public ArtifactXmlBasedAstBuilder setClassLoader(ClassLoader artifactClassLoader) {
@@ -101,7 +125,8 @@ public class ArtifactXmlBasedAstBuilder {
                               extensionModels, externalResourceProvider, value -> value);
 
     ArtifactDefinition artifactDefinition = xmlArtifactParser.parse();
-    return new XmlArtifactModelFactory(extensionModels).createFrom(artifactDefinition);
+    return new XmlArtifactModelFactory(extensionModels).createFrom(artifactDefinition, configFiles, disableXmlValidations,
+                                                                   applicationModelConfigResources);
   }
 
 }
