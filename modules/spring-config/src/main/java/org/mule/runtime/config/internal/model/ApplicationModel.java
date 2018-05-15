@@ -423,6 +423,13 @@ public class ApplicationModel {
     FileConfigurationPropertiesProvider externalPropertiesConfigurationProvider =
         new FileConfigurationPropertiesProvider(externalResourceProvider, "External files");
 
+<<<<<<< HEAD
+=======
+    ConfigurationPropertiesProvider deploymentPropertiesConfigurationProperties =
+        new MapConfigurationPropertiesProvider(deploymentProperties,
+                                               "Deployment properties");
+
+>>>>>>> sdf
     Optional<ConfigurationPropertiesResolver> parentConfigurationPropertiesResolver = of(localResolver);
     if (parentConfigurationProperties.isPresent()) {
       parentConfigurationPropertiesResolver =
@@ -486,15 +493,12 @@ public class ApplicationModel {
           new PropertiesResolverConfigurationProperties(new DefaultConfigurationPropertiesResolver(of(externalPropertiesResolver),
                                                                                                    deploymentPropertiesConfigurationProperties));
     }
-<<<<<<< HEAD
 
     try {
       initialiseIfNeeded(configurationProperties.getConfigurationPropertiesResolver());
     } catch (InitialisationException e) {
       throw new MuleRuntimeException(e);
     }
-=======
->>>>>>> sdf
   }
 
   private List<ConfigurationPropertiesProvider> getConfigurationPropertiesProvidersFromComponents(ArtifactConfig artifactConfig,
