@@ -17,8 +17,8 @@ import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.dsl.internal.parser.xml.DefaultXmlGathererErrorHandlerFactory;
 import org.mule.runtime.dsl.internal.parser.xml.DefaultXmlLoggerErrorHandler;
-import org.mule.runtime.config.internal.ModuleDelegatingEntityResolver;
 import org.mule.runtime.config.internal.MuleDocumentLoader;
+import org.mule.runtime.dsl.internal.parser.xml.ModuleDelegatingEntityResolver;
 
 import org.springframework.beans.factory.xml.DelegatingEntityResolver;
 import org.w3c.dom.Document;

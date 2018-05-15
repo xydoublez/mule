@@ -42,6 +42,7 @@ import static org.mule.runtime.internal.util.NameValidationUtil.verifyStringDoes
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -98,15 +99,11 @@ import org.mule.runtime.config.internal.dsl.processor.ObjectTypeVisitor;
 import org.mule.runtime.config.internal.dsl.processor.xml.XmlCustomAttributeHandler;
 import org.mule.runtime.core.api.config.ConfigurationException;
 import org.mule.runtime.core.api.extension.MuleExtensionModelProvider;
-<<<<<<< HEAD
-<<<<<<< HEAD
 import org.mule.runtime.core.api.util.ClassUtils;
 import org.mule.runtime.dsl.api.ResourceProvider;
-=======
 import org.mule.runtime.core.api.extension.MuleModuleExtensionModelProvider;
->>>>>>> sdf
-=======
->>>>>>> sdf
+import org.mule.runtime.core.api.extension.RuntimeExtensionModelProvider;
+import org.mule.runtime.core.api.registry.SpiServiceRegistry;
 import org.mule.runtime.dsl.api.component.ComponentBuildingDefinition;
 import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
 import org.mule.runtime.dsl.api.component.config.DefaultComponentLocation;
@@ -408,14 +405,11 @@ public class ApplicationModel {
     EnvironmentPropertiesConfigurationProvider environmentPropertiesConfigurationProvider =
         new EnvironmentPropertiesConfigurationProvider();
     ConfigurationPropertiesProvider globalPropertiesConfigurationAttributeProvider =
-<<<<<<< HEAD
           createProviderFromGlobalProperties(artifactAstHelper);
 
     DefaultConfigurationPropertiesResolver environmentPropertiesConfigurationPropertiesResolver =
         new DefaultConfigurationPropertiesResolver(empty(), environmentPropertiesConfigurationProvider);
-=======
-        createProviderFromGlobalProperties(artifactConfig);
->>>>>>> sdf
+
     DefaultConfigurationPropertiesResolver localResolver =
         new DefaultConfigurationPropertiesResolver(of(new DefaultConfigurationPropertiesResolver(
                                                                                                  deploymentPropertiesConfigurationProperties != null
@@ -640,10 +634,14 @@ public class ApplicationModel {
   private void convertArtifactDeclarationToComponentModel(Set<ExtensionModel> extensionModels,
                                                           ArtifactDeclaration artifactDeclaration) {
     if (artifactDeclaration != null && !extensionModels.isEmpty()) {
-      ExtensionModel muleModel = MuleExtensionModelProvider.getExtensionModel();
-      if (!extensionModels.contains(muleModel)) {
-        extensionModels = new HashSet<>(extensionModels);
-        extensionModels.add(muleModel);
+      // TODO remove this duplicated code from ExtensionModelDiscoverer
+      Collection<RuntimeExtensionModelProvider> runtimeExtensionModelProviders = new SpiServiceRegistry()
+          .lookupProviders(RuntimeExtensionModelProvider.class, Thread.currentThread().getContextClassLoader());
+      for (RuntimeExtensionModelProvider runtimeExtensionModelProvider : runtimeExtensionModelProviders) {
+        ExtensionModel extensionModel = runtimeExtensionModelProvider.createExtensionModel();
+        if (!extensionModels.contains(extensionModel)) {
+          extensionModels.add(extensionModel);
+        }
       }
 
       DslElementModelFactory elementFactory = DslElementModelFactory.getDefault(DslResolvingContext.getDefault(extensionModels));

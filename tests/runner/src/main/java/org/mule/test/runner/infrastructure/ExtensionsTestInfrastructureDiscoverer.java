@@ -19,6 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.mule.runtime.core.api.config.MuleManifest;
 import org.mule.runtime.core.api.extension.ExtensionManager;
 import org.mule.runtime.core.api.extension.MuleExtensionModelProvider;
 import org.mule.runtime.core.api.extension.MuleModuleExtensionModelProvider;
+import org.mule.runtime.core.api.extension.RuntimeExtensionModelProvider;
 import org.mule.runtime.core.api.registry.ServiceRegistry;
 import org.mule.runtime.core.api.registry.SpiServiceRegistry;
 import org.mule.runtime.core.api.util.FileUtils;
@@ -42,8 +44,6 @@ import org.mule.runtime.extension.api.resources.GeneratedResource;
 import org.mule.runtime.extension.api.resources.ResourcesGenerator;
 import org.mule.runtime.extension.api.resources.spi.GeneratedResourceFactory;
 import org.mule.runtime.internal.dsl.NullDslResolvingContext;
-
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Discovers and registers the extensions to a {@link org.mule.runtime.core.api.extension.ExtensionManager}.
@@ -85,8 +85,14 @@ public class ExtensionsTestInfrastructureDiscoverer {
     Map<String, Object> params = new HashMap<>();
     params.put(TYPE_PROPERTY_NAME, annotatedClass.getName());
     params.put(VERSION, getProductVersion());
-    DslResolvingContext dslResolvingContext = getDefault(ImmutableSet.of(MuleExtensionModelProvider.getExtensionModel(),
-                                                                         MuleModuleExtensionModelProvider.getExtensionModel()));
+    // TODO remove this duplicated code from ExtensionModelDiscoverer
+    Set<ExtensionModel> extensions = new HashSet<>();
+    Collection<RuntimeExtensionModelProvider> runtimeExtensionModelProviders = new SpiServiceRegistry()
+        .lookupProviders(RuntimeExtensionModelProvider.class, Thread.currentThread().getContextClassLoader());
+    for (RuntimeExtensionModelProvider runtimeExtensionModelProvider : runtimeExtensionModelProviders) {
+      extensions.add(runtimeExtensionModelProvider.createExtensionModel());
+    }
+    DslResolvingContext dslResolvingContext = getDefault(extensions);
     ExtensionModel model = loader.loadExtensionModel(annotatedClass.getClassLoader(), dslResolvingContext, params);
     extensionManager.registerExtension(model);
     return model;

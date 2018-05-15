@@ -276,9 +276,9 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
 
   private void createApplicationModel() {
     try {
-      ArtifactConfig artifactConfig = resolveArtifactConfig();
       Set<ExtensionModel> extensions =
           muleContext.getExtensionManager() != null ? muleContext.getExtensionManager().getExtensions() : emptySet();
+      ArtifactConfig artifactConfig = resolveArtifactConfig(extensions);
       org.mule.runtime.dsl.api.ResourceProvider externalResourceProvider =
           new ClassLoaderResourceProvider(muleContext.getExecutionClassLoader());
       applicationModel = new ApplicationModel(artifactConfig, artifactDeclaration, extensions,
@@ -292,7 +292,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
     }
   }
 
-  private ArtifactConfig resolveArtifactConfig() {
+  private ArtifactConfig resolveArtifactConfig(Set<ExtensionModel> extensions) {
     ArtifactConfig.Builder applicationConfigBuilder = new ArtifactConfig.Builder();
     applicationConfigBuilder.setArtifactProperties(this.artifactProperties);
 
@@ -308,14 +308,15 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
     }
 
     List<ConfigFile> configFiles = new ArrayList<>();
-    recursivelyResolveConfigFiles(initialConfigFiles, configFiles).forEach(applicationConfigBuilder::addConfigFile);
+    recursivelyResolveConfigFiles(initialConfigFiles, configFiles, extensions).forEach(applicationConfigBuilder::addConfigFile);
 
     applicationConfigBuilder.setApplicationName(muleContext.getConfiguration().getId());
     return applicationConfigBuilder.build();
   }
 
   private List<ConfigFile> recursivelyResolveConfigFiles(List<Pair<String, Supplier<InputStream>>> configFilesToResolve,
-                                                         List<ConfigFile> alreadyResolvedConfigFiles) {
+                                                         List<ConfigFile> alreadyResolvedConfigFiles,
+                                                         Set<ExtensionModel> extensions) {
 
     DefaultConfigurationPropertiesResolver propertyResolver =
         new DefaultConfigurationPropertiesResolver(empty(), new EnvironmentPropertiesConfigurationProvider());
@@ -330,8 +331,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
           try {
             is = fileNameInputStreamPair.getSecond().get();
             Document document =
-                xmlConfigurationDocumentLoader.loadDocument(muleContext.getExtensionManager() == null ? emptySet()
-                    : muleContext.getExtensionManager().getExtensions(),
+                xmlConfigurationDocumentLoader.loadDocument(extensions,
                                                             fileNameInputStreamPair.getFirst(),
                                                             is);
             ConfigLine mainConfigLine = xmlApplicationParser.parse(document.getDocumentElement()).get();
@@ -388,7 +388,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
               .getResourceAsStream(importedFileName));
         }).collect(toList());
 
-    return recursivelyResolveConfigFiles(newConfigFilesToResolved, resolvedConfigFilesBuilder.build());
+    return recursivelyResolveConfigFiles(newConfigFilesToResolved, resolvedConfigFilesBuilder.build(), extensions);
   }
 
   @Override

@@ -30,7 +30,7 @@ import java.util.stream.StreamSupport;
 public class ForbiddenConfigurationPropertiesValidator implements ExtensionModelValidator {
 
   public static final String CONFIGURATION_PROPERTY_NOT_SUPPORTED_FORMAT_MESSAGE =
-          "Configuration properties is not supported, either use <mule:global-property ../>, ${file::file.txt} or <module:property/> instead. Offending global element '%s'";
+      "Configuration properties is not supported, either use <mule:global-property ../>, ${file::file.txt} or <module:property/> instead. Offending global element '%s'";
 
   @Override
   public void validate(ExtensionModel extensionModel, ProblemsReporter problemsReporter) {
@@ -39,8 +39,8 @@ public class ForbiddenConfigurationPropertiesValidator implements ExtensionModel
       modelProperty.getGlobalElements().forEach(globalElementComponentModel -> {
         if (configurationPropertiesCollection.contains(globalElementComponentModel.getIdentifier())) {
           problemsReporter.addError(new Problem(extensionModel, format(
-                  CONFIGURATION_PROPERTY_NOT_SUPPORTED_FORMAT_MESSAGE,
-                  globalElementComponentModel.getIdentifier())));
+                                                                       CONFIGURATION_PROPERTY_NOT_SUPPORTED_FORMAT_MESSAGE,
+                                                                       globalElementComponentModel.getIdentifier())));
         }
       });
     });
@@ -48,10 +48,10 @@ public class ForbiddenConfigurationPropertiesValidator implements ExtensionModel
 
   private Set<ComponentIdentifier> getConfigurationPropertiesIdentifiers() {
     final ServiceLoader<ConfigurationPropertiesProviderFactory> providerFactories =
-            ServiceLoader.load(ConfigurationPropertiesProviderFactory.class);
+        ServiceLoader.load(ConfigurationPropertiesProviderFactory.class);
     return StreamSupport.stream(providerFactories.spliterator(), false)
-            .map(ConfigurationPropertiesProviderFactory::getSupportedComponentIdentifier)
-            .collect(Collectors.toSet());
+        .map(ConfigurationPropertiesProviderFactory::getSupportedComponentIdentifier)
+        .collect(Collectors.toSet());
   }
 
 }

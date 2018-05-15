@@ -40,9 +40,9 @@ public class CorrectPrefixesValidator implements ExtensionModelValidator {
   private static final String SEPARATOR = ":";
   public static final String TYPE_RAISE_ERROR_ATTRIBUTE = "type";
   public static final String EMPTY_TYPE_FORMAT_MESSAGE =
-          "When using a %s the '%s' must not be null nor empty, offending operation '%s'";
+      "When using a %s the '%s' must not be null nor empty, offending operation '%s'";
   public static final String WRONG_VALUE_FORMAT_MESSAGE =
-          "When using a %s the '%s' must either use the runtime or the custom namespace of the current module ('%s' or '%s') but found '%s', offending operation '%s'";
+      "When using a %s the '%s' must either use the runtime or the custom namespace of the current module ('%s' or '%s') but found '%s', offending operation '%s'";
 
   @Override
   public void validate(ExtensionModel extensionModel, ProblemsReporter problemsReporter) {
@@ -51,10 +51,10 @@ public class CorrectPrefixesValidator implements ExtensionModelValidator {
       @Override
       protected void onOperation(HasOperationModels owner, OperationModel operationModel) {
         operationModel.getModelProperty(OperationComponentModelModelProperty.class)
-                .ifPresent(operationComponentModelModelProperty -> {
-                  searchAndValidate(extensionModel.getXmlDslModel().getPrefix(), operationModel,
-                                    operationComponentModelModelProperty.getBodyComponentModel(), problemsReporter);
-                });
+            .ifPresent(operationComponentModelModelProperty -> {
+              searchAndValidate(extensionModel.getXmlDslModel().getPrefix(), operationModel,
+                                operationComponentModelModelProperty.getBodyComponentModel(), problemsReporter);
+            });
       }
     }.walk(extensionModel);
   }
@@ -100,23 +100,23 @@ public class CorrectPrefixesValidator implements ExtensionModelValidator {
     final String stringRepresentation = elementComponentModel.getParameters().get(attributeToValidate);
     if (StringUtils.isBlank(stringRepresentation)) {
       problemsReporter.addError(new Problem(operationModel, format(
-              EMPTY_TYPE_FORMAT_MESSAGE,
-              workingIdentifier.toString(),
-              attributeToValidate,
-              operationModel.getName())));
+                                                                   EMPTY_TYPE_FORMAT_MESSAGE,
+                                                                   workingIdentifier.toString(),
+                                                                   attributeToValidate,
+                                                                   operationModel.getName())));
     } else {
       int separator = stringRepresentation.indexOf(SEPARATOR);
       if (separator > 0) {
         String namespace = stringRepresentation.substring(0, separator).toUpperCase();
         if (!moduleNamespace.toUpperCase().equals(namespace)) {
           problemsReporter.addError(new Problem(operationModel, format(
-                  WRONG_VALUE_FORMAT_MESSAGE,
-                  workingIdentifier.toString(),
-                  attributeToValidate,
-                  CORE_ERROR_NS,
-                  moduleNamespace.toUpperCase(),
-                  namespace,
-                  operationModel.getName())));
+                                                                       WRONG_VALUE_FORMAT_MESSAGE,
+                                                                       workingIdentifier.toString(),
+                                                                       attributeToValidate,
+                                                                       CORE_ERROR_NS,
+                                                                       moduleNamespace.toUpperCase(),
+                                                                       namespace,
+                                                                       operationModel.getName())));
         }
       }
     }
