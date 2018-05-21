@@ -6,18 +6,19 @@
  */
 package org.mule.functional.api;
 
+import static org.mule.metadata.api.model.MetadataFormat.JAVA;
 import static org.mule.runtime.api.meta.Category.COMMUNITY;
 import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
 import static org.mule.runtime.core.api.extension.MuleExtensionModelProvider.MULESOFT_VENDOR;
-import static org.mule.runtime.core.api.extension.MuleExtensionModelProvider.MULE_NAME;
 import static org.mule.runtime.core.api.extension.MuleExtensionModelProvider.MULE_VERSION;
 
 import org.mule.metadata.api.ClassTypeLoader;
+import org.mule.metadata.api.builder.BaseTypeBuilder;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.XmlDslModel;
 import org.mule.runtime.api.meta.model.declaration.fluent.ExtensionDeclarer;
 import org.mule.runtime.api.meta.model.declaration.fluent.OperationDeclarer;
-import org.mule.runtime.core.internal.extension.CustomBuildingDefinitionProviderModelProperty;
+import org.mule.runtime.api.meta.model.declaration.fluent.SourceDeclarer;
 import org.mule.runtime.extension.api.declaration.type.ExtensionsTypeLoaderFactory;
 import org.mule.runtime.extension.api.loader.ExtensionLoadingContext;
 import org.mule.runtime.extension.api.loader.ExtensionLoadingDelegate;
@@ -52,6 +53,15 @@ public final class TestPluginExtensionModelProvider implements ExtensionLoadingD
             .build());
 
     declareThrow(extensionDeclarer, typeLoader);
+    declareSkeletonSource(extensionDeclarer);
+  }
+
+  private void declareSkeletonSource(ExtensionDeclarer extensionDeclarer) {
+    SourceDeclarer sourceDeclarer = extensionDeclarer.withMessageSource("skeleton-source")
+        .describedAs("Mock message source that provides access to the Processor set by the owner Flow.");
+
+    sourceDeclarer.withOutput().ofType(BaseTypeBuilder.create(JAVA).voidType().build());
+    sourceDeclarer.withOutputAttributes().ofType(BaseTypeBuilder.create(JAVA).voidType().build());
   }
 
   private void declareThrow(ExtensionDeclarer extensionDeclarer, ClassTypeLoader typeLoader) {

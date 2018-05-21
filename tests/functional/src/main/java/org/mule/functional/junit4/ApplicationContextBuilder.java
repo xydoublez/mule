@@ -8,20 +8,27 @@ package org.mule.functional.junit4;
 
 import static org.mule.runtime.config.api.SpringXmlConfigurationBuilderFactory.createConfigurationBuilder;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APP;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.mule.runtime.api.artifact.ast.ArtifactAst;
+import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.core.api.MuleContext;
+import org.mule.runtime.core.api.artifact.dsl.xml.ArtifactXmlBasedAstBuilder;
 import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.api.config.DefaultMuleConfiguration;
 import org.mule.runtime.core.api.context.DefaultMuleContextFactory;
 import org.mule.runtime.core.api.context.MuleContextBuilder;
 import org.mule.runtime.core.api.context.MuleContextFactory;
-import org.mule.runtime.core.api.artifact.dsl.xml.ArtifactXmlBasedAstBuilder;
+import org.mule.runtime.core.api.extension.RuntimeExtensionModelProvider;
+import org.mule.runtime.core.api.registry.SpiServiceRegistry;
 import org.mule.tck.junit4.MockExtensionManagerConfigurationBuilder;
 
 import com.google.common.collect.ImmutableSet;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ApplicationContextBuilder {
 
@@ -77,9 +84,17 @@ public class ApplicationContextBuilder {
   }
 
   protected ConfigurationBuilder getAppBuilder(String[] configResource) throws Exception {
+    // TODO remove this duplicated code from ExtensionModelDiscoverer
+    Set<ExtensionModel> extensions = new HashSet<>();
+    Collection<RuntimeExtensionModelProvider> runtimeExtensionModelProviders = new SpiServiceRegistry()
+        .lookupProviders(RuntimeExtensionModelProvider.class, Thread.currentThread().getContextClassLoader());
+    for (RuntimeExtensionModelProvider runtimeExtensionModelProvider : runtimeExtensionModelProviders) {
+      extensions.add(runtimeExtensionModelProvider.createExtensionModel());
+    }
     ArtifactAst artifactAst = ArtifactXmlBasedAstBuilder.builder()
         .setClassLoader(Thread.currentThread().getContextClassLoader())
         .setConfigFiles(ImmutableSet.copyOf(configResource))
+        .setExtensionModels(extensions)
         .build();
     return createConfigurationBuilder(artifactAst, domainContext);
   }

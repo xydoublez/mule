@@ -178,8 +178,33 @@ class MuleExtensionModelDeclarer {
 
     // global elements
     declareGlobalProperty(extensionDeclarer);
+    declareObject(extensionDeclarer);
 
     return extensionDeclarer;
+  }
+
+  private void declareObject(ExtensionDeclarer extensionDeclarer) {
+    ObjectTypeBuilder objectObjectBuilder = create(JAVA)
+        .objectType()
+        .id("object")
+        .with(new TypeAliasAnnotation("Object"))
+        .with(new TypeDslAnnotation(false, true, null, null))
+        .description("Element to declare a java object. Objects declared globally can be referenced from other parts of the configuration or recovered programmatically"
+            + " through org.mule.runtime.api.artifact.Registry.");
+
+    objectObjectBuilder.addField()
+        .key("name")
+        .value(this::stringType)
+        .required(false)
+        .description("Name to use to reference this object.");
+
+    objectObjectBuilder.addField()
+        .key("class")
+        .value(this::stringType)
+        .required(true)
+        .description("The value of the property. This replaces each occurence of a Spring placeholder.");
+
+    extensionDeclarer.getDeclaration().addType(objectObjectBuilder.build());
   }
 
   private void declareGlobalProperty(ExtensionDeclarer extensionDeclarer) {
