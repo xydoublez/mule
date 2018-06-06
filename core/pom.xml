@@ -72,6 +72,12 @@
     -->
     <dependencies>
         <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>4.2.0</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.mule.runtime</groupId>
             <artifactId>mule-api</artifactId>
         </dependency>
