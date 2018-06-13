@@ -7,7 +7,7 @@
 package org.mule.runtime.config.internal.processor;
 
 import org.mule.runtime.api.component.Component;
-import org.mule.runtime.config.internal.SpringConfigurationComponentLocator;
+import org.mule.runtime.core.internal.component.DefaultConfigurationComponentLocator;
 import org.mule.runtime.dsl.api.component.ComponentFactory;
 
 import org.springframework.beans.BeansException;
@@ -15,23 +15,23 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
 /**
- * Bean post processor that creates an {@link SpringConfigurationComponentLocator}.
+ * Bean post processor that creates an {@link DefaultConfigurationComponentLocator}.
  *
  * For each registered bean, it checks if it's a configuration components and in such case it adds the component to the
- * {@link SpringConfigurationComponentLocator} instance.
+ * {@link DefaultConfigurationComponentLocator} instance.
  *
  * @since 4.0
  */
 public class ComponentLocatorCreatePostProcessor implements BeanPostProcessor {
 
-  private SpringConfigurationComponentLocator componentLocator;
+  private DefaultConfigurationComponentLocator componentLocator;
 
   /**
    * Creates a new instance that will populate component over {@code componentLocator}
    *
    * @param componentLocator the locator in which configuration components must be added.
    */
-  public ComponentLocatorCreatePostProcessor(SpringConfigurationComponentLocator componentLocator) {
+  public ComponentLocatorCreatePostProcessor(DefaultConfigurationComponentLocator componentLocator) {
     this.componentLocator = componentLocator;
   }
 

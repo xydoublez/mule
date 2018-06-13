@@ -47,14 +47,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Adds lookup/register/unregister methods for Mule-specific entities to the standard Registry interface.
  */
-public class MuleRegistryHelper implements MuleRegistry, RegistryProvider {
-
-  protected transient Logger logger = LoggerFactory.getLogger(MuleRegistryHelper.class);
-
-  /**
-   * A reference to Mule's internal registry
-   */
-  private DefaultRegistryBroker registry;
+public class MuleRegistryHelper implements MuleRegistry {
 
   /**
    * We cache transformer searches so that we only search once
@@ -501,7 +494,7 @@ public class MuleRegistryHelper implements MuleRegistry, RegistryProvider {
   }
 
   @Override
-  public Collection<Registry> getRegistries() {
+  public Collection<InternalRegistry> getRegistries() {
     return ImmutableList.copyOf(registry.getRegistries());
   }
 

@@ -12,14 +12,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
-import static org.mule.runtime.core.internal.lifecycle.DefaultLifecycleInterceptor.createInitDisposeLifecycleInterceptor;
-import static org.mule.runtime.core.internal.lifecycle.DefaultLifecycleInterceptor.createStartStopLifecycleInterceptor;
 
 import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.context.MuleContextAware;
 import org.mule.runtime.core.api.util.UUID;
-import org.mule.runtime.core.internal.context.MuleContextWithRegistries;
+import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.runtime.core.internal.lifecycle.MuleLifecycleInterceptor;
 import org.mule.runtime.core.internal.registry.map.RegistryMap;
 import org.mule.runtime.core.privileged.registry.RegistrationException;
@@ -219,7 +217,7 @@ public class TransientRegistryTestCase extends AbstractMuleContextTestCase {
   }
 
   private MuleRegistry getRegistry() {
-    return ((MuleContextWithRegistries) muleContext).getRegistry();
+    return ((MuleContextWithRegistry) muleContext).getRegistry();
   }
 
   public class InterfaceBasedTracker extends AbstractLifecycleTracker {

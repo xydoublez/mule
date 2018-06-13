@@ -38,11 +38,11 @@ import java.util.Map;
  * @deprecated as of 3.7.0. Use {@link SimpleRegistry instead}.
  */
 @Deprecated
-public class TransientRegistry extends AbstractRegistry {
+public class TransientRegistry extends AbstractInternalRegistry {
 
   public static final String REGISTRY_ID = "org.mule.runtime.core.Registry.Transient";
 
-  private final RegistryMap registryMap = new RegistryMap(logger);
+  private final RegistryMap registryMap = new RegistryMap(LOGGER);
 
   public TransientRegistry(String id, MuleContext muleContext, LifecycleInterceptor lifecycleInterceptor) {
     super(id, muleContext, lifecycleInterceptor);
@@ -77,9 +77,9 @@ public class TransientRegistry extends AbstractRegistry {
       try {
         ((Disposable) obj).dispose();
       } catch (Exception e) {
-        logger.warn("Can not dispose object. " + getMessage(e));
-        if (logger.isDebugEnabled()) {
-          logger.debug("Can not dispose object. " + getStackTrace(e));
+        LOGGER.warn("Can not dispose object. " + getMessage(e));
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug("Can not dispose object. " + getStackTrace(e));
         }
       }
     }
@@ -226,11 +226,11 @@ public class TransientRegistry extends AbstractRegistry {
       throw new RegistrationException(I18nMessageFactory.createStaticMessage("Attempt to register object with no key"));
     }
 
-    if (logger.isDebugEnabled()) {
-      logger.debug(String.format("registering key/object %s/%s", key, object));
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(String.format("registering key/object %s/%s", key, object));
     }
 
-    logger.debug("applying processors");
+    LOGGER.debug("applying processors");
     object = applyProcessors(object, metadata);
     if (object == null) {
       return;
@@ -248,8 +248,8 @@ public class TransientRegistry extends AbstractRegistry {
 
     try {
       if (!hasFlag(metadata, MuleRegistry.LIFECYCLE_BYPASS_FLAG)) {
-        if (logger.isDebugEnabled()) {
-          logger.debug("applying lifecycle to object: " + object);
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug("applying lifecycle to object: " + object);
         }
         getLifecycleManager().applyCompletedPhases(object);
       }

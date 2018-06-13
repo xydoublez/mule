@@ -10,16 +10,15 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.Collections.singleton;
+import static java.util.Optional.of;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getCause;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
-import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.ALL;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APP;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APPLY_TO_ARTIFACT_TYPE_PARAMETER_KEY;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.DOMAIN;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.POLICY;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.createFromString;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
@@ -30,17 +29,18 @@ import org.mule.runtime.core.api.transaction.TransactionFactory;
 import org.mule.runtime.core.api.transformer.Transformer;
 import org.mule.runtime.core.api.util.PropertiesUtils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class for an object will load objects defined in a file called <code>registry-bootstrap.properties</code> into the local
@@ -101,8 +101,10 @@ import java.util.Set;
  *
  * @since 3.7.0
  */
-public abstract class AbstractRegistryBootstrap implements Initialisable {
+public abstract class  AbstractRegistryBootstrap implements Initialisable {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRegistryBootstrap.class);
+  
   private static final String TRANSACTION_RESOURCE_SUFFIX = ".transaction.resource";
   private static final String OPTIONAL_ATTRIBUTE = "optional";
   private static final String RETURN_CLASS_PROPERTY = "returnClass";
@@ -113,7 +115,7 @@ public abstract class AbstractRegistryBootstrap implements Initialisable {
   public static final String SINGLE_TX = ".singletx.";
 
   protected ArtifactType artifactType = APP;
-  protected final transient Logger logger = LoggerFactory.getLogger(getClass());
+  
   protected MuleContext muleContext;
 
   /**
@@ -288,10 +290,23 @@ public abstract class AbstractRegistryBootstrap implements Initialisable {
       doRegisterObject(bootstrapProperty);
     } catch (InvocationTargetException e) {
       Throwable cause = getCause(e);
-      throwExceptionIfNotOptional(cause instanceof NoClassDefFoundError && bootstrapProperty.getOptional(), cause,
-                                  bootstrapProperty);
+      handleOptionalObjectException(cause instanceof NoClassDefFoundError && bootstrapProperty.getOptional(), cause,
+                                    bootstrapProperty);
     } catch (NoClassDefFoundError | ClassNotFoundException | NoSuchMethodException e) {
-      throwExceptionIfNotOptional(bootstrapProperty.getOptional(), e, bootstrapProperty);
+      handleOptionalObjectException(bootstrapProperty.getOptional(), e, bootstrapProperty);
+    }
+  }
+
+  protected <T> Optional<T> instantiate(AbstractBootstrapProperty service, String classname) throws Exception {
+    try {
+      return of((T) service.getService().instantiateClass(classname));
+    } catch (InvocationTargetException e) {
+      Throwable cause = getCause(e);
+      return handleOptionalObjectException(cause instanceof NoClassDefFoundError && service.getOptional(), cause, service);
+    } catch (NoClassDefFoundError | ClassNotFoundException | NoSuchMethodException e) {
+      return handleOptionalObjectException(service.getOptional(), e, service);
+    } catch (Exception e) {
+      throw e;
     }
   }
 
@@ -305,7 +320,7 @@ public abstract class AbstractRegistryBootstrap implements Initialisable {
         context.getTransactionFactoryManager().registerTransactionFactory(supportedType, (TransactionFactory) bootstrapProperty
             .getService().instantiateClass(bootstrapProperty.getTransactionFactoryClassName()));
       } catch (NoClassDefFoundError | ClassNotFoundException ncdfe) {
-        throwExceptionIfNotOptional(bootstrapProperty.getOptional(), ncdfe, bootstrapProperty);
+        handleOptionalObjectException(bootstrapProperty.getOptional(), ncdfe, bootstrapProperty);
       }
     }
   }
@@ -329,10 +344,10 @@ public abstract class AbstractRegistryBootstrap implements Initialisable {
         doRegisterTransformer(bootstrapProperty, returnClass, transformerClass);
       } catch (InvocationTargetException e) {
         Throwable cause = getCause(e);
-        throwExceptionIfNotOptional(cause instanceof NoClassDefFoundError && bootstrapProperty.getOptional(), cause,
-                                    bootstrapProperty);
+        handleOptionalObjectException(cause instanceof NoClassDefFoundError && bootstrapProperty.getOptional(), cause,
+                                      bootstrapProperty);
       } catch (NoClassDefFoundError | ClassNotFoundException e) {
-        throwExceptionIfNotOptional(bootstrapProperty.getOptional(), e, bootstrapProperty);
+        handleOptionalObjectException(bootstrapProperty.getOptional(), e, bootstrapProperty);
       }
     }
   }
@@ -345,17 +360,18 @@ public abstract class AbstractRegistryBootstrap implements Initialisable {
 
   protected abstract void doRegisterObject(ObjectBootstrapProperty bootstrapProperty) throws Exception;
 
-  private void throwExceptionIfNotOptional(boolean optional, Throwable t, AbstractBootstrapProperty bootstrapProperty)
+  private <T> Optional<T> handleOptionalObjectException(boolean optional, Throwable t, AbstractBootstrapProperty bootstrapProperty)
       throws Exception {
     if (optional) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Ignoring optional " + bootstrapProperty);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Ignoring optional " + bootstrapProperty);
       }
+
+      return Optional.empty();
     } else if (t instanceof Exception) {
       throw (Exception) t;
     } else {
       throw new Exception(t);
     }
   }
-
 }

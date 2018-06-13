@@ -7,49 +7,31 @@
 package org.mule.runtime.core.internal.registry;
 
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
-
-import org.mule.runtime.api.exception.MuleException;
-import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.lifecycle.LifecycleException;
 import org.mule.runtime.api.lifecycle.Stoppable;
 import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.core.api.config.i18n.CoreMessages;
 import org.mule.runtime.core.api.lifecycle.LifecycleManager;
-import org.mule.runtime.core.api.util.UUID;
-import org.mule.runtime.core.internal.config.CustomService;
-import org.mule.runtime.core.internal.config.DefaultCustomizationService;
 import org.mule.runtime.core.internal.lifecycle.LifecycleInterceptor;
 import org.mule.runtime.core.internal.lifecycle.RegistryLifecycleManager;
 import org.mule.runtime.core.privileged.registry.RegistrationException;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public abstract class AbstractRegistry implements Registry {
+public abstract class AbstractInternalRegistry implements InternalRegistry {
 
-  /**
-   * the unique id for this Registry
-   */
-  private String id;
-
-  protected transient Logger logger = LoggerFactory.getLogger(getClass());
+  protected static Logger LOGGER = LoggerFactory.getLogger(AbstractInternalRegistry.class);
 
   protected MuleContext muleContext;
   private RegistryLifecycleManager lifecycleManager;
 
-  protected AbstractRegistry(String id, MuleContext muleContext, LifecycleInterceptor lifecycleInterceptor) {
-    if (id == null) {
-      throw new MuleRuntimeException(CoreMessages.objectIsNull("RegistryID"));
-    }
-    this.id = id;
+  protected AbstractInternalRegistry(MuleContext muleContext, LifecycleInterceptor lifecycleInterceptor) {
     this.muleContext = muleContext;
     lifecycleManager =
         (RegistryLifecycleManager) createLifecycleManager(lifecycleInterceptor);
@@ -61,7 +43,7 @@ public abstract class AbstractRegistry implements Registry {
       try {
         getLifecycleManager().fireLifecycle(Stoppable.PHASE_NAME);
       } catch (LifecycleException e) {
-        logger.error("Failed to shut down registry cleanly: " + getRegistryId(), e);
+        LOGGER.error("Failed to shut down registry cleanly", e);
       }
     }
     // Fire dispose lifecycle before calling doDispose() that that registries can clear any object caches once all objects
@@ -69,19 +51,19 @@ public abstract class AbstractRegistry implements Registry {
     try {
       getLifecycleManager().fireLifecycle(Disposable.PHASE_NAME);
     } catch (LifecycleException e) {
-      logger.error("Failed to shut down registry cleanly: " + getRegistryId(), e);
+      LOGGER.error("Failed to shut down registry cleanly", e);
     }
 
     try {
       doDispose();
     } catch (Exception e) {
-      logger.error("Failed to cleanly dispose: " + e.getMessage(), e);
+      LOGGER.error("Failed to cleanly dispose: " + e.getMessage(), e);
     }
   }
 
   protected LifecycleManager createLifecycleManager(LifecycleInterceptor lifecycleInterceptor) {
     // TODO(pablo.kraan): MULE-12609 - using LifecycleManager to avoid exposing RegistryLifecycleManager
-    return new RegistryLifecycleManager(getRegistryId(), this, muleContext, lifecycleInterceptor);
+    return new RegistryLifecycleManager(this, muleContext, lifecycleInterceptor);
   }
 
   abstract protected void doInitialise() throws InitialisationException;
@@ -90,10 +72,6 @@ public abstract class AbstractRegistry implements Registry {
 
   @Override
   public final void initialise() throws InitialisationException {
-    if (id == null) {
-      logger.warn("No unique id has been set on this registry");
-      id = UUID.getUUID();
-    }
     try {
       doInitialise();
     } catch (InitialisationException e) {
@@ -140,40 +118,6 @@ public abstract class AbstractRegistry implements Registry {
   }
 
   @Override
-  public final Object unregisterObject(String key) throws RegistrationException {
-    Object object = doUnregisterObject(key);
-
-    try {
-      getLifecycleManager().applyPhase(object, getLifecycleManager().getCurrentPhase(), Disposable.PHASE_NAME);
-    } catch (Exception e) {
-      if (logger.isWarnEnabled()) {
-        logger.warn(String.format("Could not apply shutdown lifecycle to object '%s' after being unregistered.", key), e);
-      }
-    }
-
-    return object;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  @Deprecated
-  public final Object unregisterObject(String key, Object metadata) throws RegistrationException {
-    return unregisterObject(key);
-  }
-
-  /**
-   * Template method for the logic to actually unregister the key without applying any lifecycle to it. Applying the shutdown
-   * lifecycle will be up to {@link #unregisterObject(String)}
-   *
-   * @param key the key of the object to be unregistered object
-   * @return the object which was registered under {@code key}
-   * @throws RegistrationException
-   */
-  protected abstract Object doUnregisterObject(String key) throws RegistrationException;
-
-  @Override
   public <T> T lookupObject(Class<T> type) throws RegistrationException {
     // Accumulate objects from all registries.
     Collection<T> objects = lookupObjects(type);
@@ -196,13 +140,4 @@ public abstract class AbstractRegistry implements Registry {
     return lookupObjects(type);
   }
 
-
-  // /////////////////////////////////////////////////////////////////////////
-  // Registry Metadata
-  // /////////////////////////////////////////////////////////////////////////
-
-  @Override
-  public final String getRegistryId() {
-    return id;
-  }
 }

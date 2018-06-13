@@ -15,7 +15,7 @@ import java.io.Serializable;
  */
 public class DefaultObjectStoreFactoryBean {
 
-  private static DefaultObjectStoreFactory delegate = new MuleDefaultObjectStoreFactory();
+  private static DefaultObjectStoreFactory DELEGATE = new MuleDefaultObjectStoreFactory();
 
   /**
    * Do not instantiate
@@ -23,10 +23,10 @@ public class DefaultObjectStoreFactoryBean {
   private DefaultObjectStoreFactoryBean() {}
 
   public static ObjectStore<Serializable> createDefaultInMemoryObjectStore() {
-    return delegate.createDefaultInMemoryObjectStore();
+    return DELEGATE.createDefaultInMemoryObjectStore();
   }
 
   public static ObjectStore<Serializable> createDefaultPersistentObjectStore() {
-    return delegate.createDefaultPersistentObjectStore();
+    return DELEGATE.createDefaultPersistentObjectStore();
   }
 }

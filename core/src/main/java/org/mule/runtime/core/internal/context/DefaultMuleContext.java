@@ -122,7 +122,7 @@ import org.mule.runtime.core.internal.lifecycle.LifecycleInterceptor;
 import org.mule.runtime.core.internal.lifecycle.MuleContextLifecycleManager;
 import org.mule.runtime.core.internal.lifecycle.MuleLifecycleInterceptor;
 import org.mule.runtime.core.internal.registry.MuleRegistry;
-import org.mule.runtime.core.internal.registry.Registry;
+import org.mule.runtime.core.internal.registry.InternalRegistry;
 import org.mule.runtime.core.internal.registry.RegistryBroker;
 import org.mule.runtime.core.internal.transformer.DynamicDataTypeConversionResolver;
 import org.mule.runtime.core.internal.util.JdkVersionUtils;
@@ -140,7 +140,7 @@ import org.slf4j.Logger;
 
 import reactor.core.publisher.Hooks;
 
-public class DefaultMuleContext implements MuleContextWithRegistries, PrivilegedMuleContext {
+public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
 
   /**
    * TODO: Remove these constants. These constants only make sense until we have a reliable solution for durable persistence in
@@ -760,24 +760,6 @@ public class DefaultMuleContext implements MuleContextWithRegistries, Privileged
   @Override
   public ClassLoader getExecutionClassLoader() {
     return executionClassLoader;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  @Deprecated
-  public void addRegistry(Registry registry) {
-    registryBroker.addRegistry(registry);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  @Deprecated
-  public void removeRegistry(Registry registry) {
-    registryBroker.removeRegistry(registry);
   }
 
   private SplashScreen buildStartupSplash() {

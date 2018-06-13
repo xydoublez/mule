@@ -4,7 +4,7 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.internal;
+package org.mule.runtime.core.internal.component;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.Optional.empty;
@@ -29,21 +29,21 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 /**
- * Spring implementation of {@link ConfigurationComponentLocator}.
+ * Default implementation of {@link ConfigurationComponentLocator}.
  *
  * since 4.0
  */
-public class SpringConfigurationComponentLocator implements ConfigurationComponentLocator {
+public class DefaultConfigurationComponentLocator implements ConfigurationComponentLocator {
 
   private final Function<String, Boolean> isTemplateLocationFunction;
   private final Map<String, Component> componentsMap = new HashMap<>();
   private final Set<ComponentLocation> componentLocations = new HashSet<>();
 
-  public SpringConfigurationComponentLocator() {
+  public DefaultConfigurationComponentLocator() {
     this.isTemplateLocationFunction = memoize(location -> false, new ConcurrentHashMap<>());
   }
 
-  public SpringConfigurationComponentLocator(Function<String, Boolean> isTemplateComponentFunction) {
+  public DefaultConfigurationComponentLocator(Function<String, Boolean> isTemplateComponentFunction) {
     this.isTemplateLocationFunction = memoize(isTemplateComponentFunction, new ConcurrentHashMap<>());
   }
 

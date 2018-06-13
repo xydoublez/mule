@@ -39,8 +39,8 @@ public class DefaultLifecycleManager<T extends Lifecycle> extends SimpleLifecycl
   @Override
   public void fireInitialisePhase(LifecycleCallback<T> callback) throws InitialisationException {
     checkPhase(Initialisable.PHASE_NAME);
-    if (logger.isInfoEnabled()) {
-      logger.info("Initialising Bean: " + lifecycleManagerId);
+    if (LOGGER.isInfoEnabled()) {
+      LOGGER.info("Initialising Bean: " + lifecycleManagerId);
     }
     try {
       invokePhase(Initialisable.PHASE_NAME, getLifecycleObject(), callback);
@@ -54,8 +54,8 @@ public class DefaultLifecycleManager<T extends Lifecycle> extends SimpleLifecycl
   @Override
   public void fireStartPhase(LifecycleCallback<T> callback) throws MuleException {
     checkPhase(Startable.PHASE_NAME);
-    if (logger.isInfoEnabled()) {
-      logger.info("Starting Bean: " + lifecycleManagerId);
+    if (LOGGER.isInfoEnabled()) {
+      LOGGER.info("Starting Bean: " + lifecycleManagerId);
     }
     invokePhase(Startable.PHASE_NAME, getLifecycleObject(), callback);
   }
@@ -63,8 +63,8 @@ public class DefaultLifecycleManager<T extends Lifecycle> extends SimpleLifecycl
   @Override
   public void fireStopPhase(LifecycleCallback<T> callback) throws MuleException {
     checkPhase(Stoppable.PHASE_NAME);
-    if (logger.isInfoEnabled()) {
-      logger.info("Stopping Bean: " + lifecycleManagerId);
+    if (LOGGER.isInfoEnabled()) {
+      LOGGER.info("Stopping Bean: " + lifecycleManagerId);
     }
     invokePhase(Stoppable.PHASE_NAME, getLifecycleObject(), callback);
   }
@@ -72,13 +72,13 @@ public class DefaultLifecycleManager<T extends Lifecycle> extends SimpleLifecycl
   @Override
   public void fireDisposePhase(LifecycleCallback<T> callback) {
     checkPhase(Disposable.PHASE_NAME);
-    if (logger.isInfoEnabled()) {
-      logger.info("Disposing Bean: " + lifecycleManagerId);
+    if (LOGGER.isInfoEnabled()) {
+      LOGGER.info("Disposing Bean: " + lifecycleManagerId);
     }
     try {
       invokePhase(Disposable.PHASE_NAME, getLifecycleObject(), callback);
     } catch (LifecycleException e) {
-      logger.warn(CoreMessages.failedToDispose(lifecycleManagerId).toString(), e);
+      LOGGER.warn(CoreMessages.failedToDispose(lifecycleManagerId).toString(), e);
     }
   }
 

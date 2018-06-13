@@ -60,7 +60,6 @@ public final class DefaultMuleContextFactory implements MuleContextFactory {
 
       @Override
       public void configure(MuleContext muleContext) throws ConfigurationException {
-        // Configure
         for (ConfigurationBuilder configBuilder : configurationBuilders) {
           configBuilder.configure(muleContext);
         }

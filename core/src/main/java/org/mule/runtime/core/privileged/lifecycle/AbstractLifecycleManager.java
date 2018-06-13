@@ -21,13 +21,13 @@ import org.mule.runtime.core.internal.lifecycle.DefaultLifecycleState;
 import org.mule.runtime.core.internal.lifecycle.phases.NotInLifecyclePhase;
 import org.mule.runtime.core.privileged.transport.LegacyConnector;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is a base implementation of the {@link org.mule.runtime.core.api.lifecycle.LifecycleManager} interface and provides almost
@@ -42,10 +42,9 @@ public abstract class AbstractLifecycleManager<O> implements LifecycleManager {
   /**
    * logger used by this class
    */
-  protected transient final Logger logger = LoggerFactory.getLogger(AbstractLifecycleManager.class);
+  protected static final Logger LOGGER = LoggerFactory.getLogger(AbstractLifecycleManager.class);
 
-  protected String lifecycleManagerId;
-  protected String currentPhase = NotInLifecyclePhase.PHASE_NAME;
+  protected String currentPhase;
   protected String executingPhase = null;
   private Set<String> directTransitions = new HashSet<>();
   protected Set<String> phaseNames = new LinkedHashSet<>(4);
@@ -57,8 +56,7 @@ public abstract class AbstractLifecycleManager<O> implements LifecycleManager {
 
   private TreeMap<String, LifecycleCallback> callbacks = new TreeMap<>();
 
-  public AbstractLifecycleManager(String id, O object) {
-    lifecycleManagerId = id;
+  public AbstractLifecycleManager(O object) {
     this.object = object;
     state = createLifecycleState();
 
@@ -112,7 +110,7 @@ public abstract class AbstractLifecycleManager<O> implements LifecycleManager {
         return;
       }
 
-      throw new IllegalStateException("Lifecycle Manager '" + lifecycleManagerId + "' phase '" + currentPhase
+      throw new IllegalStateException("Lifecycle Manager phase '" + currentPhase
           + "' does not support phase '" + name + "' for object '" + this.object.toString() + "'");
     }
   }

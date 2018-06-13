@@ -9,12 +9,12 @@ package org.mule.runtime.core.internal.registry;
 import org.mule.runtime.api.exception.MuleException;
 
 /**
- * A {@link Registry} which not only registers and fetches objects, but it's also capable of applying lifecycle and injects
+ * A {@link InternalRegistry} which not only registers and fetches objects, but it's also capable of applying lifecycle and injects
  * dependencies
  *
  * @since 3.7.0
  */
-public interface LifecycleRegistry extends Registry {
+public interface LifecycleRegistry extends InternalRegistry {
 
   /**
    * Will fire any lifecycle methods according to the current lifecycle without actually registering the object in the registry.

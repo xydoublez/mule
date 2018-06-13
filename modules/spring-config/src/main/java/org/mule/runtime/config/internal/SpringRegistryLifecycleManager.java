@@ -7,7 +7,6 @@
 package org.mule.runtime.config.internal;
 
 import static org.mule.runtime.config.internal.MuleArtifactContext.INNER_BEAN_PREFIX;
-import org.mule.runtime.api.ioc.ObjectProvider;
 import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.LifecycleException;
@@ -43,7 +42,8 @@ import org.mule.runtime.core.internal.lifecycle.phases.MuleContextStartPhase;
 import org.mule.runtime.core.internal.lifecycle.phases.MuleContextStopPhase;
 import org.mule.runtime.core.internal.lifecycle.phases.NotInLifecyclePhase;
 import org.mule.runtime.core.internal.registry.AbstractRegistryBroker;
-import org.mule.runtime.core.internal.registry.Registry;
+import org.mule.runtime.core.internal.registry.InternalRegistry;
+import org.mule.runtime.core.internal.registry.guice.DefaultRegistryBootstrap;
 import org.mule.runtime.core.internal.routing.requestreply.AbstractAsyncRequestReplyRequester;
 import org.mule.runtime.core.privileged.processor.chain.MessageProcessorChain;
 import org.mule.runtime.core.privileged.routing.OutboundRouter;
@@ -61,7 +61,7 @@ public class SpringRegistryLifecycleManager extends RegistryLifecycleManager {
   }
 
   @Override
-  protected void registerPhases(Registry registry) {
+  protected void registerPhases(InternalRegistry registry) {
     final LifecycleCallback<AbstractRegistryBroker> emptyCallback = new EmptyLifecycleCallback<>();
     registerPhase(NotInLifecyclePhase.PHASE_NAME, new NotInLifecyclePhase(), emptyCallback);
     registerPhase(Initialisable.PHASE_NAME, new SpringContextInitialisePhase(),
@@ -95,7 +95,7 @@ public class SpringRegistryLifecycleManager extends RegistryLifecycleManager {
       initOrderedObjects.add(new LifecycleObject(Initialisable.class));
       setOrderedLifecycleObjects(initOrderedObjects);
 
-      setIgnoredObjectTypes(new Class[] {ExtensionManager.class, SpringRegistry.class, SpringRegistryBootstrap.class,
+      setIgnoredObjectTypes(new Class[] {ExtensionManager.class, SpringRegistry.class, DefaultRegistryBootstrap.class,
           Component.class, MessageSource.class, InterceptingMessageProcessor.class, AbstractMessageProcessorOwner.class,
           FlowExceptionHandler.class, AbstractAsyncRequestReplyRequester.class, OutboundRouter.class,
           MessageProcessorChain.class, MuleContext.class, Service.class});

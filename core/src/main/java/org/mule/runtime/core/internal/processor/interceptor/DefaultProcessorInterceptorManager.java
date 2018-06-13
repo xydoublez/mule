@@ -10,8 +10,8 @@ package org.mule.runtime.core.internal.processor.interceptor;
 import static java.lang.Integer.MAX_VALUE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Comparator.comparingInt;
 import static org.mule.runtime.api.interception.ProcessorInterceptorFactory.INTERCEPTORS_ORDER_REGISTRY_KEY;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.interception.ProcessorInterceptorFactory;
@@ -64,7 +64,7 @@ public class DefaultProcessorInterceptorManager implements ProcessorInterceptorM
   public List<ProcessorInterceptorFactory> getInterceptorFactories() {
     final List<ProcessorInterceptorFactory> sortedInterceptors = new ArrayList<>(interceptorFactories);
 
-    sortedInterceptors.sort((o1, o2) -> orderIndexOf(o1) - orderIndexOf(o2));
+    sortedInterceptors.sort(comparingInt(this::orderIndexOf));
 
     return unmodifiableList(sortedInterceptors);
   }

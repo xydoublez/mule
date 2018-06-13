@@ -20,7 +20,7 @@ import org.mule.runtime.core.privileged.routing.OutboundRouter;
 import org.mule.runtime.core.api.source.MessageSource;
 import org.mule.runtime.core.privileged.transport.LegacyConnector;
 import org.mule.runtime.core.api.util.queue.QueueManager;
-import org.mule.runtime.core.internal.registry.Registry;
+import org.mule.runtime.core.internal.registry.InternalRegistry;
 import org.mule.runtime.extension.api.runtime.config.ConfigurationProvider;
 
 import java.util.LinkedHashSet;
@@ -47,7 +47,7 @@ import java.util.Set;
 public class MuleContextStopPhase extends DefaultLifecyclePhase {
 
   public MuleContextStopPhase() {
-    this(new Class[] {Registry.class, MuleContext.class, MessageSource.class, InterceptingMessageProcessor.class, Component.class,
+    this(new Class[] {InternalRegistry.class, MuleContext.class, MessageSource.class, InterceptingMessageProcessor.class, Component.class,
         OutboundRouter.class, Service.class});
   }
 

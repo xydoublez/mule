@@ -15,7 +15,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.core.api.Injector;
-import org.mule.runtime.core.internal.registry.RegistryDelegatingInjector;
 import org.mule.tck.junit4.AbstractMuleTestCase;
 import org.mule.tck.size.SmallTest;
 
@@ -35,7 +34,7 @@ public class RegistryDelegatingInjectorTestCase extends AbstractMuleTestCase {
   private RegistryProvider registryProvider;
 
   @Mock(extraInterfaces = Injector.class)
-  private Registry injectorRegistry;
+  private InternalRegistry injectorRegistry;
 
   private Injector injector;
 
@@ -46,7 +45,7 @@ public class RegistryDelegatingInjectorTestCase extends AbstractMuleTestCase {
 
   @Test
   public void inject() throws Exception {
-    when(registryProvider.getRegistries()).thenReturn(asList(mock(Registry.class), injectorRegistry));
+    when(registryProvider.getRegistries()).thenReturn(asList(mock(InternalRegistry.class), injectorRegistry));
     Object target = new Object();
     Object injected = new Object();
 
@@ -56,13 +55,13 @@ public class RegistryDelegatingInjectorTestCase extends AbstractMuleTestCase {
 
   @Test
   public void noSuitableRegistry() throws Exception {
-    when(registryProvider.getRegistries()).thenReturn(asList(mock(Registry.class)));
+    when(registryProvider.getRegistries()).thenReturn(asList(mock(InternalRegistry.class)));
     assertNoinjection();
   }
 
   @Test
   public void noRegistriesAtAll() throws Exception {
-    when(registryProvider.getRegistries()).thenReturn(ImmutableList.<Registry>of());
+    when(registryProvider.getRegistries()).thenReturn(ImmutableList.<InternalRegistry>of());
     assertNoinjection();
   }
 

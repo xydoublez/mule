@@ -23,6 +23,7 @@ import com.google.inject.Key;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 
 import java.util.Set;
 
@@ -56,12 +57,15 @@ public class GuiceTest extends AbstractMuleTestCase {
   @Test
   public void lookupByParent() {
     injector.getAllBindings().values().forEach(b -> b.getProvider());
-    Set<Fruit> fruits = injector.getInstance(Key.get(new TypeLiteral<Set<Fruit>>() {}));
+    Set<Fruit> fruits = injector.getInstance(Key.get(new TypeLiteral<Set<Fruit>>() {
+
+    }));
     assertThat(fruits, hasSize(2));
   }
 
   @Test
   public void graph() {
+    injector.getAllBindings().values();
   }
 
 
@@ -69,12 +73,13 @@ public class GuiceTest extends AbstractMuleTestCase {
 
     @Override
     protected void configure() {
-      bind(FruitShop.class).in(Singleton.class);
+      bind(FruitShop.class).annotatedWith(Names.named("fruitShop")).in(Singleton.class);
       Multibinder<Fruit> multibinder = Multibinder.newSetBinder(binder(), Fruit.class);
       multibinder.addBinding().to(Apple.class).in(Singleton.class);
       multibinder.addBinding().toProvider(Banana::new);
     }
   }
+
 
   public static class FruitShop {
 

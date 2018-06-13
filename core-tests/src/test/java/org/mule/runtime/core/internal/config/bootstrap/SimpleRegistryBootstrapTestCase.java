@@ -20,7 +20,7 @@ import org.mule.runtime.core.api.config.bootstrap.ArtifactType;
 import org.mule.runtime.core.api.config.bootstrap.BootstrapServiceDiscoverer;
 import org.mule.runtime.core.api.transaction.TransactionFactory;
 import org.mule.runtime.core.internal.context.DefaultMuleContext;
-import org.mule.runtime.core.internal.context.MuleContextWithRegistries;
+import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 
 import org.junit.Assert;
@@ -52,28 +52,28 @@ public class SimpleRegistryBootstrapTestCase extends AbstractMuleContextTestCase
   @Test
   public void registerOnlyAppPropertiesType() throws Exception {
     createTestRegistryBootstrap(APP);
-    assertThat(((MuleContextWithRegistries) muleContext).getRegistry().lookupObject(String.class), notNullValue());
-    assertThat(((MuleContextWithRegistries) muleContext).getRegistry().lookupObject(Properties.class), nullValue());
-    assertThat(((MuleContextWithRegistries) muleContext).getRegistry().lookupObject(HashMap.class), nullValue());
-    assertThat(((MuleContextWithRegistries) muleContext).getRegistry().lookupObject(ArrayList.class), notNullValue());
+    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(String.class), notNullValue());
+    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(Properties.class), nullValue());
+    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(HashMap.class), nullValue());
+    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(ArrayList.class), notNullValue());
   }
 
   @Test
   public void registerOnlyDomainPropertiesType() throws Exception {
     createTestRegistryBootstrap(DOMAIN);
-    assertThat(((MuleContextWithRegistries) muleContext).getRegistry().lookupObject(String.class), nullValue());
-    assertThat(((MuleContextWithRegistries) muleContext).getRegistry().lookupObject(Properties.class), notNullValue());
-    assertThat(((MuleContextWithRegistries) muleContext).getRegistry().lookupObject(HashMap.class), nullValue());
-    assertThat(((MuleContextWithRegistries) muleContext).getRegistry().lookupObject(ArrayList.class), notNullValue());
+    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(String.class), nullValue());
+    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(Properties.class), notNullValue());
+    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(HashMap.class), nullValue());
+    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(ArrayList.class), notNullValue());
   }
 
   @Test
   public void registerOnlyPolicyPropertiesType() throws Exception {
     createTestRegistryBootstrap(POLICY);
-    assertThat(((MuleContextWithRegistries) muleContext).getRegistry().lookupObject(String.class), nullValue());
-    assertThat(((MuleContextWithRegistries) muleContext).getRegistry().lookupObject(Properties.class), nullValue());
-    assertThat(((MuleContextWithRegistries) muleContext).getRegistry().lookupObject(HashMap.class), notNullValue());
-    assertThat(((MuleContextWithRegistries) muleContext).getRegistry().lookupObject(ArrayList.class), notNullValue());
+    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(String.class), nullValue());
+    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(Properties.class), nullValue());
+    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(HashMap.class), notNullValue());
+    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(ArrayList.class), notNullValue());
   }
 
   private SimpleRegistryBootstrap createTestRegistryBootstrap(ArtifactType artifactType) throws InitialisationException {

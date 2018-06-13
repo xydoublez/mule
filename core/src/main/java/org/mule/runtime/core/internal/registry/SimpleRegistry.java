@@ -69,8 +69,8 @@ public class SimpleRegistry extends TransientRegistry implements LifecycleRegist
   protected void doRegisterObject(String key, Object object, Object metadata) throws RegistrationException {
     Object previous = doGet(key);
     if (previous != null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug(String.format("An entry already exists for key %s. It will be replaced", key));
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(String.format("An entry already exists for key %s. It will be replaced", key));
       }
 
       unregisterObject(key);

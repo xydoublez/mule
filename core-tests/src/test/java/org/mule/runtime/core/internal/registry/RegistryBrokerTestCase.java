@@ -19,7 +19,7 @@ import org.mule.runtime.api.deployment.management.ComponentInitialStateManager;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.internal.construct.DefaultFlowBuilder;
-import org.mule.runtime.core.internal.context.MuleContextWithRegistries;
+import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.runtime.core.internal.lifecycle.MuleLifecycleInterceptor;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 import org.mule.tck.testmodels.fruit.Apple;
@@ -56,8 +56,8 @@ public class RegistryBrokerTestCase extends AbstractMuleContextTestCase {
     reg1.registerObject("flow", new LifecycleTrackerFlow("flow", muleContext));
     reg2.registerObject("flow2", new LifecycleTrackerFlow("flow2", muleContext));
 
-    ((MuleContextWithRegistries) muleContext).addRegistry(reg1);
-    ((MuleContextWithRegistries) muleContext).addRegistry(reg2);
+    ((MuleContextWithRegistry) muleContext).addRegistry(reg1);
+    ((MuleContextWithRegistry) muleContext).addRegistry(reg2);
 
     muleContext.start();
 
@@ -134,7 +134,7 @@ public class RegistryBrokerTestCase extends AbstractMuleContextTestCase {
     final String KEY2 = "Kiwi";
     final Object VALUE2 = new Kiwi();
 
-    MuleRegistry registry = ((MuleContextWithRegistries) muleContext).getRegistry();
+    MuleRegistry registry = ((MuleContextWithRegistry) muleContext).getRegistry();
     registry.registerObject(KEY1, VALUE1);
     registry.registerObject(KEY2, VALUE2);
 

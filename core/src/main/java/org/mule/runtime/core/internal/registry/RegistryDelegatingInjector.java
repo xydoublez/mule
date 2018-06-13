@@ -11,7 +11,7 @@ import org.mule.runtime.core.api.Injector;
 import org.mule.runtime.api.exception.MuleException;
 
 /**
- * An implementation of {@link Injector} which uses a {@link RegistryProvider} to look for {@link Registry} instances which also
+ * An implementation of {@link Injector} which uses a {@link RegistryProvider} to look for {@link InternalRegistry} instances which also
  * implement {@link Injector}. The injection operation is then delegated into the first matching registry.
  *
  * If no appropriate registry is found, then the injection operation does not take place.
@@ -32,7 +32,7 @@ public class RegistryDelegatingInjector implements Injector {
    */
   @Override
   public <T> T inject(T object) throws MuleException {
-    for (Registry registry : registryProvider.getRegistries()) {
+    for (InternalRegistry registry : registryProvider.getRegistries()) {
       if (registry instanceof Injector) {
         return ((Injector) registry).inject(object);
       }

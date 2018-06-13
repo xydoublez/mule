@@ -9,7 +9,6 @@ package org.mule.runtime.core.internal.lifecycle;
 import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
-import org.mule.runtime.api.lifecycle.Lifecycle;
 import org.mule.runtime.api.lifecycle.LifecycleException;
 import org.mule.runtime.api.lifecycle.Startable;
 import org.mule.runtime.api.lifecycle.Stoppable;
@@ -20,7 +19,7 @@ import org.mule.runtime.core.internal.lifecycle.phases.MuleContextInitialisePhas
 import org.mule.runtime.core.internal.lifecycle.phases.MuleContextStartPhase;
 import org.mule.runtime.core.internal.lifecycle.phases.MuleContextStopPhase;
 import org.mule.runtime.core.internal.registry.AbstractRegistryBroker;
-import org.mule.runtime.core.internal.registry.Registry;
+import org.mule.runtime.core.internal.registry.InternalRegistry;
 import org.mule.runtime.core.internal.registry.RegistryBroker;
 
 /**
@@ -29,13 +28,13 @@ import org.mule.runtime.core.internal.registry.RegistryBroker;
 @Deprecated
 public class RegistryBrokerLifecycleManager extends RegistryLifecycleManager {
 
-  public RegistryBrokerLifecycleManager(String id, Registry object, MuleContext muleContext,
+  public RegistryBrokerLifecycleManager(String id, InternalRegistry object, MuleContext muleContext,
                                         LifecycleInterceptor lifecycleInterceptor) {
     super(id, object, muleContext, lifecycleInterceptor);
   }
 
   @Override
-  protected void registerPhases(Registry registry) {
+  protected void registerPhases(InternalRegistry registry) {
     RegistryLifecycleCallback callback = new RegistryLifecycleCallback(this);
     LifecycleCallback<AbstractRegistryBroker> emptyCallback = new EmptyLifecycleCallback<>();
     registerPhase(Initialisable.PHASE_NAME, new MuleContextInitialisePhase(), emptyCallback);
@@ -47,8 +46,8 @@ public class RegistryBrokerLifecycleManager extends RegistryLifecycleManager {
   public void fireInitialisePhase(LifecycleCallback<AbstractRegistryBroker> callback) throws InitialisationException {
     checkPhase(Initialisable.PHASE_NAME);
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("Initialising RegistryBroker");
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Initialising RegistryBroker");
     }
 
     // No pre notification
@@ -65,15 +64,15 @@ public class RegistryBrokerLifecycleManager extends RegistryLifecycleManager {
   public void fireDisposePhase(LifecycleCallback<AbstractRegistryBroker> callback) {
     checkPhase(Disposable.PHASE_NAME);
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("Disposing RegistryBroker");
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Disposing RegistryBroker");
     }
 
     // No pre notification
     try {
       invokePhase(Disposable.PHASE_NAME, getLifecycleObject(), callback);
     } catch (LifecycleException e) {
-      logger.error("Failed to shut down registry broker cleanly: ", e);
+      LOGGER.error("Failed to shut down registry broker cleanly: ", e);
     }
     // No post notification
   }

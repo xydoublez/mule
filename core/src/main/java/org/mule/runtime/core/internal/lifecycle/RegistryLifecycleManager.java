@@ -23,7 +23,7 @@ import org.mule.runtime.core.internal.lifecycle.phases.MuleContextStartPhase;
 import org.mule.runtime.core.internal.lifecycle.phases.MuleContextStopPhase;
 import org.mule.runtime.core.internal.lifecycle.phases.NotInLifecyclePhase;
 import org.mule.runtime.core.internal.registry.AbstractRegistryBroker;
-import org.mule.runtime.core.internal.registry.Registry;
+import org.mule.runtime.core.internal.registry.InternalRegistry;
 import org.mule.runtime.core.privileged.lifecycle.AbstractLifecycleManager;
 
 import java.util.HashMap;
@@ -32,7 +32,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 
-public class RegistryLifecycleManager extends AbstractLifecycleManager<Registry> {
+public class RegistryLifecycleManager extends AbstractLifecycleManager<InternalRegistry> {
 
 
   protected Map<String, LifecyclePhase> phases = new HashMap<>();
@@ -40,16 +40,16 @@ public class RegistryLifecycleManager extends AbstractLifecycleManager<Registry>
   protected MuleContext muleContext;
   private final LifecycleInterceptor lifecycleInterceptor;
 
-  public RegistryLifecycleManager(String id, Registry object, MuleContext muleContext,
+  public RegistryLifecycleManager(InternalRegistry object, MuleContext muleContext,
                                   LifecycleInterceptor lifecycleInterceptor) {
-    super(id, object);
+    super(object);
     this.muleContext = muleContext;
     this.lifecycleInterceptor = lifecycleInterceptor;
 
     registerPhases(object);
   }
 
-  protected void registerPhases(Registry object) {
+  protected void registerPhases(InternalRegistry object) {
     final RegistryLifecycleCallback<Object> callback = new RegistryLifecycleCallback<>(this);
     final LifecycleCallback<AbstractRegistryBroker> emptyCallback = new EmptyLifecycleCallback<>();
 

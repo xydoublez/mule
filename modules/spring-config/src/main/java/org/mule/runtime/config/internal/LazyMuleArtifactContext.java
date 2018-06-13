@@ -39,6 +39,7 @@ import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.ConfigResource;
 import org.mule.runtime.core.api.config.MuleDeploymentProperties;
 import org.mule.runtime.core.api.config.bootstrap.ArtifactType;
+import org.mule.runtime.core.internal.component.DefaultConfigurationComponentLocator;
 import org.mule.runtime.core.internal.connectivity.DefaultConnectivityTestingService;
 import org.mule.runtime.core.internal.metadata.MuleMetadataService;
 import org.mule.runtime.core.internal.value.MuleValueProviderService;
@@ -95,7 +96,7 @@ public class LazyMuleArtifactContext extends MuleArtifactContext
           extendArtifactProperties(artifactProperties), artifactType, pluginsClassLoaders, parentConfigurationProperties,
           disableXmlValidations);
     // Changes the component locator in order to allow accessing any component by location even when they are prototype
-    this.componentLocator = new SpringConfigurationComponentLocator();
+    this.componentLocator = new DefaultConfigurationComponentLocator();
 
     this.applicationModel.executeOnEveryMuleComponentTree(componentModel -> componentModel.setEnabled(false));
     this.parentComponentModelInitializer = parentComponentModelInitializer;

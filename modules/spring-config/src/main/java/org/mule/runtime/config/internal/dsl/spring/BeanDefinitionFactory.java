@@ -47,7 +47,7 @@ import org.mule.runtime.api.message.ErrorType;
 import org.mule.runtime.config.api.dsl.model.ComponentBuildingDefinitionRegistry;
 import org.mule.runtime.config.api.dsl.model.properties.ConfigurationPropertiesProviderFactory;
 import org.mule.runtime.config.api.dsl.processor.AbstractAttributeDefinitionVisitor;
-import org.mule.runtime.config.internal.SpringConfigurationComponentLocator;
+import org.mule.runtime.core.internal.component.DefaultConfigurationComponentLocator;
 import org.mule.runtime.config.internal.dsl.model.SpringComponentModel;
 import org.mule.runtime.config.internal.model.ComponentModel;
 import org.mule.runtime.core.api.exception.ErrorTypeMatcher;
@@ -179,7 +179,7 @@ public class BeanDefinitionFactory {
                                                     SpringComponentModel componentModel, BeanDefinitionRegistry registry,
                                                     BiConsumer<ComponentModel, BeanDefinitionRegistry> componentModelPostProcessor,
                                                     BiFunction<Element, BeanDefinition, Either<BeanDefinition, BeanReference>> oldParsingMechanism,
-                                                    SpringConfigurationComponentLocator componentLocator) {
+                                                    DefaultConfigurationComponentLocator componentLocator) {
     List<ComponentModel> innerComponents = componentModel.getInnerComponents();
     if (!innerComponents.isEmpty()) {
       for (ComponentModel innerComponent : innerComponents) {
@@ -193,7 +193,7 @@ public class BeanDefinitionFactory {
   private BeanDefinition resolveComponent(ComponentModel parentComponentModel, SpringComponentModel componentModel,
                                           BeanDefinitionRegistry registry,
                                           BiConsumer<ComponentModel, BeanDefinitionRegistry> componentDefinitionModelProcessor,
-                                          SpringConfigurationComponentLocator componentLocator) {
+                                          DefaultConfigurationComponentLocator componentLocator) {
     if (isComponentIgnored(componentModel.getIdentifier())) {
       return null;
     }

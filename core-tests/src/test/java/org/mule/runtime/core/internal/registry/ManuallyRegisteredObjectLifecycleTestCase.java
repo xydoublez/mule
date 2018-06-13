@@ -16,7 +16,7 @@ import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.lifecycle.Startable;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.context.MuleContextAware;
-import org.mule.runtime.core.internal.context.MuleContextWithRegistries;
+import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 
 import org.junit.Test;
@@ -53,7 +53,7 @@ public class ManuallyRegisteredObjectLifecycleTestCase extends AbstractMuleConte
 
 
   private void assertLifecycle(String key) {
-    TestLifecycleObject testLifecycleObject = ((MuleContextWithRegistries) muleContext).getRegistry().get(key);
+    TestLifecycleObject testLifecycleObject = ((MuleContextWithRegistry) muleContext).getRegistry().get(key);
     assertThat(testLifecycleObject, is(notNullValue()));
 
     assertThat(testLifecycleObject.getInitialise(), is(1));
@@ -71,7 +71,7 @@ public class ManuallyRegisteredObjectLifecycleTestCase extends AbstractMuleConte
 
     protected void manuallyRegisterObject() throws MuleException {
       Object o = new TestLifecycleObject();
-      ((MuleContextWithRegistries) muleContext).getRegistry().registerObject(getKey(), o);
+      ((MuleContextWithRegistry) muleContext).getRegistry().registerObject(getKey(), o);
     }
 
     protected abstract String getKey();

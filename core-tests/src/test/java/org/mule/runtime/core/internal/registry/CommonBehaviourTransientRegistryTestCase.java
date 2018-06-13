@@ -8,12 +8,12 @@ package org.mule.runtime.core.internal.registry;
 
 import static org.mule.runtime.core.api.util.UUID.getUUID;
 import org.mule.runtime.core.internal.lifecycle.MuleLifecycleInterceptor;
-import org.mule.tck.core.registry.AbstractRegistryTestCase;
+import org.mule.tck.core.registry.AbstractInternalRegistryTestCase;
 
-public class CommonBehaviourTransientRegistryTestCase extends AbstractRegistryTestCase {
+public class CommonBehaviourTransientRegistryTestCase extends AbstractInternalRegistryTestCase {
 
   @Override
-  public Registry getRegistry() {
+  public InternalRegistry getRegistry() {
     return new TransientRegistry(getUUID(), null, new MuleLifecycleInterceptor());
   }
 }

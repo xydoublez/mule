@@ -10,7 +10,6 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.genericBeanDefinition;
-import org.mule.runtime.api.exception.DefaultMuleException;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
@@ -24,7 +23,7 @@ import org.mule.runtime.core.api.util.StringUtils;
 import org.mule.runtime.core.api.util.func.CheckedRunnable;
 import org.mule.runtime.core.internal.lifecycle.LifecycleInterceptor;
 import org.mule.runtime.core.internal.lifecycle.phases.NotInLifecyclePhase;
-import org.mule.runtime.core.internal.registry.AbstractRegistry;
+import org.mule.runtime.core.internal.registry.AbstractInternalRegistry;
 import org.mule.runtime.core.internal.registry.LifecycleRegistry;
 import org.mule.runtime.core.privileged.registry.RegistrationException;
 
@@ -47,7 +46,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class SpringRegistry extends AbstractRegistry implements LifecycleRegistry, Injector {
+public class SpringRegistry extends AbstractInternalRegistry implements LifecycleRegistry, Injector {
 
   public static final String REGISTRY_ID = "org.mule.Registry.Spring";
 
@@ -170,7 +169,7 @@ public class SpringRegistry extends AbstractRegistry implements LifecycleRegistr
   @Override
   public Object lookupObject(String key, boolean applyLifecycle) {
     if (StringUtils.isBlank(key)) {
-      logger.warn(createStaticMessage("Detected a lookup attempt with an empty or null key").getMessage(),
+      LOGGER.warn(createStaticMessage("Detected a lookup attempt with an empty or null key").getMessage(),
                   new Throwable().fillInStackTrace());
       return null;
     }
@@ -182,8 +181,8 @@ public class SpringRegistry extends AbstractRegistry implements LifecycleRegistr
       try {
         object = applicationContext.getBean(key);
       } catch (NoSuchBeanDefinitionException e) {
-        if (logger.isDebugEnabled()) {
-          logger.debug(e.getMessage(), e);
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug(e.getMessage(), e);
         }
         return null;
       }
@@ -317,7 +316,7 @@ public class SpringRegistry extends AbstractRegistry implements LifecycleRegistr
       String message = format("Failed to lookup beans of type %s from the Spring registry", type);
       throw new MuleRuntimeException(createStaticMessage(message), fbex);
     } catch (Exception e) {
-      logger.debug(e.getMessage(), e);
+      LOGGER.debug(e.getMessage(), e);
       return Collections.emptyMap();
     }
   }
@@ -336,8 +335,8 @@ public class SpringRegistry extends AbstractRegistry implements LifecycleRegistr
       String message = format("Failed to lookup beans of type %s from the Spring registry", type);
       throw new MuleRuntimeException(createStaticMessage(message), fbex);
     } catch (Exception e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug(e.getMessage(), e);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(e.getMessage(), e);
       }
       return Collections.emptyMap();
     }
@@ -422,8 +421,8 @@ public class SpringRegistry extends AbstractRegistry implements LifecycleRegistr
     private void doRegisterObject(String key, Object value) throws RegistrationException {
       if (springContextInitialised.get()) {
         if (applicationContext.containsBean(key)) {
-          if (logger.isWarnEnabled()) {
-            logger.warn(
+          if (LOGGER.isWarnEnabled()) {
+            LOGGER.warn(
                         format("Spring registry already contains an object named '%s'. The previous object will be overwritten.",
                                key));
           }

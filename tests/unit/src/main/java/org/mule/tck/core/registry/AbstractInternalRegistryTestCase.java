@@ -9,23 +9,22 @@ package org.mule.tck.core.registry;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-
-import org.mule.runtime.core.internal.registry.Registry;
+import org.mule.runtime.core.internal.registry.InternalRegistry;
 import org.mule.tck.junit4.AbstractMuleTestCase;
-
-import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
-public abstract class AbstractRegistryTestCase extends AbstractMuleTestCase {
+import org.junit.Test;
 
-  public abstract Registry getRegistry() throws Exception;
+public abstract class AbstractInternalRegistryTestCase extends AbstractMuleTestCase {
+
+  public abstract InternalRegistry getRegistry() throws Exception;
 
   @Test
   public void testNotFoundCalls() throws Exception {
-    Registry r = getRegistry();
+    InternalRegistry r = getRegistry();
     Map<String, IOException> map = r.lookupByType(IOException.class);
     assertNotNull(map);
     assertEquals(0, map.size());

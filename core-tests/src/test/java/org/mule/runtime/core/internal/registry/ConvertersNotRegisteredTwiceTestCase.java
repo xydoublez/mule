@@ -24,7 +24,7 @@ import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.api.config.builders.AbstractConfigurationBuilder;
 import org.mule.runtime.core.api.transformer.Converter;
 import org.mule.runtime.core.internal.context.DefaultMuleContext;
-import org.mule.runtime.core.internal.context.MuleContextWithRegistries;
+import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 
 import org.junit.Test;
@@ -46,7 +46,7 @@ public class ConvertersNotRegisteredTwiceTestCase extends AbstractMuleContextTes
 
       @Override
       protected void doConfigure(MuleContext muleContext) throws Exception {
-        registryHelper = (MuleRegistryHelper) ((MuleContextWithRegistries) muleContext).getRegistry();
+        registryHelper = (MuleRegistryHelper) ((MuleContextWithRegistry) muleContext).getRegistry();
         registryHelper = spy(registryHelper);
         ((DefaultMuleContext) muleContext).setMuleRegistry(registryHelper);
       }

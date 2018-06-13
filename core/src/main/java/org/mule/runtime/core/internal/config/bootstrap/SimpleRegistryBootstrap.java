@@ -7,6 +7,7 @@
 package org.mule.runtime.core.internal.config.bootstrap;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.mule.runtime.core.api.config.i18n.CoreMessages.transformerNotImplementDiscoverable;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.setMuleContextIfNeeded;
 
 import org.mule.runtime.api.exception.MuleException;
@@ -19,7 +20,7 @@ import org.mule.runtime.core.api.transformer.Converter;
 import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
 import org.mule.runtime.core.api.transformer.Transformer;
 import org.mule.runtime.core.api.util.ClassUtils;
-import org.mule.runtime.core.internal.context.MuleContextWithRegistries;
+import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.runtime.core.internal.registry.MuleRegistryHelper;
 import org.mule.runtime.core.internal.registry.SimpleRegistry;
 import org.mule.runtime.core.internal.registry.TransformerResolver;
@@ -52,7 +53,7 @@ public class SimpleRegistryBootstrap extends AbstractRegistryBootstrap {
       throws Exception {
     Transformer trans = ClassUtils.instantiateClass(transformerClass);
     if (!(trans instanceof DiscoverableTransformer)) {
-      throw new RegistrationException(CoreMessages.transformerNotImplementDiscoverable(trans));
+      throw new RegistrationException(transformerNotImplementDiscoverable(trans));
     }
     if (returnClass != null) {
       DataTypeParamsBuilder builder = DataType.builder().type(returnClass);
@@ -68,12 +69,12 @@ public class SimpleRegistryBootstrap extends AbstractRegistryBootstrap {
       // the transformer with the same name
       trans.setName("_" + trans.getName());
     }
-    ((MuleContextWithRegistries) muleContext).getRegistry().registerTransformer(trans);
+    ((MuleContextWithRegistry) muleContext).getRegistry().registerTransformer(trans);
   }
 
   @Override
   protected void registerTransformers() throws MuleException {
-    MuleRegistryHelper registry = (MuleRegistryHelper) ((MuleContextWithRegistries) muleContext).getRegistry();
+    MuleRegistryHelper registry = (MuleRegistryHelper) ((MuleContextWithRegistry) muleContext).getRegistry();
     Map<String, Converter> converters = registry.lookupByType(Converter.class);
     for (Converter converter : converters.values()) {
       registry.notifyTransformerResolvers(converter, TransformerResolver.RegistryAction.ADDED);
@@ -93,6 +94,6 @@ public class SimpleRegistryBootstrap extends AbstractRegistryBootstrap {
       setMuleContextIfNeeded(value, muleContext);
       value = ((BootstrapObjectFactory) value).create();
     }
-    ((MuleContextWithRegistries) muleContext).getRegistry().registerObject(bootstrapProperty.getKey(), value, meta);
+    ((MuleContextWithRegistry) muleContext).getRegistry().registerObject(bootstrapProperty.getKey(), value, meta);
   }
 }
