@@ -86,7 +86,7 @@ import org.mule.runtime.core.api.util.IOUtils;
 import org.mule.runtime.core.internal.component.DefaultConfigurationComponentLocator;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.runtime.core.internal.registry.DefaultRegistry;
-import org.mule.runtime.core.internal.registry.MuleRegistryHelper;
+import org.mule.runtime.core.internal.registry.MuleRegistryAdapter;
 import org.mule.runtime.core.internal.registry.TransformerResolver;
 
 import com.google.common.collect.ImmutableList;
@@ -376,7 +376,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
 
     addBeanPostProcessors(beanFactory,
                           new MuleContextPostProcessor(muleContext),
-                          new PostRegistrationActionsPostProcessor((MuleRegistryHelper) muleContext
+                          new PostRegistrationActionsPostProcessor((MuleRegistryAdapter) muleContext
                               .getRegistry(), beanFactory),
                           new DiscardedOptionalBeanPostProcessor(optionalObjectsController,
                                                                  (DefaultListableBeanFactory) beanFactory),

@@ -8,7 +8,7 @@ package org.mule.runtime.config.internal.processor;
 
 import static org.mule.runtime.config.internal.MuleArtifactContext.INNER_BEAN_PREFIX;
 
-import org.mule.runtime.core.internal.registry.MuleRegistryHelper;
+import org.mule.runtime.core.internal.registry.MuleRegistryAdapter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -19,14 +19,14 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 
 /**
- * A {@link BeanPostProcessor} which invokes {@link MuleRegistryHelper#postObjectRegistrationActions(Object)} after spring
+ * A {@link BeanPostProcessor} which invokes {@link MuleRegistryAdapter#postObjectRegistrationActions(Object)} after spring
  * finishes initialization over each object.
  *
  * @since 3.7.0
  */
 public class PostRegistrationActionsPostProcessor implements BeanPostProcessor {
 
-  private final MuleRegistryHelper registryHelper;
+  private final MuleRegistryAdapter registryHelper;
   private final Set<String> seenBeanNames = new HashSet<>();
   private final ConfigurableListableBeanFactory beanFactory;
 
@@ -34,7 +34,7 @@ public class PostRegistrationActionsPostProcessor implements BeanPostProcessor {
    * @param registryHelper registry helper to delegate post processing of beans.
    * @param beanFactory the bean factory to validate the type of beans to post process
    */
-  public PostRegistrationActionsPostProcessor(MuleRegistryHelper registryHelper, ConfigurableListableBeanFactory beanFactory) {
+  public PostRegistrationActionsPostProcessor(MuleRegistryAdapter registryHelper, ConfigurableListableBeanFactory beanFactory) {
     this.registryHelper = registryHelper;
     this.beanFactory = beanFactory;
   }

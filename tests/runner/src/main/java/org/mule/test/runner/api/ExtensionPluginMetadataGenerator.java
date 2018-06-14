@@ -20,7 +20,7 @@ import org.mule.runtime.core.internal.context.DefaultMuleContext;
 import org.mule.runtime.core.internal.lifecycle.MuleLifecycleInterceptor;
 import org.mule.runtime.core.internal.registry.DefaultRegistryBroker;
 import org.mule.runtime.core.internal.registry.MuleRegistry;
-import org.mule.runtime.core.internal.registry.MuleRegistryHelper;
+import org.mule.runtime.core.internal.registry.MuleRegistryAdapter;
 import org.mule.runtime.core.privileged.exception.ErrorTypeLocator;
 import org.mule.runtime.extension.api.annotation.Extension;
 import org.mule.runtime.extension.api.loader.ExtensionModelLoader;
@@ -110,8 +110,8 @@ class ExtensionPluginMetadataGenerator {
 
       @Override
       public MuleRegistry getRegistry() {
-        return new MuleRegistryHelper(new DefaultRegistryBroker(this, new MuleLifecycleInterceptor()),
-                                      this);
+        return new MuleRegistryAdapter(new DefaultRegistryBroker(this, new MuleLifecycleInterceptor()),
+                                       this);
       }
 
       @Override

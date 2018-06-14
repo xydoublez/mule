@@ -23,13 +23,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 @SmallTest
-public class MuleRegistryHelperTransformersAsObjectsTestCase extends AbstractMuleTestCase {
+public class MuleRegistryAdapterTransformersAsObjectsTestCase extends AbstractMuleTestCase {
 
   private static final DataType APPLE_DATA_TYPE = DataType.fromType(Apple.class);
 
   private final DefaultRegistryBroker registry = mock(DefaultRegistryBroker.class);
   private final MuleContext muleContext = mock(MuleContext.class);
-  private final MuleRegistryHelper muleRegistryHelper = new MuleRegistryHelper(registry, muleContext);
+  private final MuleRegistryAdapter muleRegistryHelper = new MuleRegistryAdapter(registry, muleContext);
   private final Converter stringToApple = new MockConverterBuilder().from(DataType.STRING).to(APPLE_DATA_TYPE).build();
   private final Converter appleToString = new MockConverterBuilder().from(APPLE_DATA_TYPE).to(DataType.STRING).build();
 

@@ -40,7 +40,7 @@ import org.mule.runtime.core.internal.config.builders.DefaultsConfigurationBuild
 import org.mule.runtime.core.internal.connector.SchedulerController;
 import org.mule.runtime.core.internal.exception.MessagingException;
 import org.mule.runtime.core.internal.lifecycle.MuleContextLifecycleManager;
-import org.mule.runtime.core.internal.registry.MuleRegistryHelper;
+import org.mule.runtime.core.internal.registry.MuleRegistryAdapter;
 import org.mule.runtime.core.internal.transformer.DynamicDataTypeConversionResolver;
 import org.mule.runtime.core.internal.util.store.MuleObjectStoreManager;
 import org.mule.tck.config.TestServicesConfigurationBuilder;
@@ -165,7 +165,7 @@ public class DefaultMuleContextTestCase extends AbstractMuleTestCase {
     createMuleContext();
     StreamCloserService serviceFromRegistry =
         ((MuleContextWithRegistry) context).getRegistry().lookupObject(OBJECT_MULE_STREAM_CLOSER_SERVICE);
-    MuleRegistryHelper registry = spy((MuleRegistryHelper) ((MuleContextWithRegistry) context).getRegistry());
+    MuleRegistryAdapter registry = spy((MuleRegistryAdapter) ((MuleContextWithRegistry) context).getRegistry());
     ((DefaultMuleContext) context).setRegistry(registry);
 
     StreamCloserService streamCloserService = context.getStreamCloserService();
@@ -184,7 +184,7 @@ public class DefaultMuleContextTestCase extends AbstractMuleTestCase {
   public void cachesDataTypeConversionResolver() throws Exception {
     createMuleContext();
     disposeIfNeeded(((MuleContextWithRegistry) context).getRegistry(), LOGGER);
-    final MuleRegistryHelper muleRegistry = mock(MuleRegistryHelper.class);
+    final MuleRegistryAdapter muleRegistry = mock(MuleRegistryAdapter.class);
     ((DefaultMuleContext) context).setRegistry(muleRegistry);
 
     DataTypeConversionResolver dataTypeConverterResolver1 = context.getDataTypeConverterResolver();

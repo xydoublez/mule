@@ -9,12 +9,13 @@ package org.mule.runtime.core.internal.registry;
 import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.LifecycleException;
+import org.mule.runtime.core.api.Injector;
 import org.mule.runtime.core.privileged.registry.RegistrationException;
 
 import java.util.Collection;
 import java.util.Map;
 
-public interface InternalRegistry extends Initialisable, Disposable {
+public interface InternalRegistry extends Initialisable, Disposable, Injector {
   // /////////////////////////////////////////////////////////////////////////
   // Lookup methods - these should NOT create a new object, only return existing ones
   // /////////////////////////////////////////////////////////////////////////

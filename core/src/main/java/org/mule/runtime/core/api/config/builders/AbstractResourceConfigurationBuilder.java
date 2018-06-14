@@ -83,7 +83,9 @@ public abstract class AbstractResourceConfigurationBuilder extends AbstractConfi
 
     super.configure(muleContext);
 
-    LOGGER.debug(configurationBuilderSuccess(this, createConfigResourcesString()).toString());
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(configurationBuilderSuccess(this, createConfigResourcesString()).toString());
+    }
   }
 
   protected ConfigResource[] loadConfigResources(String[] configs) throws ConfigurationException {

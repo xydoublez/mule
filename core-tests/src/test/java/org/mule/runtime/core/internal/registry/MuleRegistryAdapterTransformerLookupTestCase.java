@@ -28,13 +28,13 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 @SmallTest
-public class MuleRegistryHelperTransformerLookupTestCase extends AbstractMuleTestCase {
+public class MuleRegistryAdapterTransformerLookupTestCase extends AbstractMuleTestCase {
 
   private static final DataType ORANGE_DATA_TYPE = DataType.fromType(Orange.class);
 
   private final DefaultRegistryBroker registry = mock(DefaultRegistryBroker.class);
   private final MuleContext muleContext = mock(MuleContext.class);
-  private final MuleRegistryHelper muleRegistryHelper = new MuleRegistryHelper(registry, muleContext);
+  private final MuleRegistryAdapter muleRegistryHelper = new MuleRegistryAdapter(registry, muleContext);
   private final Converter stringToOrange = new MockConverterBuilder().from(DataType.STRING).to(ORANGE_DATA_TYPE).build();
   private final Converter orangeToString = new MockConverterBuilder().from(ORANGE_DATA_TYPE).to(DataType.STRING).build();
 

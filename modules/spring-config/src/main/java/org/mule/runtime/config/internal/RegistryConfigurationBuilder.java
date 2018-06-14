@@ -46,7 +46,6 @@ import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_POLICY_MANA
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_POLICY_MANAGER_STATE_HANDLER;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_PROCESSING_TIME_WATCHER;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_QUEUE_MANAGER;
-import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_REGISTRY;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_SCHEDULER_BASE_CONFIG;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_SCHEDULER_POOLS_CONFIG;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_SECURITY_MANAGER;
@@ -60,7 +59,6 @@ import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_TRANSFORMAT
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APP;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.POLICY;
 import static org.mule.runtime.core.internal.interception.ProcessorInterceptorManager.PROCESSOR_INTERCEPTOR_MANAGER_REGISTRY_KEY;
-import org.mule.runtime.api.artifact.Registry;
 import org.mule.runtime.api.component.ConfigurationProperties;
 import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
 import org.mule.runtime.api.config.custom.ServiceConfigurator;
@@ -96,7 +94,6 @@ import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.DefaultMuleConfiguration;
 import org.mule.runtime.core.api.config.bootstrap.ArtifactType;
 import org.mule.runtime.core.api.config.builders.AbstractConfigurationBuilder;
-import org.mule.runtime.core.api.context.MuleContextBuilder;
 import org.mule.runtime.core.api.context.notification.MuleContextNotification;
 import org.mule.runtime.core.api.context.notification.MuleContextNotificationListener;
 import org.mule.runtime.core.api.event.EventContextService;
@@ -125,7 +122,8 @@ import org.mule.runtime.core.internal.metadata.MuleMetadataService;
 import org.mule.runtime.core.internal.policy.DefaultPolicyManager;
 import org.mule.runtime.core.internal.policy.DefaultPolicyStateHandler;
 import org.mule.runtime.core.internal.processor.interceptor.DefaultProcessorInterceptorManager;
-import org.mule.runtime.core.internal.registry.MuleRegistryBuilder;
+import org.mule.runtime.core.internal.registry.DefaultRegistry;
+import org.mule.runtime.core.internal.registry.InternalRegistryBuilder;
 import org.mule.runtime.core.internal.registry.guice.DefaultRegistryBootstrap;
 import org.mule.runtime.core.internal.registry.guice.LocalInMemoryObjectStoreProvider;
 import org.mule.runtime.core.internal.registry.guice.LocalLockFactoryProvider;
@@ -155,9 +153,10 @@ import javax.inject.Provider;
 
 public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
 
-  private final MuleRegistryBuilder builder;
+  private final InternalRegistryBuilder builder;
   private final ArtifactType artifactType;
   private final CustomServiceRegistry customServiceRegistry;
+  private final MuleContextWithRegistry muleContext;
 
   private static final ImmutableSet<String> APPLICATION_ONLY_SERVICES = ImmutableSet.<String>builder()
       .add(OBJECT_SECURITY_MANAGER)
@@ -228,8 +227,8 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
                                       ConfigurationProperties configurationProperties,
                                       ArtifactType artifactType,
                                       DefaultConfigurationComponentLocator componentLocator) {
-    this.builder = ((MuleContextWithRegistry) muleContext).getRegistryBuilder()
-        .orElseThrow(() -> new IllegalStateException("Registry has already been built"));
+    this.muleContext = (MuleContextWithRegistry) muleContext;
+    this.builder = this.muleContext.getRegistryBuilder();
     this.configurationProperties = configurationProperties;
     this.customServiceRegistry = (CustomServiceRegistry) muleContext.getCustomizationService();
     this.artifactType = artifactType;
@@ -244,7 +243,6 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
     builder.registerObject(ErrorTypeRepository.class.getName(), muleContext.getErrorTypeRepository());
     builder.registerObject(ConfigurationComponentLocator.REGISTRY_KEY, componentLocator);
     builder.registerObject(OBJECT_NOTIFICATION_HANDLER, muleContext.getNotificationManager());
-    builder.registerObject(OBJECT_REGISTRY, registry);
     builder.registerObject(OBJECT_STATISTICS, muleContext.getStatistics());
     loadServiceConfigurators();
 
@@ -257,7 +255,7 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
     registerObjectStore();
     registerLockFactory();
     registerQueueManager();
-    createCustomServices();
+    createCustomServices(muleContext);
   }
 
   private void loadServiceConfigurators() {
@@ -266,7 +264,7 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
         .forEach(customizer -> customizer.configure(customServiceRegistry));
   }
 
-  private void createCustomServices() {
+  private void createCustomServices(MuleContext muleContext) {
     customServiceRegistry.getCustomServices().entrySet()
         .forEach(entry -> register(getCustomServiceRegistration(entry.getValue(), entry.getKey())));
   }
@@ -290,7 +288,7 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
     } else if (customServiceImpl.isPresent()) {
       if (customServiceImpl.get() instanceof Service) {
         registration = instance(serviceId, createInjectProviderParamsServiceProxy((Service) customServiceImpl.get(),
-                                                                                  registry));
+                                                                                  new DefaultRegistry(muleContext)));
       } else {
         registration = instance(serviceId, customServiceImpl.get());
       }

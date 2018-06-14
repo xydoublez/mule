@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Adds lookup/register/unregister methods for Mule-specific entities to the standard Registry interface.
  */
-public class MuleRegistryHelper implements MuleRegistry {
+public class MuleRegistryAdapter implements MuleRegistry {
 
   /**
    * We cache transformer searches so that we only search once
@@ -75,7 +75,7 @@ public class MuleRegistryHelper implements MuleRegistry {
    */
   private Collection<Transformer> transformers = new CopyOnWriteArrayList<>();
 
-  public MuleRegistryHelper(InternalRegistry registry, MuleContext muleContext) {
+  public MuleRegistryAdapter(InternalRegistry registry, MuleContext muleContext) {
     this.registry = registry;
     this.muleContext = muleContext;
   }

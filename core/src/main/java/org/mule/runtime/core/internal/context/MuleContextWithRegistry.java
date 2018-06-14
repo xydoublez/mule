@@ -8,9 +8,7 @@ package org.mule.runtime.core.internal.context;
 
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.internal.registry.MuleRegistry;
-import org.mule.runtime.core.internal.registry.MuleRegistryBuilder;
-
-import java.util.Optional;
+import org.mule.runtime.core.internal.registry.InternalRegistryBuilder;
 
 /**
  * Declares {@link MuleRegistry} handling methods for {@link MuleContext}.
@@ -25,6 +23,6 @@ public interface MuleContextWithRegistry extends MuleContext {
 
   MuleRegistry getRegistry();
 
-  Optional<MuleRegistryBuilder> getRegistryBuilder();
+  InternalRegistryBuilder getRegistryBuilder();
 
 }

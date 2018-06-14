@@ -15,13 +15,12 @@ import org.mule.runtime.api.metadata.DataType;
 import org.mule.runtime.api.metadata.DataTypeParamsBuilder;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.bootstrap.ArtifactType;
-import org.mule.runtime.core.api.config.i18n.CoreMessages;
 import org.mule.runtime.core.api.transformer.Converter;
 import org.mule.runtime.core.api.transformer.DiscoverableTransformer;
 import org.mule.runtime.core.api.transformer.Transformer;
 import org.mule.runtime.core.api.util.ClassUtils;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
-import org.mule.runtime.core.internal.registry.MuleRegistryHelper;
+import org.mule.runtime.core.internal.registry.MuleRegistryAdapter;
 import org.mule.runtime.core.internal.registry.SimpleRegistry;
 import org.mule.runtime.core.internal.registry.TransformerResolver;
 import org.mule.runtime.core.internal.util.StreamCloser;
@@ -74,7 +73,7 @@ public class SimpleRegistryBootstrap extends AbstractRegistryBootstrap {
 
   @Override
   protected void registerTransformers() throws MuleException {
-    MuleRegistryHelper registry = (MuleRegistryHelper) ((MuleContextWithRegistry) muleContext).getRegistry();
+    MuleRegistryAdapter registry = (MuleRegistryAdapter) ((MuleContextWithRegistry) muleContext).getRegistry();
     Map<String, Converter> converters = registry.lookupByType(Converter.class);
     for (Converter converter : converters.values()) {
       registry.notifyTransformerResolvers(converter, TransformerResolver.RegistryAction.ADDED);

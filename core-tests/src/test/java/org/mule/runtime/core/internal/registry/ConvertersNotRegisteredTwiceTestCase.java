@@ -37,7 +37,7 @@ import java.util.Set;
 
 public class ConvertersNotRegisteredTwiceTestCase extends AbstractMuleContextTestCase {
 
-  private MuleRegistryHelper registryHelper;
+  private MuleRegistryAdapter registryHelper;
 
   @Override
   protected void addBuilders(List<ConfigurationBuilder> builders) {
@@ -46,7 +46,7 @@ public class ConvertersNotRegisteredTwiceTestCase extends AbstractMuleContextTes
 
       @Override
       protected void doConfigure(MuleContext muleContext) throws Exception {
-        registryHelper = (MuleRegistryHelper) ((MuleContextWithRegistry) muleContext).getRegistry();
+        registryHelper = (MuleRegistryAdapter) ((MuleContextWithRegistry) muleContext).getRegistry();
         registryHelper = spy(registryHelper);
         ((DefaultMuleContext) muleContext).setRegistry(registryHelper);
       }

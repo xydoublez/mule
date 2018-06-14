@@ -8,42 +8,18 @@ package org.mule.runtime.core.internal.registry;
 
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.metadata.DataType;
+import org.mule.runtime.core.api.Injector;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.transformer.Transformer;
 import org.mule.runtime.core.api.transformer.TransformerException;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
  * Adds lookup/register/unregister methods for Mule-specific entities to the standard Registry interface.
  */
-public interface MuleRegistry extends LifecycleRegistry {
-
-  /**
-   * Pass this flag as metadata of the {@link InternalRegistry#registerObject(String, Object, Object)} method to have lifecycle method
-   * calls on the registered objects omitted. Unless extending Mule, one will probably never have a use for this.
-   *
-   * @see InternalRegistry#registerObject(String, Object, Object)
-   */
-  int LIFECYCLE_BYPASS_FLAG = 0x01;
-
-  /**
-   * Determines whether Inject processors should get executed on an object added to the registry Inject processors are responsible
-   * for processing inject interfaces such as {@link org.mule.runtime.core.api.context.MuleContextAware}
-   */
-  int INJECT_PROCESSORS_BYPASS_FLAG = 0x02;
-
-  /**
-   * Determines whether pre-init processors should get executed on an object added to the registry. Pre init processors are
-   * basically object processors that do not inject members into objects. These processors happen after the inject processors
-   */
-  int PRE_INIT_PROCESSORS_BYPASS_FLAG = 0x04;
-
-  // /////////////////////////////////////////////////////////////////////////
-  // Lookup methods - these should NOT create a new object, only return existing ones
-  // /////////////////////////////////////////////////////////////////////////
+public interface MuleRegistry extends LifecycleRegistry, Injector {
 
   Transformer lookupTransformer(String name);
 
@@ -75,18 +51,6 @@ public interface MuleRegistry extends LifecycleRegistry {
    * @since 3.0.0
    */
   Transformer lookupTransformer(DataType source, DataType result) throws TransformerException;
-
-  Collection<FlowConstruct> lookupFlowConstructs();
-
-  // /////////////////////////////////////////////////////////////////////////
-  // Registration methods
-  // /////////////////////////////////////////////////////////////////////////
-
-  void registerTransformer(Transformer transformer) throws MuleException;
-
-  void unregisterTransformer(String transformerName) throws MuleException;
-
-  void registerFlowConstruct(FlowConstruct flowConstruct) throws MuleException;
 
   /**
    * Will execute any processors on an object and fire any lifecycle methods according to the current lifecycle without actually

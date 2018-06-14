@@ -30,10 +30,7 @@ import org.mule.runtime.core.api.lifecycle.LifecycleManager;
 import org.mule.runtime.core.api.util.ClassUtils;
 import org.mule.runtime.core.internal.exception.DefaultSystemExceptionStrategy;
 import org.mule.runtime.core.internal.lifecycle.MuleContextLifecycleManager;
-import org.mule.runtime.core.internal.registry.DefaultRegistryBroker;
-import org.mule.runtime.core.internal.registry.MuleRegistryBuilder;
-import org.mule.runtime.core.internal.registry.MuleRegistryHelper;
-import org.mule.runtime.core.internal.registry.RegistryDelegatingInjector;
+import org.mule.runtime.core.internal.registry.InternalRegistryBuilder;
 import org.mule.runtime.core.internal.registry.guice.GuiceRegistryBuilder;
 import org.mule.runtime.core.internal.serialization.JavaObjectSerializer;
 
@@ -71,7 +68,7 @@ public class DefaultMuleContextBuilder implements MuleContextBuilder {
 
   private List<MuleContextListener> listeners = new ArrayList<>();
 
-  private MuleRegistryBuilder registryBuilder = new GuiceRegistryBuilder();
+  private InternalRegistryBuilder registryBuilder = new GuiceRegistryBuilder();
 
   /**
    * Creates a new builder
@@ -93,10 +90,6 @@ public class DefaultMuleContextBuilder implements MuleContextBuilder {
     muleContext.setNotificationManager(injectMuleContextIfRequired(getNotificationManager(), muleContext));
     muleContext.setLifecycleManager(injectMuleContextIfRequired(getLifecycleManager(), muleContext));
     muleContext.setArtifactType(artifactType);
-
-    MuleRegistryHelper muleRegistry = new MuleRegistryHelper(registryBroker, muleContext);
-    muleContext.setRegistry(muleRegistry);
-    muleContext.setInjector(new RegistryDelegatingInjector(muleRegistry));
 
     muleContext.setExceptionListener(createExceptionListener(muleContext));
     muleContext.setExecutionClassLoader(getExecutionClassLoader());

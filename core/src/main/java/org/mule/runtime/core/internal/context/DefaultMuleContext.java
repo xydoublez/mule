@@ -8,7 +8,6 @@ package org.mule.runtime.core.internal.context;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.SystemUtils.JAVA_VERSION;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.serialization.ObjectSerializer.DEFAULT_OBJECT_SERIALIZER_NAME;
@@ -112,8 +111,10 @@ import org.mule.runtime.core.internal.exception.ErrorHandlerFactory;
 import org.mule.runtime.core.internal.lifecycle.LifecycleInterceptor;
 import org.mule.runtime.core.internal.lifecycle.MuleContextLifecycleManager;
 import org.mule.runtime.core.internal.lifecycle.MuleLifecycleInterceptor;
+import org.mule.runtime.core.internal.registry.ForwardingInternalRegistry;
 import org.mule.runtime.core.internal.registry.MuleRegistry;
-import org.mule.runtime.core.internal.registry.MuleRegistryBuilder;
+import org.mule.runtime.core.internal.registry.InternalRegistryBuilder;
+import org.mule.runtime.core.internal.registry.MuleRegistryAdapter;
 import org.mule.runtime.core.internal.registry.guice.GuiceRegistryBuilder;
 import org.mule.runtime.core.internal.transformer.DynamicDataTypeConversionResolver;
 import org.mule.runtime.core.internal.util.JdkVersionUtils;
@@ -163,7 +164,7 @@ public class DefaultMuleContext implements MuleContextWithRegistry, PrivilegedMu
    */
   private MuleRegistry registry;
 
-  private MuleRegistryBuilder registryBuilder = new GuiceRegistryBuilder();
+  private InternalRegistryBuilder registryBuilder = new GuiceRegistryBuilder();
 
   /**
    * Default component to perform dependency injection
@@ -313,10 +314,20 @@ public class DefaultMuleContext implements MuleContextWithRegistry, PrivilegedMu
   }
 
   private void buildRegistry() throws InitialisationException {
+    ForwardingInternalRegistry delegate = new ForwardingInternalRegistry();
+    registryBuilder.registerObject(OBJECT_REGISTRY, delegate);
+    delegate.setRegistry(registryBuilder.build(this));
+
+    registryBuilder = null;
+    registry = new MuleRegistryAdapter(delegate, this);
+
+    if (injector == null) {
+      setInjector(registry);
+    }
 
     // Initialize the helper, this only initialises the helper class and does not call the registry lifecycle manager
     // The registry lifecycle is called below using 'getLifecycleManager().fireLifecycle(Initialisable.PHASE_NAME);'
-    getRegistry().initialise();
+    registry.initialise();
   }
 
   @Override
@@ -550,7 +561,7 @@ public class DefaultMuleContext implements MuleContextWithRegistry, PrivilegedMu
   @Override
   public void setSecurityManager(SecurityManager securityManager) {
     checkLifecycleForPropertySet(OBJECT_SECURITY_MANAGER, Initialisable.PHASE_NAME);
-    getRegistryBuilder().ifPresent(builder -> builder.registerObject(OBJECT_SECURITY_MANAGER, securityManager));
+    registryBuilder.registerObject(OBJECT_SECURITY_MANAGER, securityManager);
   }
 
   /**
@@ -658,7 +669,7 @@ public class DefaultMuleContext implements MuleContextWithRegistry, PrivilegedMu
   public void setQueueManager(QueueManager queueManager) {
     checkLifecycleForPropertySet(OBJECT_QUEUE_MANAGER, Initialisable.PHASE_NAME);
     this.queueManager = queueManager;
-    getRegistryBuilder().ifPresent(builder -> builder.registerObject(OBJECT_QUEUE_MANAGER, queueManager));
+    registryBuilder.registerObject(OBJECT_QUEUE_MANAGER, queueManager);
   }
 
   /**
@@ -683,7 +694,7 @@ public class DefaultMuleContext implements MuleContextWithRegistry, PrivilegedMu
   @Override
   public void setTransactionManager(TransactionManager manager) throws RegistrationException {
     checkLifecycleForPropertySet(OBJECT_TRANSACTION_MANAGER, Initialisable.PHASE_NAME);
-    getRegistryBuilder().ifPresent(builder -> builder.registerObject(OBJECT_TRANSACTION_MANAGER, manager));
+    registryBuilder.registerObject(OBJECT_TRANSACTION_MANAGER, manager);
   }
 
   /**
@@ -928,11 +939,14 @@ public class DefaultMuleContext implements MuleContextWithRegistry, PrivilegedMu
   }
 
   @Override
-  public Optional<MuleRegistryBuilder> getRegistryBuilder() {
-    return ofNullable(registryBuilder);
+  public InternalRegistryBuilder getRegistryBuilder() {
+    if (registry != null) {
+      throw new IllegalStateException("Cannot get the registry builder, Registry has already been built.");
+    }
+    return registryBuilder;
   }
 
-  public void setRegistryBuilder(MuleRegistryBuilder registryBuilder) {
+  public void setRegistryBuilder(InternalRegistryBuilder registryBuilder) {
     if (registry != null) {
       throw new IllegalStateException("Cannot set a new registry builder, Registry has already been built.");
     }

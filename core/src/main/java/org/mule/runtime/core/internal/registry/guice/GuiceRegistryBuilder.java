@@ -11,7 +11,7 @@ import org.mule.runtime.api.util.LazyValue;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.internal.context.DefaultMuleContext;
 import org.mule.runtime.core.internal.registry.InternalRegistry;
-import org.mule.runtime.core.internal.registry.MuleRegistryBuilder;
+import org.mule.runtime.core.internal.registry.InternalRegistryBuilder;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -27,29 +27,29 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-public class GuiceRegistryBuilder implements MuleRegistryBuilder {
+public class GuiceRegistryBuilder implements InternalRegistryBuilder {
 
   private final Map<String, Registration> registrations = new HashMap<>();
 
   @Override
-  public MuleRegistryBuilder registerObject(String key, Object value) {
+  public InternalRegistryBuilder registerObject(String key, Object value) {
     return register(new InstanceRegistration(key, value));
   }
 
   @Override
-  public MuleRegistryBuilder registerType(String key, Class<?> objectType, boolean singleton) {
+  public InternalRegistryBuilder registerType(String key, Class<?> objectType, boolean singleton) {
     return register(new TypeRegistration(key, singleton, objectType));
   }
 
   @Override
-  public <T> MuleRegistryBuilder registerProvider(String key,
-                                                  Class<T> objectType,
-                                                  Class<? extends Provider<? extends T>> providerType,
-                                                  boolean singleton) {
+  public <T> InternalRegistryBuilder registerProvider(String key,
+                                                      Class<T> objectType,
+                                                      Class<? extends Provider<? extends T>> providerType,
+                                                      boolean singleton) {
     return register(new ProviderRegistration(key, objectType, providerType, singleton));
   }
 
-  private MuleRegistryBuilder register(Registration registration) {
+  private InternalRegistryBuilder register(Registration registration) {
     if (registrations.containsKey(registration.name)) {
       throw new IllegalStateException("There already is an object registered with key: " + registration.name);
     }

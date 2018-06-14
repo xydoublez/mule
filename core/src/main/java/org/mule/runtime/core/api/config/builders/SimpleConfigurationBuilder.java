@@ -10,6 +10,7 @@ import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.runtime.core.internal.registry.InternalRegistry;
+import org.mule.runtime.core.internal.registry.InternalRegistryBuilder;
 
 import java.util.Map;
 
@@ -28,8 +29,9 @@ public final class SimpleConfigurationBuilder extends AbstractConfigurationBuild
 
   @Override
   protected void doConfigure(MuleContext muleContext) throws Exception {
-    if (objects != null && objects.size() > 0) {
-      ((MuleContextWithRegistry) muleContext).getRegistry().registerObjects((Map<String, Object>) objects);
+    if (objects != null && muleContext instanceof MuleContextWithRegistry) {
+      InternalRegistryBuilder registryBuilder = ((MuleContextWithRegistry) muleContext).getRegistryBuilder();
+      objects.entrySet().forEach(entry -> registryBuilder.registerObject(entry.getKey(), entry.getValue()));
     }
   }
 }

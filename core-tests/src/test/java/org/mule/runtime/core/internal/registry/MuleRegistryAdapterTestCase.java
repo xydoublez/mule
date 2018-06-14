@@ -33,7 +33,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-public class MuleRegistryHelperTestCase extends AbstractMuleContextTestCase {
+public class MuleRegistryAdapterTestCase extends AbstractMuleContextTestCase {
 
   private static final DataType ORANGE_DATA_TYPE = DataType.fromType(Orange.class);
   private static final DataType BLOOD_ORANGE_DATA_TYPE = DataType.fromType(BloodOrange.class);
