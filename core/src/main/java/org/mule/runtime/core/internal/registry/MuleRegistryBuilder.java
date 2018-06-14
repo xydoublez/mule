@@ -1,8 +1,10 @@
 package org.mule.runtime.core.internal.registry;
 
+import org.mule.runtime.core.api.MuleContext;
+
 import javax.inject.Provider;
 
-public interface MuleRegistryBuilder<T extends InternalRegistry> {
+public interface MuleRegistryBuilder {
 
 
   MuleRegistryBuilder registerObject(String key, Object value);
@@ -25,6 +27,6 @@ public interface MuleRegistryBuilder<T extends InternalRegistry> {
                                            Class<? extends Provider<? extends T>> providerType,
                                            boolean singleton);
 
-  T build();
+  InternalRegistry build(MuleContext muleContext);
 
 }

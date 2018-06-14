@@ -10,6 +10,7 @@ import static com.google.inject.Guice.createInjector;
 import org.mule.runtime.api.util.LazyValue;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.internal.context.DefaultMuleContext;
+import org.mule.runtime.core.internal.registry.InternalRegistry;
 import org.mule.runtime.core.internal.registry.MuleRegistryBuilder;
 
 import com.google.inject.AbstractModule;
@@ -26,14 +27,9 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-public class GuiceRegistryBuilder implements MuleRegistryBuilder<GuiceRegistry> {
+public class GuiceRegistryBuilder implements MuleRegistryBuilder {
 
   private final Map<String, Registration> registrations = new HashMap<>();
-  private final MuleContext muleContext;
-
-  public GuiceRegistryBuilder(MuleContext muleContext) {
-    this.muleContext = muleContext;
-  }
 
   @Override
   public MuleRegistryBuilder registerObject(String key, Object value) {
@@ -53,7 +49,7 @@ public class GuiceRegistryBuilder implements MuleRegistryBuilder<GuiceRegistry> 
     return register(new ProviderRegistration(key, objectType, providerType, singleton));
   }
 
-  private MuleRegistryBuilder<GuiceRegistry> register(Registration registration) {
+  private MuleRegistryBuilder register(Registration registration) {
     if (registrations.containsKey(registration.name)) {
       throw new IllegalStateException("There already is an object registered with key: " + registration.name);
     }
@@ -63,7 +59,7 @@ public class GuiceRegistryBuilder implements MuleRegistryBuilder<GuiceRegistry> 
   }
 
   @Override
-  public GuiceRegistry build() {
+  public InternalRegistry build(MuleContext muleContext) {
     MuleInjectionModule module = new MuleInjectionModule();
     registrations.values().forEach(r -> r.registerOn(module));
 

@@ -166,7 +166,7 @@ public class DefaultMuleContextTestCase extends AbstractMuleTestCase {
     StreamCloserService serviceFromRegistry =
         ((MuleContextWithRegistry) context).getRegistry().lookupObject(OBJECT_MULE_STREAM_CLOSER_SERVICE);
     MuleRegistryHelper registry = spy((MuleRegistryHelper) ((MuleContextWithRegistry) context).getRegistry());
-    ((DefaultMuleContext) context).setMuleRegistry(registry);
+    ((DefaultMuleContext) context).setRegistry(registry);
 
     StreamCloserService streamCloserService = context.getStreamCloserService();
     assertThat(streamCloserService, not(nullValue()));
@@ -185,7 +185,7 @@ public class DefaultMuleContextTestCase extends AbstractMuleTestCase {
     createMuleContext();
     disposeIfNeeded(((MuleContextWithRegistry) context).getRegistry(), LOGGER);
     final MuleRegistryHelper muleRegistry = mock(MuleRegistryHelper.class);
-    ((DefaultMuleContext) context).setMuleRegistry(muleRegistry);
+    ((DefaultMuleContext) context).setRegistry(muleRegistry);
 
     DataTypeConversionResolver dataTypeConverterResolver1 = context.getDataTypeConverterResolver();
     DataTypeConversionResolver dataTypeConverterResolver2 = context.getDataTypeConverterResolver();

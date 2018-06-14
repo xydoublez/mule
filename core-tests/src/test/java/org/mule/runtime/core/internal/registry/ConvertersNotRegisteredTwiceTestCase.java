@@ -48,7 +48,7 @@ public class ConvertersNotRegisteredTwiceTestCase extends AbstractMuleContextTes
       protected void doConfigure(MuleContext muleContext) throws Exception {
         registryHelper = (MuleRegistryHelper) ((MuleContextWithRegistry) muleContext).getRegistry();
         registryHelper = spy(registryHelper);
-        ((DefaultMuleContext) muleContext).setMuleRegistry(registryHelper);
+        ((DefaultMuleContext) muleContext).setRegistry(registryHelper);
       }
     });
   }

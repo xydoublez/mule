@@ -36,6 +36,7 @@ import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_LOCK_FACTOR
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_LOCK_PROVIDER;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_MESSAGE_PROCESSING_FLOW_TRACE_MANAGER;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_MULE_CONFIGURATION;
+import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_MULE_CONTEXT;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_MULE_STREAM_CLOSER_SERVICE;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_NOTIFICATION_DISPATCHER;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_NOTIFICATION_HANDLER;
@@ -95,6 +96,7 @@ import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.DefaultMuleConfiguration;
 import org.mule.runtime.core.api.config.bootstrap.ArtifactType;
 import org.mule.runtime.core.api.config.builders.AbstractConfigurationBuilder;
+import org.mule.runtime.core.api.context.MuleContextBuilder;
 import org.mule.runtime.core.api.context.notification.MuleContextNotification;
 import org.mule.runtime.core.api.context.notification.MuleContextNotificationListener;
 import org.mule.runtime.core.api.event.EventContextService;
@@ -108,6 +110,7 @@ import org.mule.runtime.core.internal.config.CustomService;
 import org.mule.runtime.core.internal.config.CustomServiceRegistry;
 import org.mule.runtime.core.internal.connection.DelegateConnectionManagerAdapter;
 import org.mule.runtime.core.internal.connectivity.DefaultConnectivityTestingService;
+import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.runtime.core.internal.context.notification.DefaultNotificationDispatcher;
 import org.mule.runtime.core.internal.context.notification.DefaultNotificationListenerRegistry;
 import org.mule.runtime.core.internal.context.notification.MessageProcessingFlowTraceManager;
@@ -152,9 +155,8 @@ import javax.inject.Provider;
 
 public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
 
-  private final MuleRegistryBuilder<?> builder;
+  private final MuleRegistryBuilder builder;
   private final ArtifactType artifactType;
-  private final OptionalObjectsController optionalObjectsController;
   private final CustomServiceRegistry customServiceRegistry;
 
   private static final ImmutableSet<String> APPLICATION_ONLY_SERVICES = ImmutableSet.<String>builder()
@@ -221,26 +223,22 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
 
   private final DefaultConfigurationComponentLocator componentLocator;
   private final ConfigurationProperties configurationProperties;
-  private final MuleContext muleContext;
-  private final Registry registry;
 
   public RegistryConfigurationBuilder(MuleContext muleContext,
                                       ConfigurationProperties configurationProperties,
                                       ArtifactType artifactType,
-                                      OptionalObjectsController optionalObjectsController,
-                                      DefaultConfigurationComponentLocator componentLocator,
-                                      Registry registry) {
-    this.muleContext = muleContext;
+                                      DefaultConfigurationComponentLocator componentLocator) {
+    this.builder = ((MuleContextWithRegistry) muleContext).getRegistryBuilder()
+        .orElseThrow(() -> new IllegalStateException("Registry has already been built"));
     this.configurationProperties = configurationProperties;
     this.customServiceRegistry = (CustomServiceRegistry) muleContext.getCustomizationService();
     this.artifactType = artifactType;
-    this.optionalObjectsController = optionalObjectsController;
     this.componentLocator = componentLocator;
-    this.registry = registry;
   }
 
   @Override
   protected void doConfigure(MuleContext muleContext) throws Exception {
+    builder.registerObject(OBJECT_MULE_CONTEXT, muleContext);
     builder.registerObject(DEFAULT_OBJECT_SERIALIZER_NAME, muleContext.getObjectSerializer());
     builder.registerObject(OBJECT_CONFIGURATION_PROPERTIES, configurationProperties);
     builder.registerObject(ErrorTypeRepository.class.getName(), muleContext.getErrorTypeRepository());

@@ -57,8 +57,8 @@ public class MuleRegistryHelper implements MuleRegistry {
   protected ConcurrentHashMap/* Map<String, List<Transformer>> */ transformerListCache =
       new ConcurrentHashMap/* <String, List<Transformer>> */(8);
 
-  private MuleContext muleContext;
-
+  private final MuleContext muleContext;
+  private final InternalRegistry registry;
   private final ReadWriteLock transformerResolversLock = new ReentrantReadWriteLock();
 
   /**
@@ -75,7 +75,7 @@ public class MuleRegistryHelper implements MuleRegistry {
    */
   private Collection<Transformer> transformers = new CopyOnWriteArrayList<>();
 
-  public MuleRegistryHelper(DefaultRegistryBroker registry, MuleContext muleContext) {
+  public MuleRegistryHelper(InternalRegistry registry, MuleContext muleContext) {
     this.registry = registry;
     this.muleContext = muleContext;
   }

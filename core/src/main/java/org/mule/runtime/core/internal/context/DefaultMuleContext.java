@@ -8,9 +8,11 @@ package org.mule.runtime.core.internal.context;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.SystemUtils.JAVA_VERSION;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.serialization.ObjectSerializer.DEFAULT_OBJECT_SERIALIZER_NAME;
+import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import static org.mule.runtime.core.api.config.MuleProperties.LOCAL_OBJECT_STORE_MANAGER;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_CLUSTER_CONFIGURATION;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_COMPONENT_INITIAL_STATE_MANAGER;
@@ -47,17 +49,6 @@ import static org.mule.runtime.core.internal.logging.LogUtil.log;
 import static org.mule.runtime.core.internal.util.FunctionalUtils.safely;
 import static org.mule.runtime.core.internal.util.JdkVersionUtils.getSupportedJdks;
 import static org.slf4j.LoggerFactory.getLogger;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Inject;
-import javax.transaction.TransactionManager;
-
 import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
 import org.mule.runtime.api.config.custom.CustomizationService;
 import org.mule.runtime.api.deployment.management.ComponentInitialStateManager;
@@ -122,8 +113,8 @@ import org.mule.runtime.core.internal.lifecycle.LifecycleInterceptor;
 import org.mule.runtime.core.internal.lifecycle.MuleContextLifecycleManager;
 import org.mule.runtime.core.internal.lifecycle.MuleLifecycleInterceptor;
 import org.mule.runtime.core.internal.registry.MuleRegistry;
-import org.mule.runtime.core.internal.registry.InternalRegistry;
-import org.mule.runtime.core.internal.registry.RegistryBroker;
+import org.mule.runtime.core.internal.registry.MuleRegistryBuilder;
+import org.mule.runtime.core.internal.registry.guice.GuiceRegistryBuilder;
 import org.mule.runtime.core.internal.transformer.DynamicDataTypeConversionResolver;
 import org.mule.runtime.core.internal.util.JdkVersionUtils;
 import org.mule.runtime.core.internal.util.splash.ArtifactShutdownSplashScreen;
@@ -136,11 +127,20 @@ import org.mule.runtime.core.privileged.exception.ErrorTypeLocator;
 import org.mule.runtime.core.privileged.registry.RegistrationException;
 import org.mule.runtime.core.privileged.transformer.ExtendedTransformationService;
 
-import org.slf4j.Logger;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
+import javax.transaction.TransactionManager;
+
+import org.slf4j.Logger;
 import reactor.core.publisher.Hooks;
 
-public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
+public class DefaultMuleContext implements MuleContextWithRegistry, PrivilegedMuleContext {
 
   /**
    * TODO: Remove these constants. These constants only make sense until we have a reliable solution for durable persistence in
@@ -154,19 +154,16 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
   /**
    * logger used by this class
    */
-  private static Logger logger = getLogger(DefaultMuleContext.class);
+  private static Logger LOGGER = getLogger(DefaultMuleContext.class);
 
   private CustomizationService customizationService = new DefaultCustomizationService();
 
   /**
-   * Internal registry facade which delegates to other registries.
-   */
-  private RegistryBroker registryBroker;
-
-  /**
    * Simplified Mule configuration interface
    */
-  private MuleRegistry muleRegistryHelper;
+  private MuleRegistry registry;
+
+  private MuleRegistryBuilder registryBuilder = new GuiceRegistryBuilder();
 
   /**
    * Default component to perform dependency injection
@@ -265,8 +262,8 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
 
   static {
     // Log dropped events/errors
-    Hooks.onErrorDropped(error -> logger.debug("ERROR DROPPED " + error));
-    Hooks.onNextDropped(event -> logger.debug("EVENT DROPPED " + event));
+    Hooks.onErrorDropped(error -> LOGGER.debug("ERROR DROPPED " + error));
+    Hooks.onNextDropped(event -> LOGGER.debug("EVENT DROPPED " + event));
   }
 
   public DefaultMuleContext() {
@@ -291,9 +288,7 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
       try {
         id = getConfiguration().getDomainId() + "." + getClusterId() + "." + getConfiguration().getId();
 
-        // Initialize the helper, this only initialises the helper class and does not call the registry lifecycle manager
-        // The registry lifecycle is called below using 'getLifecycleManager().fireLifecycle(Initialisable.PHASE_NAME);'
-        getRegistry().initialise();
+        buildRegistry();
 
         fireNotification(new MuleContextNotification(this, CONTEXT_INITIALISING));
         getLifecycleManager().fireLifecycle(Initialisable.PHASE_NAME);
@@ -306,7 +301,7 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
         getNotificationManager().initialise();
 
         // refresh object serializer reference in case a default one was redefined in the config.
-        objectSerializer = registryBroker.get(DEFAULT_OBJECT_SERIALIZER_NAME);
+        objectSerializer = registry.get(DEFAULT_OBJECT_SERIALIZER_NAME);
       } catch (InitialisationException e) {
         dispose();
         throw e;
@@ -315,6 +310,13 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
         throw new InitialisationException(e, this);
       }
     }
+  }
+
+  private void buildRegistry() throws InitialisationException {
+
+    // Initialize the helper, this only initialises the helper class and does not call the registry lifecycle manager
+    // The registry lifecycle is called below using 'getLifecycleManager().fireLifecycle(Initialisable.PHASE_NAME);'
+    getRegistry().initialise();
   }
 
   @Override
@@ -326,7 +328,7 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
         throw new MuleRuntimeException(objectIsNull("queueManager"));
       }
 
-      componentInitialStateManager = muleRegistryHelper.get(OBJECT_COMPONENT_INITIAL_STATE_MANAGER);
+      componentInitialStateManager = registry.get(OBJECT_COMPONENT_INITIAL_STATE_MANAGER);
       startDate = System.currentTimeMillis();
 
       startIfNeeded(extensionManager);
@@ -341,7 +343,7 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
 
       startLatch.release();
 
-      if (logger.isInfoEnabled()) {
+      if (LOGGER.isInfoEnabled()) {
         SplashScreen startupScreen = buildStartupSplash();
         log(startupScreen.toString());
       }
@@ -399,11 +401,11 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
     synchronized (lifecycleStateLock) {
       if (isStarted() || (lifecycleManager.getLastPhaseExecuted() != null
           && (lifecycleManager.getLastPhaseExecuted().equals(Startable.PHASE_NAME)
-              && lifecycleManager.isLastPhaseExecutionFailed()))) {
+          && lifecycleManager.isLastPhaseExecutionFailed()))) {
         try {
           stop();
         } catch (MuleException e) {
-          logger.error("Failed to stop Mule context", e);
+          LOGGER.error("Failed to stop Mule context", e);
         }
       }
 
@@ -411,30 +413,28 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
 
       fireNotification(new MuleContextNotification(this, CONTEXT_DISPOSING));
 
-      disposeIfNeeded(getExceptionListener(), logger);
+      disposeIfNeeded(getExceptionListener(), LOGGER);
 
       try {
         getLifecycleManager().fireLifecycle(Disposable.PHASE_NAME);
 
         // THis is a little odd. I find the relationship between the MuleRegistry Helper and the registry broker, too much
         // abstraction?
-        if (muleRegistryHelper != null) {
-          safely(() -> muleRegistryHelper.dispose());
+        if (registry != null) {
+          safely(() -> registry.dispose());
         }
       } catch (Exception e) {
-        logger.debug("Failed to cleanly dispose Mule: " + e.getMessage(), e);
+        LOGGER.debug("Failed to cleanly dispose Mule: " + e.getMessage(), e);
       }
 
       notificationManager.fireNotification(new MuleContextNotification(this, CONTEXT_DISPOSED));
 
       disposeManagers();
 
-      if ((getStartDate() > 0) && logger.isInfoEnabled()) {
+      if ((getStartDate() > 0) && LOGGER.isInfoEnabled()) {
         SplashScreen shutdownScreen = buildShutdownSplash();
         log(shutdownScreen.toString());
       }
-
-      // registryBroker.dispose();
 
       setExecutionClassLoader(null);
     }
@@ -442,7 +442,7 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
 
   private void disposeManagers() {
     safely(() -> {
-      disposeIfNeeded(getFlowTraceManager(), logger);
+      disposeIfNeeded(getFlowTraceManager(), LOGGER);
       notificationManager.dispose();
     });
   }
@@ -528,15 +528,15 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
    * Fires a server notification to all registered {@link CustomNotificationListener} notificationManager.
    *
    * @param notification the notification to fire. This must be of type {@link CustomNotification} otherwise an exception will be
-   *        thrown.
+   *                     thrown.
    * @throws UnsupportedOperationException if the notification fired is not a {@link CustomNotification}
    */
   private void fireNotification(AbstractServerNotification notification) {
     ServerNotificationManager notificationManager = getNotificationManager();
     if (notificationManager != null) {
       notificationManager.fireNotification(notification);
-    } else if (logger.isDebugEnabled()) {
-      logger.debug("MuleEvent Manager is not enabled, ignoring notification: " + notification);
+    } else if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("MuleEvent Manager is not enabled, ignoring notification: " + notification);
     }
   }
 
@@ -545,16 +545,12 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
    * service invocations
    *
    * @param securityManager the security manager used by this Mule instance to authenticate and authorise incoming and outgoing
-   *        event traffic and service invocations
+   *                        event traffic and service invocations
    */
   @Override
   public void setSecurityManager(SecurityManager securityManager) {
     checkLifecycleForPropertySet(OBJECT_SECURITY_MANAGER, Initialisable.PHASE_NAME);
-    try {
-      registryBroker.registerObject(OBJECT_SECURITY_MANAGER, securityManager);
-    } catch (RegistrationException e) {
-      throw new MuleRuntimeException(e);
-    }
+    getRegistryBuilder().ifPresent(builder -> builder.registerObject(OBJECT_SECURITY_MANAGER, securityManager));
   }
 
   /**
@@ -562,13 +558,13 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
    * service invocations
    *
    * @return he security manager used by this Mule instance to authenticate and authorise incoming and outgoing event traffic and
-   *         service invocations
+   * service invocations
    */
   @Override
   public SecurityManager getSecurityManager() {
-    SecurityManager securityManager = registryBroker.lookupObject(OBJECT_SECURITY_MANAGER);
+    SecurityManager securityManager = registry.lookupObject(OBJECT_SECURITY_MANAGER);
     if (securityManager == null) {
-      Collection<SecurityManager> temp = registryBroker.lookupObjects(SecurityManager.class);
+      Collection<SecurityManager> temp = registry.lookupObjects(SecurityManager.class);
       if (temp.size() > 0) {
         securityManager = (temp.iterator().next());
       }
@@ -601,9 +597,9 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
   @Override
   public QueueManager getQueueManager() {
     if (queueManager == null) {
-      queueManager = registryBroker.lookupObject(OBJECT_QUEUE_MANAGER);
+      queueManager = registry.lookupObject(OBJECT_QUEUE_MANAGER);
       if (queueManager == null) {
-        Collection<QueueManager> temp = registryBroker.lookupObjects(QueueManager.class);
+        Collection<QueueManager> temp = registry.lookupObjects(QueueManager.class);
         if (temp.size() > 0) {
           queueManager = temp.iterator().next();
         }
@@ -660,12 +656,9 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
 
   @Override
   public void setQueueManager(QueueManager queueManager) {
-    try {
-      getRegistry().registerObject(OBJECT_QUEUE_MANAGER, queueManager);
-    } catch (RegistrationException e) {
-      throw new MuleRuntimeException(e);
-    }
+    checkLifecycleForPropertySet(OBJECT_QUEUE_MANAGER, Initialisable.PHASE_NAME);
     this.queueManager = queueManager;
+    getRegistryBuilder().ifPresent(builder -> builder.registerObject(OBJECT_QUEUE_MANAGER, queueManager));
   }
 
   /**
@@ -689,8 +682,8 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
    */
   @Override
   public void setTransactionManager(TransactionManager manager) throws RegistrationException {
-    // checkLifecycleForPropertySet(MuleProperties.OBJECT_TRANSACTION_MANAGER, Initialisable.PHASE_NAME);
-    registryBroker.registerObject(OBJECT_TRANSACTION_MANAGER, manager);
+    checkLifecycleForPropertySet(OBJECT_TRANSACTION_MANAGER, Initialisable.PHASE_NAME);
+    getRegistryBuilder().ifPresent(builder -> builder.registerObject(OBJECT_TRANSACTION_MANAGER, manager));
   }
 
   /**
@@ -700,13 +693,13 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
    */
   @Override
   public TransactionManager getTransactionManager() {
-    return getRegistry().lookupObject(OBJECT_TRANSACTION_MANAGER);
+    return registry.lookupObject(OBJECT_TRANSACTION_MANAGER);
   }
 
   protected void checkLifecycleForPropertySet(String propertyName, String phase) throws IllegalStateException {
     if (lifecycleManager.isPhaseComplete(phase)) {
       throw new IllegalStateException("Cannot set property: '" + propertyName + "' once the server has already been through the "
-          + phase + " phase.");
+                                          + phase + " phase.");
     }
   }
 
@@ -715,7 +708,11 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
    */
   @Override
   public MuleRegistry getRegistry() {
-    return muleRegistryHelper;
+    if (registry == null) {
+      throw new IllegalStateException("Registry has not yet been built");
+    }
+
+    return registry;
   }
 
   /**
@@ -857,13 +854,6 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
 
           if (dataTypeConversionResolver == null) {
             dataTypeConversionResolver = new DynamicDataTypeConversionResolver(this);
-
-            try {
-              getRegistry().registerObject(OBJECT_CONVERTER_RESOLVER, dataTypeConversionResolver);
-            } catch (RegistrationException e) {
-              // Should not occur
-              throw new IllegalStateException(e);
-            }
           }
         }
       }
@@ -875,7 +865,7 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
   @Override
   public ExtendedExpressionManager getExpressionManager() {
     if (expressionManager == null) {
-      expressionManager = registryBroker.lookupObject(OBJECT_EXPRESSION_MANAGER);
+      expressionManager = registry.lookupObject(OBJECT_EXPRESSION_MANAGER);
     }
     return expressionManager;
   }
@@ -883,7 +873,7 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
   @Override
   public LockFactory getLockFactory() {
     if (this.lockFactory == null) {
-      this.lockFactory = registryBroker.get(OBJECT_LOCK_FACTORY);
+      this.lockFactory = registry.get(OBJECT_LOCK_FACTORY);
     }
     return this.lockFactory;
   }
@@ -891,7 +881,7 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
   @Override
   public ProcessingTimeWatcher getProcessorTimeWatcher() {
     if (this.processingTimeWatcher == null) {
-      this.processingTimeWatcher = registryBroker.get(OBJECT_PROCESSING_TIME_WATCHER);
+      this.processingTimeWatcher = registry.get(OBJECT_PROCESSING_TIME_WATCHER);
     }
 
     return this.processingTimeWatcher;
@@ -933,16 +923,21 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
     this.lifecycleManager = (MuleContextLifecycleManager) lifecycleManager;
   }
 
-  public void setRegistryBroker(RegistryBroker registryBroker) {
-    this.registryBroker = registryBroker;
-  }
-
   public void setInjector(Injector injector) {
     this.injector = injector;
   }
 
-  public void setMuleRegistry(MuleRegistry muleRegistry) {
-    this.muleRegistryHelper = muleRegistry;
+  @Override
+  public Optional<MuleRegistryBuilder> getRegistryBuilder() {
+    return ofNullable(registryBuilder);
+  }
+
+  public void setRegistryBuilder(MuleRegistryBuilder registryBuilder) {
+    if (registry != null) {
+      throw new IllegalStateException("Cannot set a new registry builder, Registry has already been built.");
+    }
+    checkArgument(registryBuilder != null, "Cannot set a null registry builder");
+    this.registryBuilder = registryBuilder;
   }
 
   @Override
@@ -1002,7 +997,7 @@ public class DefaultMuleContext implements MuleContext, PrivilegedMuleContext {
     if (exceptionContextProviders == null) {
       synchronized (exceptionContextProvidersLock) {
         if (exceptionContextProviders == null) {
-          exceptionContextProviders = this.muleRegistryHelper.lookupByType(ExceptionContextProvider.class).values();
+          exceptionContextProviders = this.registry.lookupByType(ExceptionContextProvider.class).values();
         }
       }
     }
