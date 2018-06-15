@@ -7,11 +7,11 @@
 package org.mule.runtime.core.internal.transformer.graph;
 
 import org.mule.runtime.api.metadata.DataType;
+import org.mule.runtime.core.api.config.i18n.CoreMessages;
 import org.mule.runtime.core.api.transformer.Converter;
 import org.mule.runtime.core.api.transformer.Transformer;
 import org.mule.runtime.core.internal.registry.TransformerResolver;
 import org.mule.runtime.core.internal.transformer.ResolverException;
-import org.mule.runtime.core.api.config.i18n.CoreMessages;
 
 import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -82,7 +82,7 @@ public class GraphTransformerResolver implements TransformerResolver {
   }
 
   @Override
-  public void transformerChange(Transformer transformer, RegistryAction registryAction) {
+  public void transformerChange(Transformer transformer) {
     readWriteLock.writeLock().lock();
 
     try {
@@ -91,12 +91,8 @@ public class GraphTransformerResolver implements TransformerResolver {
       }
 
       cache.clear();
+      graph.addConverter((Converter) transformer);
 
-      if (registryAction == RegistryAction.ADDED) {
-        graph.addConverter((Converter) transformer);
-      } else if (registryAction == RegistryAction.REMOVED) {
-        graph.removeConverter((Converter) transformer);
-      }
     } finally {
       readWriteLock.writeLock().unlock();
     }

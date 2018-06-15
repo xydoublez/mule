@@ -7,6 +7,7 @@
 package org.mule.runtime.core.internal.registry;
 
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Disposable;
@@ -43,10 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class TypeBasedTransformerResolver implements TransformerResolver, MuleContextAware, Disposable, Initialisable {
 
-  /**
-   * logger used by this class
-   */
-  protected transient final Logger logger = LoggerFactory.getLogger(TypeBasedTransformerResolver.class);
+  private static final Logger LOGGER = getLogger(TypeBasedTransformerResolver.class);
 
   private ObjectToString objectToString;
   private ObjectToByteArray objectToByteArray;
@@ -129,8 +127,8 @@ public class TypeBasedTransformerResolver implements TransformerResolver, MuleCo
 
   protected Transformer getNearestTransformerMatch(List<Transformer> trans, Class input, Class output) throws ResolverException {
     if (trans.size() > 1) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Comparing transformers for best match: source = " + input + " target = " + output
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Comparing transformers for best match: source = " + input + " target = " + output
             + " Possible transformers = " + trans);
       }
 

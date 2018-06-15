@@ -22,21 +22,6 @@ import org.mule.runtime.core.internal.transformer.ResolverException;
 public interface TransformerResolver {
 
   /**
-   * Possible registry actions that occur that will trigger an event fired via
-   * {@link #transformerChange(Transformer, RegistryAction)} method.
-   */
-  enum RegistryAction {
-    /**
-     * signals that a transformer was added to the registry
-     */
-    ADDED,
-    /**
-     * signals that a transformer was removed from the registry
-     */
-    REMOVED
-  }
-
-  /**
    * Responsible for finding a transformer with the given criteria. Note that if a transformer is not found null should be return,
    * an exception must NOT be thrown.
    *
@@ -48,11 +33,10 @@ public interface TransformerResolver {
   Transformer resolve(DataType source, DataType result) throws ResolverException;
 
   /**
-   * A callback that is called when a transformer is registered or unregistered from the registry. This is used in situations
+   * A callback that is called when a transformer is registered in the registry. This is used in situations
    * where the resolver caches transformers and the cache needs to be updated.
    *
    * @param transformer the transformer that has changed
-   * @param registryAction whether the transformer was added or removed
    */
-  void transformerChange(Transformer transformer, RegistryAction registryAction);
+  void transformerChange(Transformer transformer);
 }
