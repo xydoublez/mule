@@ -8,7 +8,6 @@ package org.mule.runtime.core.internal.registry;
 
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.metadata.DataType;
-import org.mule.runtime.core.api.Injector;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.transformer.Transformer;
@@ -19,7 +18,7 @@ import java.util.List;
 /**
  * Adds lookup/register/unregister methods for Mule-specific entities to the standard Registry interface.
  */
-public interface MuleRegistry extends LifecycleRegistry, Injector {
+public interface MuleRegistry extends InternalRegistry {
 
   Transformer lookupTransformer(String name);
 

@@ -4,10 +4,11 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.core.internal.registry.guice;
+package org.mule.runtime.core.internal.registry.guice.provider;
 
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_LOCK_FACTORY;
 import org.mule.runtime.api.lock.LockFactory;
+import org.mule.runtime.core.internal.registry.guice.AliasProvider;
 
 import javax.inject.Inject;
 import javax.inject.Named;

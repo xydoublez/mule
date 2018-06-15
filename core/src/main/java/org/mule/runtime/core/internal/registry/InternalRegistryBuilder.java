@@ -16,14 +16,14 @@ public interface InternalRegistryBuilder {
 
   default <T> InternalRegistryBuilder registerProvider(String key,
                                                        Class<T> objectType,
-                                                       Class<? extends Provider<? extends T>> providerType) {
+                                                       Provider<? extends T> providerType) {
     
     return registerProvider(key, objectType, providerType, true);
   }
 
   <T> InternalRegistryBuilder registerProvider(String key,
                                                Class<T> objectType,
-                                               Class<? extends Provider<? extends T>> providerType,
+                                               Provider<? extends T> provider,
                                                boolean singleton);
 
   InternalRegistry build(MuleContext muleContext);

@@ -7,14 +7,15 @@
 package org.mule.runtime.core.internal.registry.guice;
 
 import static com.google.inject.Guice.createInjector;
-import org.mule.runtime.api.util.LazyValue;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.internal.context.DefaultMuleContext;
 import org.mule.runtime.core.internal.registry.InternalRegistry;
 import org.mule.runtime.core.internal.registry.InternalRegistryBuilder;
+import org.mule.runtime.core.internal.registry.guice.provider.ConstantProvider;
+import org.mule.runtime.core.internal.registry.guice.provider.ForwardingProvider;
+import org.mule.runtime.core.internal.registry.guice.provider.TypeProvider;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.binder.LinkedBindingBuilder;
@@ -24,7 +25,6 @@ import com.google.inject.name.Names;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 
 public class GuiceRegistryBuilder implements InternalRegistryBuilder {
@@ -44,9 +44,9 @@ public class GuiceRegistryBuilder implements InternalRegistryBuilder {
   @Override
   public <T> InternalRegistryBuilder registerProvider(String key,
                                                       Class<T> objectType,
-                                                      Class<? extends Provider<? extends T>> providerType,
+                                                      Provider<? extends T> provider,
                                                       boolean singleton) {
-    return register(new ProviderRegistration(key, objectType, providerType, singleton));
+    return register(new ProviderRegistration(key, objectType, provider, singleton));
   }
 
   private InternalRegistryBuilder register(Registration registration) {
@@ -115,17 +115,17 @@ public class GuiceRegistryBuilder implements InternalRegistryBuilder {
   private class ProviderRegistration<T> extends Registration {
 
     private final Class<T> objectType;
-    private final Class<? extends Provider<? extends T>> providerType;
+    private final Provider<? extends T> provider;
 
-    public ProviderRegistration(String name, Class<T> objectType, Class<? extends Provider<? extends T>> providerType, boolean singleton) {
+    public ProviderRegistration(String name, Class<T> objectType, Provider<? extends T> provider, boolean singleton) {
       super(name, singleton);
       this.objectType = objectType;
-      this.providerType = providerType;
+      this.provider = provider;
     }
 
     @Override
     protected void registerOn(MuleInjectionModule module) {
-      module.bindProvider(name, objectType, providerType, singleton);
+      module.bindProvider(name, objectType, provider, singleton);
     }
   }
 
@@ -133,16 +133,15 @@ public class GuiceRegistryBuilder implements InternalRegistryBuilder {
   private class MuleInjectionModule extends AbstractModule {
 
     private void bindInstance(String key, Object value) {
-      scope(named(bind(value.getClass()), key).toProvider(new InjectorProvider(value)), true);
+      bindProvider(key, value.getClass(), new ConstantProvider(value), true);
     }
 
     private void bindType(String key, Class type, boolean singleton) {
-      scope(named(bind(type), key).to(type), singleton);
+      bindProvider(key, type, new TypeProvider<>(type), singleton);
     }
 
-    private <T> void bindProvider(String key, Class<T> objectType, Class<? extends Provider<? extends T>> providerType,
-                                  boolean singleton) {
-      scope(named(bind(objectType), key).toProvider(providerType), singleton);
+    private <T> void bindProvider(String key, Class<T> objectType, Provider<? extends T> provider, boolean singleton) {
+      scope(named(bind(objectType), key).toProvider(new ForwardingProvider(provider)), singleton);
     }
 
     private void scope(ScopedBindingBuilder binding, boolean singleton) {
@@ -153,27 +152,6 @@ public class GuiceRegistryBuilder implements InternalRegistryBuilder {
 
     private LinkedBindingBuilder named(AnnotatedBindingBuilder<?> binding, String name) {
       return binding.annotatedWith(Names.named(name));
-    }
-  }
-
-  private class InjectorProvider<T> implements Provider<T> {
-
-    private final LazyValue<T> value;
-
-    @Inject
-    private Injector injector;
-
-    public InjectorProvider(T instance) {
-      value = new LazyValue<>(() -> {
-        injector.injectMembers(instance);
-
-        return instance;
-      });
-    }
-
-    @Override
-    public T get() {
-      return value.get();
     }
   }
 }

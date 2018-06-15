@@ -4,7 +4,7 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.core.internal.registry.guice;
+package org.mule.runtime.core.internal.registry.guice.provider;
 
 import org.mule.runtime.api.component.Component;
 import org.mule.runtime.core.api.MuleContext;
@@ -13,10 +13,12 @@ import org.mule.runtime.core.api.lifecycle.LifecycleStateAware;
 import org.mule.runtime.core.internal.component.DefaultConfigurationComponentLocator;
 import org.mule.runtime.dsl.api.component.ComponentFactory;
 
+import com.google.inject.Injector;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-public abstract class AbstractProvider<T> implements Provider<T> {
+public abstract class GuiceProvider<T> implements Provider<T> {
 
   @Inject
   private MuleContext muleContext;
@@ -24,9 +26,14 @@ public abstract class AbstractProvider<T> implements Provider<T> {
   @Inject
   private DefaultConfigurationComponentLocator componentLocator;
 
+  @Inject
+  protected Injector guiceInjector;
+
   @Override
   public final T get() {
     T object = doGet();
+
+    guiceInjector.injectMembers(object);
 
     if (object instanceof MuleContextAware) {
       ((MuleContextAware) object).setMuleContext(muleContext);

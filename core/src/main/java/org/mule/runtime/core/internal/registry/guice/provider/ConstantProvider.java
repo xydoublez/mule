@@ -4,18 +4,18 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.core.internal.registry.guice;
+package org.mule.runtime.core.internal.registry.guice.provider;
 
-public class ConstantProvider extends AbstractProvider<Object> {
+public class ConstantProvider<T> extends GuiceProvider<T> {
 
-  private final Object value;
+  private final T value;
 
-  public ConstantProvider(Object value) {
+  public ConstantProvider(T value) {
     this.value = value;
   }
 
   @Override
-  protected Object doGet() {
+  protected T doGet() {
     return value;
   }
 }

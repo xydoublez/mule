@@ -4,19 +4,19 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.core.internal.registry.guice;
+package org.mule.runtime.core.internal.registry.guice.provider;
 
-import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_LOCAL_STORE_IN_MEMORY;
+import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_LOCAL_STORE_PERSISTENT;
 import org.mule.runtime.api.store.ObjectStore;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
-public class LocalInMemoryObjectStoreProvider implements Provider<ObjectStore> {
+public class LocalPersistentObjectStoreProvider implements Provider<ObjectStore> {
 
   @Inject
-  @Named(OBJECT_LOCAL_STORE_IN_MEMORY)
+  @Named(OBJECT_LOCAL_STORE_PERSISTENT)
   private ObjectStore objectStore;
 
   @Override

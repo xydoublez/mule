@@ -24,6 +24,7 @@ import org.mule.runtime.core.api.util.func.CheckedRunnable;
 import org.mule.runtime.core.internal.lifecycle.LifecycleInterceptor;
 import org.mule.runtime.core.internal.lifecycle.phases.NotInLifecyclePhase;
 import org.mule.runtime.core.internal.registry.AbstractInternalRegistry;
+import org.mule.runtime.core.internal.registry.InternalRegistry;
 import org.mule.runtime.core.internal.registry.LifecycleRegistry;
 import org.mule.runtime.core.privileged.registry.RegistrationException;
 
@@ -46,7 +47,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class SpringRegistry extends AbstractInternalRegistry implements LifecycleRegistry, Injector {
+public class SpringRegistry extends AbstractInternalRegistry implements InternalRegistry {
 
   public static final String REGISTRY_ID = "org.mule.Registry.Spring";
 

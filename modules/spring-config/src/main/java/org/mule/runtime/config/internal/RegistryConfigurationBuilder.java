@@ -124,12 +124,12 @@ import org.mule.runtime.core.internal.policy.DefaultPolicyStateHandler;
 import org.mule.runtime.core.internal.processor.interceptor.DefaultProcessorInterceptorManager;
 import org.mule.runtime.core.internal.registry.DefaultRegistry;
 import org.mule.runtime.core.internal.registry.InternalRegistryBuilder;
-import org.mule.runtime.core.internal.registry.guice.DefaultRegistryBootstrap;
-import org.mule.runtime.core.internal.registry.guice.LocalInMemoryObjectStoreProvider;
-import org.mule.runtime.core.internal.registry.guice.LocalLockFactoryProvider;
-import org.mule.runtime.core.internal.registry.guice.LocalObjectStoreManagerProvider;
-import org.mule.runtime.core.internal.registry.guice.LocalPersistentObjectStoreProvider;
-import org.mule.runtime.core.internal.registry.guice.LocalQueueManagerProvider;
+import org.mule.runtime.core.internal.registry.DefaultRegistryBootstrap;
+import org.mule.runtime.core.internal.registry.guice.provider.LocalInMemoryObjectStoreProvider;
+import org.mule.runtime.core.internal.registry.guice.provider.LocalLockFactoryProvider;
+import org.mule.runtime.core.internal.registry.guice.provider.LocalObjectStoreManagerProvider;
+import org.mule.runtime.core.internal.registry.guice.provider.LocalPersistentObjectStoreProvider;
+import org.mule.runtime.core.internal.registry.guice.provider.LocalQueueManagerProvider;
 import org.mule.runtime.core.internal.security.DefaultMuleSecurityManager;
 import org.mule.runtime.core.internal.time.LocalTimeSupplier;
 import org.mule.runtime.core.internal.transaction.TransactionFactoryLocator;
@@ -195,9 +195,9 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
       type(OBJECT_NOTIFICATION_DISPATCHER, DefaultNotificationDispatcher.class),
       type(NotificationListenerRegistry.REGISTRY_KEY, DefaultNotificationListenerRegistry.class),
       type(EventContextService.REGISTRY_KEY, DefaultEventContextService.class),
-      provider(BASE_IN_MEMORY_OBJECT_STORE_KEY, ObjectStore.class, LocalInMemoryObjectStoreProvider.class),
+      provider(BASE_IN_MEMORY_OBJECT_STORE_KEY, ObjectStore.class, new LocalInMemoryObjectStoreProvider()),
       instance(OBJECT_LOCAL_STORE_IN_MEMORY, new MuleDefaultObjectStoreFactory().createDefaultInMemoryObjectStore()),
-      provider(BASE_PERSISTENT_OBJECT_STORE_KEY, ObjectStore.class, LocalPersistentObjectStoreProvider.class),
+      provider(BASE_PERSISTENT_OBJECT_STORE_KEY, ObjectStore.class, new LocalPersistentObjectStoreProvider()),
       instance(OBJECT_LOCAL_STORE_PERSISTENT, new MuleDefaultObjectStoreFactory().createDefaultPersistentObjectStore()),
       type(OBJECT_STORE_MANAGER, MuleObjectStoreManager.class),
       type(OBJECT_QUEUE_MANAGER, TransactionalQueueManager.class),
@@ -314,7 +314,7 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
     if (customManagerDefined.get()) {
       register(type(OBJECT_LOCAL_QUEUE_MANAGER, TransactionalQueueManager.class));
     } else {
-      register(provider(OBJECT_LOCAL_QUEUE_MANAGER, QueueManager.class, LocalQueueManagerProvider.class));
+      register(provider(OBJECT_LOCAL_QUEUE_MANAGER, QueueManager.class, new LocalQueueManagerProvider()));
     }
   }
 
@@ -328,7 +328,7 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
     if (customLockFactoryWasDefined.get()) {
       register(type(OBJECT_LOCK_FACTORY, MuleLockFactory.class));
     } else {
-      register(provider(LOCAL_OBJECT_LOCK_FACTORY, LockFactory.class, LocalLockFactoryProvider.class));
+      register(provider(LOCAL_OBJECT_LOCK_FACTORY, LockFactory.class, new LocalLockFactoryProvider()));
     }
   }
 
@@ -347,7 +347,7 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
 
       register(instance(LOCAL_OBJECT_STORE_MANAGER, local));
     } else {
-      register(provider(LOCAL_OBJECT_STORE_MANAGER, ObjectStoreManager.class, LocalObjectStoreManagerProvider.class));
+      register(provider(LOCAL_OBJECT_STORE_MANAGER, ObjectStoreManager.class, new LocalObjectStoreManagerProvider()));
     }
   }
 
@@ -393,7 +393,7 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
     return new TypeRegistration(key, type);
   }
 
-  private Registration provider(String key, Class<?> objectType, Class<? extends Provider> providerType) {
+  private Registration provider(String key, Class<?> objectType, Provider<?> providerType) {
     return new ProviderRegistration(key, objectType, providerType);
   }
 
@@ -407,7 +407,6 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
 
     protected abstract void register();
   }
-
 
   private class InstanceRegistration extends Registration {
 
@@ -424,7 +423,6 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
     }
   }
 
-
   private class TypeRegistration extends Registration {
 
     private Class<?> type;
@@ -440,21 +438,20 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
     }
   }
 
-
   private class ProviderRegistration<T> extends Registration {
 
     private final Class<T> objectType;
-    private final Class<? extends Provider<? extends T>> providerType;
+    private final Provider<? extends T> provider;
 
-    public ProviderRegistration(String key, Class<T> objectType, Class<? extends Provider<? extends T>> providerType) {
+    public ProviderRegistration(String key, Class<T> objectType, Provider<? extends T> provider) {
       super(key);
       this.objectType = objectType;
-      this.providerType = providerType;
+      this.provider = provider;
     }
 
     @Override
     protected void register() {
-      builder.registerProvider(key, objectType, providerType);
+      builder.registerProvider(key, objectType, provider);
     }
   }
 }

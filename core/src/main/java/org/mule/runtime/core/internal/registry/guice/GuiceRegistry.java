@@ -17,7 +17,7 @@ import org.mule.runtime.core.api.util.StringUtils;
 import org.mule.runtime.core.internal.lifecycle.LifecycleInterceptor;
 import org.mule.runtime.core.internal.lifecycle.phases.NotInLifecyclePhase;
 import org.mule.runtime.core.internal.registry.AbstractInternalRegistry;
-import org.mule.runtime.core.internal.registry.LifecycleRegistry;
+import org.mule.runtime.core.internal.registry.InternalRegistry;
 import org.mule.runtime.core.privileged.registry.RegistrationException;
 
 import com.google.inject.Binding;
@@ -33,7 +33,7 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class GuiceRegistry extends AbstractInternalRegistry implements LifecycleRegistry {
+public class GuiceRegistry extends AbstractInternalRegistry implements InternalRegistry {
 
   private final com.google.inject.Injector injector;
   private ConcurrentMap<String, Binding<?>> bindingsByKey = new ConcurrentHashMap<>();

@@ -4,7 +4,7 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.core.internal.registry.guice;
+package org.mule.runtime.core.internal.registry;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.mule.runtime.core.api.config.i18n.CoreMessages.transformerNotImplementDiscoverable;

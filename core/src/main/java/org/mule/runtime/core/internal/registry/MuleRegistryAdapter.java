@@ -52,10 +52,8 @@ public class MuleRegistryAdapter implements MuleRegistry {
   /**
    * We cache transformer searches so that we only search once
    */
-  protected ConcurrentHashMap/* <String, Transformer> */ exactTransformerCache =
-      new ConcurrentHashMap/* <String, Transformer> */(8);
-  protected ConcurrentHashMap/* Map<String, List<Transformer>> */ transformerListCache =
-      new ConcurrentHashMap/* <String, List<Transformer>> */(8);
+  protected ConcurrentHashMap<String, Transformer> exactTransformerCache = new ConcurrentHashMap<>(8);
+  protected ConcurrentHashMap<String, List<Transformer>> transformerListCache = new ConcurrentHashMap<>(8);
 
   private final MuleContext muleContext;
   private final InternalRegistry registry;
@@ -136,7 +134,7 @@ public class MuleRegistryAdapter implements MuleRegistry {
     result = builder(result).mediaType(ANY).charset((Charset) null).build();
 
     final String dataTypePairHash = getDataTypeSourceResultPairHash(source, result);
-    Transformer cachedTransformer = (Transformer) exactTransformerCache.get(dataTypePairHash);
+    Transformer cachedTransformer = exactTransformerCache.get(dataTypePairHash);
     if (cachedTransformer != null) {
       return cachedTransformer;
     }
@@ -144,7 +142,7 @@ public class MuleRegistryAdapter implements MuleRegistry {
     Transformer trans = resolveTransformer(source, result);
 
     if (trans != null) {
-      Transformer concurrentlyAddedTransformer = (Transformer) exactTransformerCache.putIfAbsent(dataTypePairHash, trans);
+      Transformer concurrentlyAddedTransformer = exactTransformerCache.putIfAbsent(dataTypePairHash, trans);
       if (concurrentlyAddedTransformer != null) {
         return concurrentlyAddedTransformer;
       } else {
@@ -190,7 +188,7 @@ public class MuleRegistryAdapter implements MuleRegistry {
 
     final String dataTypePairHash = getDataTypeSourceResultPairHash(source, result);
 
-    List<Transformer> results = (List<Transformer>) transformerListCache.get(dataTypePairHash);
+    List<Transformer> results = transformerListCache.get(dataTypePairHash);
     if (results != null) {
       return results;
     }
@@ -214,8 +212,7 @@ public class MuleRegistryAdapter implements MuleRegistry {
       readLock.unlock();
     }
 
-    List<Transformer> concurrentlyAddedTransformers =
-        (List<Transformer>) transformerListCache.putIfAbsent(dataTypePairHash, results);
+    List<Transformer> concurrentlyAddedTransformers = transformerListCache.putIfAbsent(dataTypePairHash, results);
     if (concurrentlyAddedTransformers != null) {
       return concurrentlyAddedTransformers;
     } else {
@@ -231,25 +228,9 @@ public class MuleRegistryAdapter implements MuleRegistry {
     return (FlowConstruct) registry.lookupObject(name);
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Collection<FlowConstruct> lookupFlowConstructs() {
-    return lookupObjects(FlowConstruct.class);
-  }
-
   @Override
   public boolean isSingleton(String key) {
     return registry.isSingleton(key);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public final void registerTransformer(Transformer transformer) throws MuleException {
-    registerObject(getName(transformer), transformer, Transformer.class);
   }
 
   public void notifyTransformerResolvers(Transformer t, TransformerResolver.RegistryAction action) {
@@ -286,25 +267,6 @@ public class MuleRegistryAdapter implements MuleRegistry {
    * {@inheritDoc}
    */
   @Override
-  public void registerFlowConstruct(FlowConstruct flowConstruct) throws MuleException {
-    registry.registerObject(getName(flowConstruct), flowConstruct, FlowConstruct.class);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void unregisterTransformer(String transformerName) throws MuleException {
-    Transformer transformer = lookupTransformer(transformerName);
-    notifyTransformerResolvers(transformer, TransformerResolver.RegistryAction.REMOVED);
-    registry.unregisterObject(transformerName, Transformer.class);
-
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
   public Object applyProcessorsAndLifecycle(Object object) throws MuleException {
     object = applyProcessors(object);
     object = applyLifecycle(object);
@@ -332,35 +294,13 @@ public class MuleRegistryAdapter implements MuleRegistry {
    */
   @Override
   public Object applyLifecycle(Object object, String phase) throws MuleException {
-    return withLifecycleRegistry(object, registry -> registry.applyLifecycle(object, phase));
+    return registry.applyLifecycle(object, phase);
   }
 
   @Override
   public void applyLifecycle(Object object, String startPhase, String toPhase) throws MuleException {
-    withLifecycleRegistry(object, registry -> {
-      registry.applyLifecycle(object, startPhase, toPhase);
-      return object;
-    });
+    registry.applyLifecycle(object, startPhase, toPhase);
   }
-
-  private Object withLifecycleRegistry(Object object, LifecycleDelegate delegate) throws MuleException {
-    LifecycleRegistry lifecycleRegistry = registry.getLifecycleRegistry();
-    if (lifecycleRegistry != null) {
-      return delegate.apply(lifecycleRegistry);
-    }
-
-    return object;
-  }
-
-  @FunctionalInterface
-  private interface LifecycleDelegate {
-
-    Object apply(LifecycleRegistry registry) throws MuleException;
-  }
-
-  ////////////////////////////////////////////////////////////////////////////
-  // Delegate to internal registry
-  ////////////////////////////////////////////////////////////////////////////
 
   /**
    * {@inheritDoc}
@@ -419,16 +359,6 @@ public class MuleRegistryAdapter implements MuleRegistry {
     return registry.lookupByType(type);
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void registerObject(String key, Object value, Object metadata) throws RegistrationException {
-    registry.registerObject(key, value, metadata);
-
-    postObjectRegistrationActions(value);
-  }
-
   public void postObjectRegistrationActions(Object value) {
     // TODO MULE-10238 - Remove this check once SimpleRegistry gets removed
     if (!postProcessedObjects.containsKey(value)) {
@@ -441,89 +371,6 @@ public class MuleRegistryAdapter implements MuleRegistry {
         notifyTransformerResolvers((Converter) value, ADDED);
       }
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void registerObject(String key, Object value) throws RegistrationException {
-    registry.registerObject(key, value);
-
-
-    postObjectRegistrationActions(value);
-  }
-
-  public void registerTransformerResolver(TransformerResolver value) {
-    Lock lock = transformerResolversLock.writeLock();
-    lock.lock();
-    try {
-      transformerResolvers.add(value);
-      Collections.sort(transformerResolvers, new TransformerResolverComparator());
-    } finally {
-      lock.unlock();
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void registerObjects(Map objects) throws RegistrationException {
-    registry.registerObjects(objects);
-
-    for (Object value : objects.values()) {
-      postObjectRegistrationActions(value);
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Object unregisterObject(String key, Object metadata) throws RegistrationException {
-    return registry.unregisterObject(key, metadata);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Object unregisterObject(String key) throws RegistrationException {
-    return registry.unregisterObject(key);
-  }
-
-  @Override
-  public Collection<InternalRegistry> getRegistries() {
-    return ImmutableList.copyOf(registry.getRegistries());
-  }
-
-  ////////////////////////////////////////////////////////////////////////////
-  // Registry Metadata
-  ////////////////////////////////////////////////////////////////////////////
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public String getRegistryId() {
-    return this.toString();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean isReadOnly() {
-    return false;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean isRemote() {
-    return false;
   }
 
   private String getDataTypeSourceResultPairHash(DataType source, DataType result) {

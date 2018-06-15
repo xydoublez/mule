@@ -43,7 +43,7 @@ import org.mule.runtime.core.internal.lifecycle.phases.MuleContextStopPhase;
 import org.mule.runtime.core.internal.lifecycle.phases.NotInLifecyclePhase;
 import org.mule.runtime.core.internal.registry.AbstractRegistryBroker;
 import org.mule.runtime.core.internal.registry.InternalRegistry;
-import org.mule.runtime.core.internal.registry.guice.DefaultRegistryBootstrap;
+import org.mule.runtime.core.internal.registry.DefaultRegistryBootstrap;
 import org.mule.runtime.core.internal.routing.requestreply.AbstractAsyncRequestReplyRequester;
 import org.mule.runtime.core.privileged.processor.chain.MessageProcessorChain;
 import org.mule.runtime.core.privileged.routing.OutboundRouter;
