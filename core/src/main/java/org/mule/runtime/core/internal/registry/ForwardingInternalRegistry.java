@@ -81,4 +81,24 @@ public class ForwardingInternalRegistry implements InternalRegistry {
   public <T> T inject(T object) throws MuleException {
     return registry.inject(object);
   }
+
+  @Override
+  public Object applyLifecycle(Object object) throws MuleException {
+    return registry.applyLifecycle(object);
+  }
+
+  @Override
+  public Object applyLifecycle(Object object, String phase) throws MuleException {
+    return registry.applyLifecycle(object, phase);
+  }
+
+  @Override
+  public void applyLifecycle(Object object, String startPhase, String toPhase) throws MuleException {
+    registry.applyLifecycle(object, startPhase, toPhase);
+  }
+
+  @Override
+  public <T> T lookupObject(String key, boolean applyLifecycle) {
+    return registry.lookupObject(key, applyLifecycle);
+  }
 }

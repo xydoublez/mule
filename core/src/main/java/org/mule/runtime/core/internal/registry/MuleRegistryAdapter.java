@@ -10,6 +10,7 @@ import static java.util.Collections.sort;
 import static org.mule.runtime.api.metadata.DataType.builder;
 import static org.mule.runtime.api.metadata.MediaType.ANY;
 import static org.mule.runtime.core.api.config.i18n.CoreMessages.noTransformerFoundForMessage;
+import static org.mule.runtime.core.internal.util.ConcurrencyUtils.withLock;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.lifecycle.Initialisable;
@@ -32,6 +33,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Adds lookup/register/unregister methods for Mule-specific entities to the standard Registry interface.
@@ -51,11 +55,14 @@ public class MuleRegistryAdapter implements MuleRegistry {
    * Transformer transformerResolvers are registered on context start, then they are not unregistered.
    */
   private List<TransformerResolver> transformerResolvers = new ArrayList<>();
+  private final ReadWriteLock transformerResolversLock = new ReentrantReadWriteLock();
+
 
   /**
    * Transformers are registered on context start, then they are usually not unregistered
    */
   private Collection<Transformer> transformers = new LinkedList<>();
+  private final ReadWriteLock transformersLock = new ReentrantReadWriteLock();
 
   public MuleRegistryAdapter(InternalRegistry registry, MuleContext muleContext) {
     this.registry = registry;
@@ -68,10 +75,29 @@ public class MuleRegistryAdapter implements MuleRegistry {
   @Override
   public void initialise() throws InitialisationException {
     transformerResolvers = (List<TransformerResolver>) registry.lookupObjects(TransformerResolver.class);
-    sort(transformerResolvers, new TransformerResolverComparator());
+    sortTransformerResolvers();
 
     transformers.addAll(registry.lookupObjects(Converter.class));
     transformers.forEach(this::notifyTransformerResolvers);
+  }
+
+  private void sortTransformerResolvers() {
+    sort(transformerResolvers, new TransformerResolverComparator());
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public final void registerTransformer(Transformer transformer) throws MuleException {
+    withLock(transformerResolversLock.writeLock(), () -> {
+      if (transformer instanceof TransformerResolver) {
+        transformerResolvers.add(((TransformerResolver) transformer));
+        sortTransformerResolvers();
+      }
+    });
+
+    notifyTransformerResolvers(transformer);
   }
 
   /**
@@ -154,15 +180,22 @@ public class MuleRegistryAdapter implements MuleRegistry {
   }
 
   protected Transformer resolveTransformer(DataType source, DataType result) throws TransformerException {
-    for (TransformerResolver resolver : transformerResolvers) {
-      try {
-        Transformer trans = resolver.resolve(source, result);
-        if (trans != null) {
-          return trans;
+    Lock readLock = transformerResolversLock.readLock();
+    readLock.lock();
+
+    try {
+      for (TransformerResolver resolver : transformerResolvers) {
+        try {
+          Transformer trans = resolver.resolve(source, result);
+          if (trans != null) {
+            return trans;
+          }
+        } catch (ResolverException e) {
+          throw new TransformerException(noTransformerFoundForMessage(source, result), e);
         }
-      } catch (ResolverException e) {
-        throw new TransformerException(noTransformerFoundForMessage(source, result), e);
       }
+    } finally {
+      readLock.unlock();
     }
 
     return null;
@@ -188,15 +221,21 @@ public class MuleRegistryAdapter implements MuleRegistry {
 
     results = new ArrayList<>(2);
 
-    for (Transformer transformer : transformers) {
-      // The transformer must have the DiscoveryTransformer interface if we are
-      // going to find it here
-      if (!(transformer instanceof Converter)) {
-        continue;
+    Lock readLock = transformersLock.readLock();
+    readLock.lock();
+    try {
+      for (Transformer transformer : transformers) {
+        // The transformer must have the DiscoveryTransformer interface if we are
+        // going to find it here
+        if (!(transformer instanceof Converter)) {
+          continue;
+        }
+        if (result.isCompatibleWith(transformer.getReturnDataType()) && transformer.isSourceDataTypeSupported(source)) {
+          results.add(transformer);
+        }
       }
-      if (result.isCompatibleWith(transformer.getReturnDataType()) && transformer.isSourceDataTypeSupported(source)) {
-        results.add(transformer);
-      }
+    } finally {
+      readLock.unlock();
     }
 
     List<Transformer> concurrentlyAddedTransformers = transformerListCache.putIfAbsent(dataTypePairHash, results);
@@ -220,9 +259,15 @@ public class MuleRegistryAdapter implements MuleRegistry {
     return registry.isSingleton(key);
   }
 
-  public void notifyTransformerResolvers(Transformer t) {
+  private void notifyTransformerResolvers(Transformer t) {
     if (t instanceof Converter) {
-      transformerResolvers.forEach(resolver -> resolver.transformerChange(t));
+      withLock(transformerResolversLock.readLock(), () ->
+          transformerResolvers.forEach(resolver -> resolver.transformerChange(t)));
+
+      transformerListCache.clear();
+      exactTransformerCache.clear();
+
+      withLock(transformersLock.writeLock(), () -> transformers.add(t));
     }
   }
 

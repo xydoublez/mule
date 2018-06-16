@@ -8,7 +8,6 @@ package org.mule.runtime.core.internal.registry;
 
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
 import static org.slf4j.LoggerFactory.getLogger;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.lifecycle.Initialisable;
@@ -26,9 +25,6 @@ import org.mule.runtime.core.internal.transformer.simple.ObjectToByteArray;
 import org.mule.runtime.core.internal.transformer.simple.ObjectToString;
 import org.mule.runtime.core.privileged.transformer.TransformerChain;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,6 +32,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.slf4j.Logger;
 
 /**
  * Will discover transformers based on type information only. It looks for transformers that support the source and result types
@@ -51,7 +49,7 @@ public class TypeBasedTransformerResolver implements TransformerResolver, MuleCo
 
   private MuleContext muleContext;
 
-  protected Map<String, Transformer> exactTransformerCache = new ConcurrentHashMap/* <String, Transformer> */(8);
+  protected Map<String, Transformer> exactTransformerCache = new ConcurrentHashMap<>(8);
 
   protected TransformerResolver graphTransformerResolver = new GraphTransformerResolver();
 
@@ -172,9 +170,9 @@ public class TypeBasedTransformerResolver implements TransformerResolver, MuleCo
   }
 
   @Override
-  public void transformerChange(Transformer transformer, RegistryAction registryAction) {
+  public void transformerChange(Transformer transformer) {
     if (transformer instanceof Converter) {
-      graphTransformerResolver.transformerChange(transformer, registryAction);
+      graphTransformerResolver.transformerChange(transformer);
       exactTransformerCache.clear();
     }
   }

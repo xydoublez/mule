@@ -80,4 +80,7 @@ public interface MuleRegistry extends InternalRegistry {
    * @return the {@link MuleContext} that owns this registry instance. Non null.
    */
   MuleContext getMuleContext();
+
+  void registerTransformer(Transformer transformer) throws MuleException;
+
 }
