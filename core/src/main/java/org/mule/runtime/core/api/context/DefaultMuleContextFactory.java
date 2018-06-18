@@ -116,7 +116,7 @@ public final class DefaultMuleContextFactory implements MuleContextFactory {
 
         // Automatically resolve Configuration to be used and delegate configuration
         // to it.
-        new AutoConfigurationBuilder(configResources, emptyMap(), APP).configure(muleContext);
+        new Regis(configResources, emptyMap(), APP).configure(muleContext);
       }
     });
   }

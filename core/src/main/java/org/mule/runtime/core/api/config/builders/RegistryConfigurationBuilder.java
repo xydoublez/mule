@@ -4,7 +4,7 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.internal;
+package org.mule.runtime.core.api.config.builders;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
@@ -96,7 +96,9 @@ import org.mule.runtime.core.api.config.bootstrap.ArtifactType;
 import org.mule.runtime.core.api.config.builders.AbstractConfigurationBuilder;
 import org.mule.runtime.core.api.context.notification.MuleContextNotification;
 import org.mule.runtime.core.api.context.notification.MuleContextNotificationListener;
+import org.mule.runtime.core.api.el.ExtendedExpressionManager;
 import org.mule.runtime.core.api.event.EventContextService;
+import org.mule.runtime.core.api.extension.ExtensionManager;
 import org.mule.runtime.core.api.registry.SpiServiceRegistry;
 import org.mule.runtime.core.api.retry.policy.NoRetryPolicyTemplate;
 import org.mule.runtime.core.api.streaming.DefaultStreamingManager;
@@ -105,6 +107,9 @@ import org.mule.runtime.core.internal.cluster.DefaultClusterService;
 import org.mule.runtime.core.internal.component.DefaultConfigurationComponentLocator;
 import org.mule.runtime.core.internal.config.CustomService;
 import org.mule.runtime.core.internal.config.CustomServiceRegistry;
+import org.mule.runtime.core.internal.config.factory.DefaultExpressionManagerProvider;
+import org.mule.runtime.core.internal.config.factory.ExtensionManagerProvider;
+import org.mule.runtime.core.internal.config.factory.TransactionManagerProvider;
 import org.mule.runtime.core.internal.connection.DelegateConnectionManagerAdapter;
 import org.mule.runtime.core.internal.connectivity.DefaultConnectivityTestingService;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
@@ -150,6 +155,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Provider;
+import javax.transaction.TransactionManager;
 
 public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
 
@@ -176,11 +182,11 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
 
   // Do not use static field. BeanDefinitions are reused and produce weird behaviour
   private final List<Registration> defaultContextServices = unmodifiableList(asList(
-      type(OBJECT_TRANSACTION_MANAGER, TransactionManagerFactoryBean.class),
+      provider(OBJECT_TRANSACTION_MANAGER, TransactionManager.class, new TransactionManagerProvider()),
       type(OBJECT_DEFAULT_RETRY_POLICY_TEMPLATE, NoRetryPolicyTemplate.class),
       type(OBJECT_EXPRESSION_LANGUAGE, MVELExpressionLanguage.class),
-      type(OBJECT_EXPRESSION_MANAGER, DefaultExpressionManagerFactoryBean.class),
-      type(OBJECT_EXTENSION_MANAGER, ExtensionManagerFactoryBean.class),
+      provider(OBJECT_EXPRESSION_MANAGER, ExtendedExpressionManager.class, new DefaultExpressionManagerProvider()),
+      provider(OBJECT_EXTENSION_MANAGER, ExtensionManager.class, new ExtensionManagerProvider()),
       type(OBJECT_TIME_SUPPLIER, LocalTimeSupplier.class),
       type(OBJECT_CONNECTION_MANAGER, DelegateConnectionManagerAdapter.class),
       type(METADATA_SERVICE_KEY, MuleMetadataService.class),
@@ -217,7 +223,7 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
       instance(OBJECT_SCHEDULER_POOLS_CONFIG, SchedulerContainerPoolsConfig.getInstance()),
       type(OBJECT_SCHEDULER_BASE_CONFIG, SchedulerBaseConfigFactory.class),
       type(OBJECT_CLUSTER_SERVICE, DefaultClusterService.class),
-      type(LAZY_COMPONENT_INITIALIZER_SERVICE_KEY, NoOpLazyComponentInitializer.class)
+      type(LazyComponentInitializer.LAZY_COMPONENT_INITIALIZER_SERVICE_KEY, NoOpLazyComponentInitializer.class)
   ));
 
   private final DefaultConfigurationComponentLocator componentLocator;
@@ -287,8 +293,8 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
       registration = type(serviceId, customServiceClass.get());
     } else if (customServiceImpl.isPresent()) {
       if (customServiceImpl.get() instanceof Service) {
-        registration = instance(serviceId, createInjectProviderParamsServiceProxy((Service) customServiceImpl.get(),
-                                                                                  new DefaultRegistry(muleContext)));
+        registration = instance(serviceId, InjectParamsFromContextServiceProxy.createInjectProviderParamsServiceProxy((Service) customServiceImpl.get(),
+                                                                                                                      new DefaultRegistry(muleContext)));
       } else {
         registration = instance(serviceId, customServiceImpl.get());
       }

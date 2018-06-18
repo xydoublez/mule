@@ -75,7 +75,7 @@ public final class LegacyRegistryUtils {
    * @throws RegistrationException if an object with the same key already exists
    */
   public static void registerObject(MuleContext context, String key, Object object) throws RegistrationException {
-    getRegistry(context).registerObject(key, object);
+    //getRegistry(context).registerObject(key, object);
   }
 
   /**
@@ -88,7 +88,7 @@ public final class LegacyRegistryUtils {
    */
   public static void registerObject(MuleContext context, String key, Object object, Object metadata)
       throws RegistrationException {
-    getRegistry(context).registerObject(key, object, metadata);
+    //getRegistry(context).registerObject(key, object, metadata);
   }
 
   /**
@@ -120,7 +120,7 @@ public final class LegacyRegistryUtils {
    *         lifecycle threw an exception
    */
   public static Object unregisterObject(MuleContext context, String key) throws RegistrationException {
-    return getRegistry(context).unregisterObject(key);
+    //return getRegistry(context).unregisterObject(key);
   }
 
   /**

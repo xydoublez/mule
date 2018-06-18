@@ -5,16 +5,17 @@
  * LICENSE.txt file.
  */
 
-package org.mule.runtime.config.internal;
+package org.mule.runtime.core.internal.config.factory;
 
 import static org.mule.runtime.core.internal.execution.ClassLoaderInjectorInvocationHandler.createClassLoaderInjectorInvocationHandler;
+import org.mule.runtime.api.exception.MuleException;
+import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.el.ExtendedExpressionManager;
 import org.mule.runtime.core.internal.el.DefaultExpressionManager;
+import org.mule.runtime.core.internal.registry.guice.provider.GuiceProvider;
 
 import javax.inject.Inject;
-
-import org.springframework.beans.factory.FactoryBean;
 
 /**
  * Creates the default {@link org.mule.runtime.core.api.el.ExpressionManager}
@@ -22,29 +23,23 @@ import org.springframework.beans.factory.FactoryBean;
  * This factory creates a proxy on top of the real expression manager. That proxy is used to set the right classloader on the
  * current thread's context classloader before calling any method on the delegate object.
  *
- * @since 4.0
+ * @since 4.2.0
  */
-public class DefaultExpressionManagerFactoryBean implements FactoryBean<ExtendedExpressionManager> {
+public class DefaultExpressionManagerProvider extends GuiceProvider<ExtendedExpressionManager> {
 
   @Inject
   private MuleContext muleContext;
 
   @Override
-  public ExtendedExpressionManager getObject() throws Exception {
+  protected ExtendedExpressionManager doGet() {
     DefaultExpressionManager delegate = new DefaultExpressionManager();
-    muleContext.getInjector().inject(delegate);
+    try {
+      muleContext.getInjector().inject(delegate);
+    } catch (MuleException e) {
+      throw new MuleRuntimeException(e);
+    }
 
     return (ExtendedExpressionManager) createClassLoaderInjectorInvocationHandler(delegate,
                                                                                   muleContext.getExecutionClassLoader());
-  }
-
-  @Override
-  public Class<?> getObjectType() {
-    return ExtendedExpressionManager.class;
-  }
-
-  @Override
-  public boolean isSingleton() {
-    return true;
   }
 }

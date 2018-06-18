@@ -12,7 +12,7 @@ import static org.junit.Assert.assertThat;
 
 import org.mule.runtime.core.internal.config.builders.DefaultsConfigurationBuilder;
 import org.mule.runtime.core.internal.context.DefaultMuleContext;
-import org.mule.runtime.config.internal.factories.TransactionManagerFactoryBean;
+import org.mule.runtime.core.internal.config.factory.TransactionManagerProvider;
 import org.mule.runtime.core.api.context.DefaultMuleContextFactory;
 import org.mule.tck.config.TestServicesConfigurationBuilder;
 import org.mule.tck.junit4.AbstractMuleTestCase;
@@ -23,7 +23,7 @@ import javax.transaction.TransactionManager;
 import org.hamcrest.core.IsNull;
 import org.junit.Test;
 
-public class TransactionManagerFactoryBeanTestCase extends AbstractMuleTestCase {
+public class TransactionManagerProviderTestCase extends AbstractMuleTestCase {
 
   @Test
   public void registerTransactionManager() throws Exception {
@@ -31,7 +31,7 @@ public class TransactionManagerFactoryBeanTestCase extends AbstractMuleTestCase 
         (DefaultMuleContext) new DefaultMuleContextFactory().createMuleContext(new TestServicesConfigurationBuilder(),
                                                                                new DefaultsConfigurationBuilder());
 
-    TransactionManagerFactoryBean txMgrFB = new TransactionManagerFactoryBean();
+    TransactionManagerProvider txMgrFB = new TransactionManagerProvider();
     txMgrFB.setMuleContext(context);
     txMgrFB.setTxManagerFactory(new TestTransactionManagerFactory());
     TransactionManager transactionManager = txMgrFB.getObject();
