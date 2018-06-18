@@ -6,17 +6,18 @@
  */
 package org.mule.runtime.core.internal.registry;
 
+import static java.util.Collections.singletonMap;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.lifecycle.Lifecycle;
 import org.mule.runtime.api.util.concurrent.Latch;
-import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
+
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -32,6 +33,11 @@ public class RegisteredObjectLifecycleTestCase extends AbstractMuleContextTestCa
   private DummyBean bean = new DummyBean();
 
   @Override
+  protected Map<String, Object> getStartUpRegistryObjects() {
+    return singletonMap("dummy", bean);
+  }
+
+  @Override
   protected void doSetUp() throws Exception {
     bean = new DummyBean();
     initLatch = new Latch();
@@ -42,7 +48,6 @@ public class RegisteredObjectLifecycleTestCase extends AbstractMuleContextTestCa
 
   @Test
   public void testLifecycleForMuleContext() throws Exception {
-    ((MuleContextWithRegistry) muleContext).getRegistry().registerObject("dummy", bean);
     assertTrue(initLatch.await(TIMEOUT, MILLISECONDS));
     Thread.sleep(TIMEOUT);
     assertThat(startLatch.getCount(), is(1L));
@@ -66,7 +71,6 @@ public class RegisteredObjectLifecycleTestCase extends AbstractMuleContextTestCa
 
   @Test
   public void testLifecycleForUnregisteredObject() throws Exception {
-    ((MuleContextWithRegistry) muleContext).getRegistry().registerObject("dummy", bean);
     assertTrue(initLatch.await(TIMEOUT, MILLISECONDS));
     Thread.sleep(TIMEOUT);
     assertThat(startLatch.getCount(), is(1L));
@@ -79,7 +83,6 @@ public class RegisteredObjectLifecycleTestCase extends AbstractMuleContextTestCa
     assertThat(stopLatch.getCount(), is(1L));
     assertThat(disposeLatch.getCount(), is(1L));
 
-    ((MuleContextWithRegistry) muleContext).getRegistry().unregisterObject("dummy");
     assertTrue(stopLatch.await(TIMEOUT, MILLISECONDS));
     assertTrue(disposeLatch.await(TIMEOUT, MILLISECONDS));
   }

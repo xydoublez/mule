@@ -47,8 +47,7 @@ public class GuiceRegistry extends AbstractInternalRegistry implements InternalR
   }
 
   @Override
-  protected void doInitialise() throws InitialisationException {
-  }
+  protected void doInitialise() throws InitialisationException {}
 
   @Override
   public <T> T inject(T object) throws MuleException {
@@ -57,8 +56,7 @@ public class GuiceRegistry extends AbstractInternalRegistry implements InternalR
   }
 
   @Override
-  protected void doDispose() {
-  }
+  protected void doDispose() {}
 
   @Override
   public Object applyLifecycle(Object object) throws MuleException {
@@ -164,16 +162,13 @@ public class GuiceRegistry extends AbstractInternalRegistry implements InternalR
     return bindingsByKey.computeIfAbsent(key, k -> injector.getAllBindings().entrySet().stream()
         .filter(entry -> getName(entry.getKey()).equals(key))
         .map(Map.Entry::getValue)
-        .findFirst().orElseThrow(() -> new NoSuchElementException())
-    );
+        .findFirst().orElseThrow(() -> new NoSuchElementException()));
   }
 
   private Map<String, Binding> getBindings(Class type) {
-    return bindingsByType.computeIfAbsent(type, c ->
-      injector.getAllBindings().entrySet().stream()
-          .filter(entry -> type.isAssignableFrom(entry.getKey().getTypeLiteral().getRawType()))
-          .collect(toMap(entry -> getName(entry.getKey()), entry -> entry.getValue()))
-    );
+    return bindingsByType.computeIfAbsent(type, c -> injector.getAllBindings().entrySet().stream()
+        .filter(entry -> type.isAssignableFrom(entry.getKey().getTypeLiteral().getRawType()))
+        .collect(toMap(entry -> getName(entry.getKey()), entry -> entry.getValue())));
   }
 
   private String getName(Key<?> key) {

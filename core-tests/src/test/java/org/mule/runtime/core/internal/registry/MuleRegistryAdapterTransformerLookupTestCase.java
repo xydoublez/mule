@@ -32,9 +32,9 @@ public class MuleRegistryAdapterTransformerLookupTestCase extends AbstractMuleTe
 
   private static final DataType ORANGE_DATA_TYPE = DataType.fromType(Orange.class);
 
-  private final DefaultRegistryBroker registry = mock(DefaultRegistryBroker.class);
+  private final InternalRegistry registry = mock(InternalRegistry.class);
   private final MuleContext muleContext = mock(MuleContext.class);
-  private final MuleRegistryAdapter muleRegistryHelper = new MuleRegistryAdapter(registry, muleContext);
+  private final MuleRegistryAdapter adapter = new MuleRegistryAdapter(registry, muleContext);
   private final Converter stringToOrange = new MockConverterBuilder().from(DataType.STRING).to(ORANGE_DATA_TYPE).build();
   private final Converter orangeToString = new MockConverterBuilder().from(ORANGE_DATA_TYPE).to(DataType.STRING).build();
 
@@ -44,16 +44,16 @@ public class MuleRegistryAdapterTransformerLookupTestCase extends AbstractMuleTe
     when(transformerResolver.resolve(DataType.STRING, ORANGE_DATA_TYPE)).thenReturn(stringToOrange);
     when(transformerResolver.resolve(ORANGE_DATA_TYPE, DataType.STRING)).thenReturn(orangeToString);
 
-    muleRegistryHelper.registerObject("mockTransformerResolver", transformerResolver);
+    adapter.registerTransformerResolver(transformerResolver);
 
-    muleRegistryHelper.registerTransformer(orangeToString);
-    muleRegistryHelper.registerTransformer(stringToOrange);
+    adapter.registerTransformer(orangeToString);
+    adapter.registerTransformer(stringToOrange);
   }
 
   @Test
   public void cachesTransformerResolvers() throws Exception {
-    Transformer transformer1 = muleRegistryHelper.lookupTransformer(DataType.STRING, ORANGE_DATA_TYPE);
-    Transformer transformer2 = muleRegistryHelper.lookupTransformer(ORANGE_DATA_TYPE, DataType.STRING);
+    Transformer transformer1 = adapter.lookupTransformer(DataType.STRING, ORANGE_DATA_TYPE);
+    Transformer transformer2 = adapter.lookupTransformer(ORANGE_DATA_TYPE, DataType.STRING);
 
     Mockito.verify(registry, times(0)).lookupObjects(TransformerResolver.class);
     assertEquals(stringToOrange, transformer1);
@@ -62,7 +62,7 @@ public class MuleRegistryAdapterTransformerLookupTestCase extends AbstractMuleTe
 
   @Test
   public void cachesTransformers() throws Exception {
-    List<Transformer> transformers = muleRegistryHelper.lookupTransformers(DataType.STRING, ORANGE_DATA_TYPE);
+    List<Transformer> transformers = adapter.lookupTransformers(DataType.STRING, ORANGE_DATA_TYPE);
 
     Mockito.verify(registry, times(0)).lookupObjects(Transformer.class);
     assertEquals(1, transformers.size());

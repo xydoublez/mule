@@ -47,7 +47,8 @@ import java.util.Set;
 public class MuleContextStopPhase extends DefaultLifecyclePhase {
 
   public MuleContextStopPhase() {
-    this(new Class[] {InternalRegistry.class, MuleContext.class, MessageSource.class, InterceptingMessageProcessor.class, Component.class,
+    this(new Class[] {InternalRegistry.class, MuleContext.class, MessageSource.class, InterceptingMessageProcessor.class,
+        Component.class,
         OutboundRouter.class, Service.class});
   }
 

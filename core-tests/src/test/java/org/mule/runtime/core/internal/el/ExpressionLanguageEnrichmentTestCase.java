@@ -6,6 +6,7 @@
  */
 package org.mule.runtime.core.internal.el;
 
+import static java.util.Collections.singletonMap;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -15,11 +16,9 @@ import static org.junit.Assert.assertThat;
 import static org.mule.runtime.api.message.Message.of;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_EXPRESSION_LANGUAGE;
 import static org.mule.tck.util.MuleContextUtils.eventBuilder;
-
 import org.mule.runtime.api.component.Component;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.core.api.event.CoreEvent;
-import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.runtime.core.internal.el.context.AbstractELTestCase;
 import org.mule.runtime.core.internal.el.mvel.MVELExpressionLanguage;
 import org.mule.runtime.core.internal.message.InternalMessage;
@@ -29,10 +28,11 @@ import org.mule.tck.testmodels.fruit.Apple;
 import org.mule.tck.testmodels.fruit.Fruit;
 import org.mule.tck.testmodels.fruit.FruitCleaner;
 
-import org.junit.Before;
-import org.junit.Test;
+import java.util.Map;
 
 import javax.activation.DataHandler;
+
+import org.junit.Test;
 
 @SmallTest
 public class ExpressionLanguageEnrichmentTestCase extends AbstractELTestCase {
@@ -43,18 +43,17 @@ public class ExpressionLanguageEnrichmentTestCase extends AbstractELTestCase {
 
   protected MVELExpressionLanguage expressionLanguage;
 
-  @SuppressWarnings("unchecked")
-  @Before
-  public void setup() throws Exception {
+  @Override
+  protected Map<String, Object> getStartUpRegistryObjects() {
     expressionLanguage = new MVELExpressionLanguage(muleContext);
-    ((MuleContextWithRegistry) muleContext).getRegistry().registerObject(OBJECT_EXPRESSION_LANGUAGE, expressionLanguage);
+    return singletonMap(OBJECT_EXPRESSION_LANGUAGE, expressionLanguage);
   }
 
   @Test
   public void enrichReplacePayload() throws Exception {
     CoreEvent event = CoreEvent.builder(context).message(of("foo")).build();
     CoreEvent.Builder eventBuilder = CoreEvent.builder(event);
-    expressionLanguage.enrich("message.payload", event, eventBuilder, ((Component) flowConstruct).getLocation(), "bar");
+    expressionLanguage.enrich("message.payload", event, eventBuilder, flowConstruct.getLocation(), "bar");
     assertThat(eventBuilder.build().getMessage().getPayload().getValue(), is("bar"));
   }
 

@@ -15,7 +15,6 @@ import static org.mockito.Mockito.spy;
 import static org.mule.runtime.api.el.BindingContextUtils.NULL_BINDING_CONTEXT;
 import static org.mule.runtime.api.scheduler.SchedulerConfig.config;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_SCHEDULER_BASE_CONFIG;
-
 import org.mule.runtime.api.el.DefaultExpressionLanguageFactoryService;
 import org.mule.runtime.api.el.ExpressionLanguage;
 import org.mule.runtime.api.exception.MuleException;
@@ -23,16 +22,17 @@ import org.mule.runtime.api.scheduler.SchedulerView;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.builders.AbstractConfigurationBuilder;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
+import org.mule.runtime.core.internal.registry.InternalRegistryBuilder;
 import org.mule.runtime.core.internal.registry.MuleRegistry;
 import org.mule.runtime.http.api.HttpService;
 import org.mule.tck.SimpleUnitTestSupportSchedulerService;
 import org.mule.weave.v2.el.WeaveDefaultExpressionLanguageFactoryService;
 
+import java.util.List;
+
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-
-import java.util.List;
 
 /**
  * Registers services instances into the {@link MuleRegistry} of a {@link MuleContext}.
@@ -63,14 +63,14 @@ public class TestServicesConfigurationBuilder extends AbstractConfigurationBuild
 
   @Override
   public void doConfigure(MuleContext muleContext) throws Exception {
-    MuleRegistry registry = ((MuleContextWithRegistry) muleContext).getRegistry();
-    registry.registerObject(schedulerService.getName(), spy(schedulerService));
-    registry.registerObject(OBJECT_SCHEDULER_BASE_CONFIG, config());
+    InternalRegistryBuilder registryBuilder = ((MuleContextWithRegistry) muleContext).getRegistryBuilder();
+    registryBuilder.registerObject(schedulerService.getName(), spy(schedulerService));
+    registryBuilder.registerObject(OBJECT_SCHEDULER_BASE_CONFIG, config());
 
     if (mockExpressionExecutor) {
       DefaultExpressionLanguageFactoryService expressionExecutor =
           mock(DefaultExpressionLanguageFactoryService.class, RETURNS_DEEP_STUBS);
-      registry.registerObject(MOCK_EXPR_EXECUTOR, expressionExecutor);
+      registryBuilder.registerObject(MOCK_EXPR_EXECUTOR, expressionExecutor);
     } else {
       // Avoid doing the DW warm-up for every test, reusing the ExpressionLanguage implementation
       if (cachedExprLanguageFactory == null) {
@@ -95,11 +95,11 @@ public class TestServicesConfigurationBuilder extends AbstractConfigurationBuild
         };
       }
 
-      registry.registerObject(cachedExprLanguageFactory.getName(), cachedExprLanguageFactory);
+      registryBuilder.registerObject(cachedExprLanguageFactory.getName(), cachedExprLanguageFactory);
     }
 
     if (mockHttpService) {
-      registry.registerObject(MOCK_HTTP_SERVICE, mock(HttpService.class));
+      registryBuilder.registerObject(MOCK_HTTP_SERVICE, mock(HttpService.class));
     }
   }
 

@@ -24,10 +24,9 @@ import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.disposeIfNeeded
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
 import static org.mule.tck.MuleTestUtils.APPLE_FLOW;
-import static org.mule.tck.MuleTestUtils.createAndRegisterFlow;
+import static org.mule.tck.MuleTestUtils.createFlow;
 import static org.mule.tck.util.MuleContextUtils.eventBuilder;
 import static org.slf4j.LoggerFactory.getLogger;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.scheduler.Scheduler;
@@ -49,11 +48,6 @@ import org.mule.tck.junit4.AbstractMuleContextTestCase;
 import org.mule.tck.probe.JUnitLambdaProbe;
 import org.mule.tck.probe.PollingProber;
 
-import org.junit.After;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.slf4j.Logger;
-
 import java.beans.ExceptionListener;
 import java.util.HashMap;
 import java.util.Map;
@@ -61,6 +55,11 @@ import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.junit.After;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.Logger;
 
 public class AsyncRequestReplyRequesterTestCase extends AbstractMuleContextTestCase implements ExceptionListener {
 
@@ -76,6 +75,7 @@ public class AsyncRequestReplyRequesterTestCase extends AbstractMuleContextTestC
 
     objects.put(OBJECT_STORE_MANAGER, new MuleObjectStoreManager());
     objects.put(REGISTRY_KEY, componentLocator);
+    objects.put(APPLE_FLOW, createFlow(muleContext, APPLE_FLOW, componentLocator));
 
     return objects;
   }
@@ -85,7 +85,6 @@ public class AsyncRequestReplyRequesterTestCase extends AbstractMuleContextTestC
   protected void doSetUp() throws Exception {
     super.doSetUp();
     scheduler = muleContext.getSchedulerService().cpuIntensiveScheduler();
-    createAndRegisterFlow(muleContext, APPLE_FLOW, componentLocator);
   }
 
   @Override

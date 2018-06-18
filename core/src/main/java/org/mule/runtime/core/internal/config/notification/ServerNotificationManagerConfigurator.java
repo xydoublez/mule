@@ -4,13 +4,13 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.internal;
+package org.mule.runtime.core.internal.config.notification;
 
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
-import static org.mule.runtime.config.internal.NotificationConfig.EVENT_MAP;
-import static org.mule.runtime.config.internal.NotificationConfig.INTERFACE_MAP;
+import static org.mule.runtime.core.internal.config.notification.NotificationConfig.EVENT_MAP;
+import static org.mule.runtime.core.internal.config.notification.NotificationConfig.INTERFACE_MAP;
 import org.mule.runtime.api.artifact.Registry;
 import org.mule.runtime.api.component.AbstractComponent;
 import org.mule.runtime.api.lifecycle.Initialisable;
@@ -33,11 +33,9 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
 
 public class ServerNotificationManagerConfigurator extends AbstractComponent implements Initialisable {
 
@@ -46,9 +44,6 @@ public class ServerNotificationManagerConfigurator extends AbstractComponent imp
 
   @Inject
   private Registry registry;
-
-  @Inject
-  private ApplicationContext applicationContext;
 
   private Boolean dynamic;
   private List<NotificationConfig<? extends Notification, ? extends NotificationListener>> enabledNotifications =
@@ -189,12 +184,9 @@ public class ServerNotificationManagerConfigurator extends AbstractComponent imp
   protected Set<ListenerSubscriptionPair> getMergedListeners(ServerNotificationManager notificationManager) {
     Set<ListenerSubscriptionPair> mergedListeners = new HashSet<>();
 
-    // Any singleton bean defined in spring that implements
-    // NotificationListener or a subclass.
-    Set<ListenerSubscriptionPair> adhocListeners = new HashSet<>();
-    for (String name : applicationContext.getBeanNamesForType(NotificationListener.class, false, true)) {
-      adhocListeners.add(new ListenerSubscriptionPair((NotificationListener<?>) applicationContext.getBean(name)));
-    }
+    Set<ListenerSubscriptionPair> adhocListeners = registry.lookupAllByType(NotificationListener.class).stream()
+        .map(n -> new ListenerSubscriptionPair((NotificationListener<?>) n))
+        .collect(Collectors.toSet());
 
     if (notificationListeners != null) {
       mergedListeners.addAll(notificationListeners);
@@ -220,10 +212,6 @@ public class ServerNotificationManagerConfigurator extends AbstractComponent imp
 
   public void setNotificationDynamic(boolean dynamic) {
     this.dynamic = new Boolean(dynamic);
-  }
-
-  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-    this.applicationContext = applicationContext;
   }
 
   public void setEnabledNotifications(List<NotificationConfig<? extends Notification, ? extends NotificationListener>> enabledNotifications) {

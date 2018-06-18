@@ -25,10 +25,10 @@ import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_POLLING_CON
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APP;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.disposeIfNeeded;
 import static org.slf4j.LoggerFactory.getLogger;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.core.api.MuleContext;
+import org.mule.runtime.core.api.config.builders.RegistryConfigurationBuilder;
 import org.mule.runtime.core.api.context.DefaultMuleContextFactory;
 import org.mule.runtime.core.api.context.MuleContextFactory;
 import org.mule.runtime.core.api.context.notification.ServerNotificationManager;
@@ -36,10 +36,10 @@ import org.mule.runtime.core.api.exception.SystemExceptionHandler;
 import org.mule.runtime.core.api.transformer.DataTypeConversionResolver;
 import org.mule.runtime.core.api.util.StreamCloserService;
 import org.mule.runtime.core.internal.config.ClusterConfiguration;
-import org.mule.runtime.core.internal.config.builders.DefaultsConfigurationBuilder;
 import org.mule.runtime.core.internal.connector.SchedulerController;
 import org.mule.runtime.core.internal.exception.MessagingException;
 import org.mule.runtime.core.internal.lifecycle.MuleContextLifecycleManager;
+import org.mule.runtime.core.internal.registry.InternalRegistryBuilder;
 import org.mule.runtime.core.internal.registry.MuleRegistryAdapter;
 import org.mule.runtime.core.internal.transformer.DynamicDataTypeConversionResolver;
 import org.mule.runtime.core.internal.util.store.MuleObjectStoreManager;
@@ -58,10 +58,11 @@ public class DefaultMuleContextTestCase extends AbstractMuleTestCase {
 
   private SystemExceptionHandler mockSystemExceptionHandler = mock(SystemExceptionHandler.class);
   private MessagingException mockMessagingException = mock(MessagingException.class);
+
   @Rule
   public TestServicesConfigurationBuilder testServicesConfigurationBuilder = new TestServicesConfigurationBuilder();
-  private MuleContextFactory muleContextFactory;
 
+  private MuleContextFactory muleContextFactory;
   private MuleContext context;
 
   @Before
@@ -125,8 +126,9 @@ public class DefaultMuleContextTestCase extends AbstractMuleTestCase {
   public void overriddenClusterConfiguration() throws Exception {
     final int clusterNodeId = 22;
     final String clusterId = "some-id";
+
     createMuleContext();
-    ((MuleContextWithRegistry) context).getRegistry().registerObject(OBJECT_CLUSTER_CONFIGURATION, new ClusterConfiguration() {
+    getRegistryBuilder().registerObject(OBJECT_CLUSTER_CONFIGURATION, new ClusterConfiguration() {
 
       @Override
       public String getClusterId() {
@@ -139,6 +141,7 @@ public class DefaultMuleContextTestCase extends AbstractMuleTestCase {
         return clusterNodeId;
       }
     });
+
     context.start();
     assertThat(context.getClusterId(), is(clusterId));
     assertThat(context.getClusterNodeId(), is(clusterNodeId));
@@ -154,8 +157,7 @@ public class DefaultMuleContextTestCase extends AbstractMuleTestCase {
   @Test
   public void overriddenMulePollingController() throws Exception {
     createMuleContext();
-    ((MuleContextWithRegistry) context).getRegistry().registerObject(OBJECT_POLLING_CONTROLLER,
-                                                                     (SchedulerController) () -> false);
+    getRegistryBuilder().registerObject(OBJECT_POLLING_CONTROLLER, (SchedulerController) () -> false);
     context.start();
     assertThat(context.isPrimaryPollingInstance(), is(false));
   }
@@ -196,6 +198,10 @@ public class DefaultMuleContextTestCase extends AbstractMuleTestCase {
   }
 
   protected void createMuleContext() throws MuleException {
-    context = muleContextFactory.createMuleContext(testServicesConfigurationBuilder, new DefaultsConfigurationBuilder());
+    context = muleContextFactory.createMuleContext(testServicesConfigurationBuilder, new RegistryConfigurationBuilder());
+  }
+
+  private InternalRegistryBuilder getRegistryBuilder() {
+    return ((MuleContextWithRegistry) context).getRegistryBuilder();
   }
 }

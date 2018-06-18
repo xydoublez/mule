@@ -6,16 +6,18 @@
  */
 package org.mule.runtime.core.internal.util.store;
 
+import static java.util.Collections.singletonMap;
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_STORE_MANAGER;
-
 import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.store.ObjectStore;
 import org.mule.runtime.api.store.ObjectStoreSettings;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
+
+import java.util.Map;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,9 +38,13 @@ public class MuleObjectStoreDisposalTestCase extends AbstractMuleContextTestCase
   private ObjectStore disposableStore;
 
   @Override
+  protected Map<String, Object> getStartUpRegistryObjects() {
+    return singletonMap(DISPOSABLE_TRANSIENT_USER_STORE_KEY, disposableStore);
+  }
+
+  @Override
   protected void doSetUp() throws Exception {
     osm = ((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(OBJECT_STORE_MANAGER);
-    ((MuleContextWithRegistry) muleContext).getRegistry().registerObject(DISPOSABLE_TRANSIENT_USER_STORE_KEY, disposableStore);
     osm.setBaseTransientStoreKey(DISPOSABLE_TRANSIENT_USER_STORE_KEY);
   }
 

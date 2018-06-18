@@ -101,10 +101,10 @@ import org.slf4j.LoggerFactory;
  *
  * @since 3.7.0
  */
-public abstract class  AbstractRegistryBootstrap implements Initialisable {
+public abstract class AbstractRegistryBootstrap implements Initialisable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRegistryBootstrap.class);
-  
+
   private static final String TRANSACTION_RESOURCE_SUFFIX = ".transaction.resource";
   private static final String OPTIONAL_ATTRIBUTE = "optional";
   private static final String RETURN_CLASS_PROPERTY = "returnClass";
@@ -115,7 +115,7 @@ public abstract class  AbstractRegistryBootstrap implements Initialisable {
   public static final String SINGLE_TX = ".singletx.";
 
   protected ArtifactType artifactType = APP;
-  
+
   protected MuleContext muleContext;
 
   /**
@@ -360,7 +360,8 @@ public abstract class  AbstractRegistryBootstrap implements Initialisable {
 
   protected abstract void doRegisterObject(ObjectBootstrapProperty bootstrapProperty) throws Exception;
 
-  private <T> Optional<T> handleOptionalObjectException(boolean optional, Throwable t, AbstractBootstrapProperty bootstrapProperty)
+  private <T> Optional<T> handleOptionalObjectException(boolean optional, Throwable t,
+                                                        AbstractBootstrapProperty bootstrapProperty)
       throws Exception {
     if (optional) {
       if (LOGGER.isDebugEnabled()) {

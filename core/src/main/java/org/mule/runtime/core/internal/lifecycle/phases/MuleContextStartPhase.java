@@ -45,7 +45,8 @@ import java.util.Set;
 public class MuleContextStartPhase extends DefaultLifecyclePhase {
 
   public MuleContextStartPhase() {
-    this(new Class[] {InternalRegistry.class, MuleContext.class, MessageSource.class, InterceptingMessageProcessor.class, Component.class,
+    this(new Class[] {InternalRegistry.class, MuleContext.class, MessageSource.class, InterceptingMessageProcessor.class,
+        Component.class,
         OutboundRouter.class, MuleContext.class, Service.class});
   }
 

@@ -90,14 +90,21 @@ public class MuleRegistryAdapter implements MuleRegistry {
    */
   @Override
   public final void registerTransformer(Transformer transformer) throws MuleException {
-    withLock(transformerResolversLock.writeLock(), () -> {
-      if (transformer instanceof TransformerResolver) {
-        transformerResolvers.add(((TransformerResolver) transformer));
-        sortTransformerResolvers();
-      }
-    });
-
+    if (transformer instanceof TransformerResolver) {
+      registerTransformerResolver((TransformerResolver) transformer);
+    }
     notifyTransformerResolvers(transformer);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void registerTransformerResolver(TransformerResolver transformerResolver) {
+    withLock(transformerResolversLock.writeLock(), () -> {
+      transformerResolvers.add(transformerResolver);
+      sortTransformerResolvers();
+    });
   }
 
   /**
@@ -261,8 +268,8 @@ public class MuleRegistryAdapter implements MuleRegistry {
 
   private void notifyTransformerResolvers(Transformer t) {
     if (t instanceof Converter) {
-      withLock(transformerResolversLock.readLock(), () ->
-          transformerResolvers.forEach(resolver -> resolver.transformerChange(t)));
+      withLock(transformerResolversLock.readLock(),
+               () -> transformerResolvers.forEach(resolver -> resolver.transformerChange(t)));
 
       transformerListCache.clear();
       exactTransformerCache.clear();

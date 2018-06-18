@@ -83,7 +83,7 @@ import org.mule.runtime.core.api.registry.ServiceRegistry;
 import org.mule.runtime.core.api.registry.SpiServiceRegistry;
 import org.mule.runtime.core.api.transformer.Converter;
 import org.mule.runtime.core.api.util.IOUtils;
-import org.mule.runtime.core.internal.component.DefaultConfigurationComponentLocator;
+import org.mule.runtime.core.api.component.DefaultConfigurationComponentLocator;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.runtime.core.internal.registry.DefaultRegistry;
 import org.mule.runtime.core.internal.registry.MuleRegistryAdapter;
@@ -154,7 +154,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
   protected final XmlApplicationParser xmlApplicationParser;
   private ArtifactType artifactType;
   private List<ComponentIdentifier> componentNotSupportedByNewParsers = new ArrayList<>();
-  protected DefaultConfigurationComponentLocator componentLocator = new DefaultConfigurationComponentLocator(componentName -> {
+  protected DefaultConfigurationComponentLocator componentLocator = new  DefaultConfigurationComponentLocator(componentName -> {
     try {
       BeanDefinition beanDefinition = getBeanFactory().getBeanDefinition(componentName);
       return beanDefinition.isPrototype();

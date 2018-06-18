@@ -9,14 +9,13 @@ package org.mule.runtime.config.internal;
 import static com.google.common.base.Throwables.getCausalChain;
 import static org.mule.runtime.api.connection.ConnectionValidationResult.failure;
 import org.mule.runtime.api.component.location.Location;
-import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.connection.ConnectionValidationResult;
 import org.mule.runtime.api.connectivity.ConnectivityTestingService;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.exception.ObjectNotFoundException;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
-import org.mule.runtime.config.api.LazyComponentInitializer;
+import org.mule.runtime.core.api.config.LazyComponentInitializer;
 import org.mule.runtime.config.internal.dsl.model.NoSuchComponentModelException;
 
 import java.util.List;

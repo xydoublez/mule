@@ -14,36 +14,39 @@ import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APP;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APPLY_TO_ARTIFACT_TYPE_PARAMETER_KEY;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.DOMAIN;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.POLICY;
-
-import org.mule.runtime.api.lifecycle.InitialisationException;
-import org.mule.runtime.core.api.config.bootstrap.ArtifactType;
+import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.bootstrap.BootstrapServiceDiscoverer;
 import org.mule.runtime.core.api.transaction.TransactionFactory;
-import org.mule.runtime.core.internal.context.DefaultMuleContext;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
 
-public class SimpleRegistryBootstrapTestCase extends AbstractMuleContextTestCase {
+import org.junit.Assert;
+import org.junit.Test;
+
+public class DefaultRegistryBootstrapTestCase extends AbstractMuleContextTestCase {
 
   public static final String TEST_TRANSACTION_FACTORY_CLASS = "org.foo.Connection";
 
+  @Override
+  protected MuleContext createMuleContext() throws Exception {
+    MuleContext muleContext = super.createMuleContext();
+    createTestRegistryBootstrap(muleContext);
+
+    return muleContext;
+  }
+
   @Test(expected = ClassNotFoundException.class)
   public void registeringOptionalTransaction() throws Exception {
-    createTestRegistryBootstrap(APP);
     muleContext.getTransactionFactoryManager()
         .getTransactionFactoryFor(org.apache.commons.lang3.ClassUtils.getClass(TEST_TRANSACTION_FACTORY_CLASS));
   }
 
   @Test
   public void existingNotOptionalTransaction() throws Exception {
-    createTestRegistryBootstrap(APP);
     TransactionFactory transactionFactoryFor =
         muleContext.getTransactionFactoryManager().getTransactionFactoryFor(FakeTransactionResource.class);
     Assert.assertNotNull(transactionFactoryFor);
@@ -51,32 +54,13 @@ public class SimpleRegistryBootstrapTestCase extends AbstractMuleContextTestCase
 
   @Test
   public void registerOnlyAppPropertiesType() throws Exception {
-    createTestRegistryBootstrap(APP);
     assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(String.class), notNullValue());
     assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(Properties.class), nullValue());
     assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(HashMap.class), nullValue());
     assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(ArrayList.class), notNullValue());
   }
 
-  @Test
-  public void registerOnlyDomainPropertiesType() throws Exception {
-    createTestRegistryBootstrap(DOMAIN);
-    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(String.class), nullValue());
-    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(Properties.class), notNullValue());
-    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(HashMap.class), nullValue());
-    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(ArrayList.class), notNullValue());
-  }
-
-  @Test
-  public void registerOnlyPolicyPropertiesType() throws Exception {
-    createTestRegistryBootstrap(POLICY);
-    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(String.class), nullValue());
-    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(Properties.class), nullValue());
-    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(HashMap.class), notNullValue());
-    assertThat(((MuleContextWithRegistry) muleContext).getRegistry().lookupObject(ArrayList.class), notNullValue());
-  }
-
-  private SimpleRegistryBootstrap createTestRegistryBootstrap(ArtifactType artifactType) throws InitialisationException {
+  private void createTestRegistryBootstrap(MuleContext muleContext) {
     final Properties properties = new Properties();
     properties.put("1", format("java.lang.String,%s=%s", APPLY_TO_ARTIFACT_TYPE_PARAMETER_KEY, APP.getAsString()));
     properties.put("2", format("java.util.Properties,%s=%s", APPLY_TO_ARTIFACT_TYPE_PARAMETER_KEY, DOMAIN.getAsString()));
@@ -88,11 +72,7 @@ public class SimpleRegistryBootstrapTestCase extends AbstractMuleContextTestCase
     properties.put("test.singletx.transaction.resource1", FakeTransactionResource.class.getName());
 
     final BootstrapServiceDiscoverer bootstrapServiceDiscoverer = new TestBootstrapServiceDiscoverer(properties);
-    ((DefaultMuleContext) muleContext).setBootstrapServiceDiscoverer(bootstrapServiceDiscoverer);
-
-    SimpleRegistryBootstrap simpleRegistryBootstrap = new SimpleRegistryBootstrap(artifactType, muleContext);
-    simpleRegistryBootstrap.initialise();
-    return simpleRegistryBootstrap;
+    muleContext.setBootstrapServiceDiscoverer(bootstrapServiceDiscoverer);
   }
 
 }

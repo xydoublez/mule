@@ -7,6 +7,7 @@
 package org.mule.runtime.core.internal.registry.guice;
 
 import static com.google.inject.Guice.createInjector;
+import static org.slf4j.LoggerFactory.getLogger;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.internal.context.DefaultMuleContext;
 import org.mule.runtime.core.internal.registry.InternalRegistry;
@@ -27,7 +28,11 @@ import java.util.Map;
 
 import javax.inject.Provider;
 
+import org.slf4j.Logger;
+
 public class GuiceRegistryBuilder implements InternalRegistryBuilder {
+
+  private static final Logger LOGGER = getLogger(GuiceRegistryBuilder.class);
 
   private final Map<String, Registration> registrations = new HashMap<>();
 
@@ -51,7 +56,9 @@ public class GuiceRegistryBuilder implements InternalRegistryBuilder {
 
   private InternalRegistryBuilder register(Registration registration) {
     if (registrations.containsKey(registration.name)) {
-      throw new IllegalStateException("There already is an object registered with key: " + registration.name);
+      if (LOGGER.isDebugEnabled()) {
+        registration.logOverride();
+      }
     }
 
     registrations.put(registration.name, registration);
@@ -76,6 +83,14 @@ public class GuiceRegistryBuilder implements InternalRegistryBuilder {
       this.singleton = singleton;
     }
 
+    private void logOverride() {
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Overriding registry key '{}' with {}", name, getDescription());
+      }
+    }
+
+    protected abstract String getDescription();
+
     protected abstract void registerOn(MuleInjectionModule module);
   }
 
@@ -93,6 +108,11 @@ public class GuiceRegistryBuilder implements InternalRegistryBuilder {
     protected void registerOn(MuleInjectionModule module) {
       module.bindInstance(name, value);
     }
+
+    @Override
+    protected String getDescription() {
+      return "instance " + value;
+    }
   }
 
 
@@ -109,8 +129,12 @@ public class GuiceRegistryBuilder implements InternalRegistryBuilder {
     protected void registerOn(MuleInjectionModule module) {
       module.bindType(name, type, singleton);
     }
-  }
 
+    @Override
+    protected String getDescription() {
+      return "type registration " + type.getName();
+    }
+  }
 
   private class ProviderRegistration<T> extends Registration {
 
@@ -126,6 +150,11 @@ public class GuiceRegistryBuilder implements InternalRegistryBuilder {
     @Override
     protected void registerOn(MuleInjectionModule module) {
       module.bindProvider(name, objectType, provider, singleton);
+    }
+
+    @Override
+    protected String getDescription() {
+      return "with provider " + provider;
     }
   }
 

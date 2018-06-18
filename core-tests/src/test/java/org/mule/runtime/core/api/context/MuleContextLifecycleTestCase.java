@@ -19,7 +19,6 @@ import static org.mule.runtime.core.api.context.notification.MuleContextNotifica
 import static org.mule.runtime.core.api.context.notification.MuleContextNotification.CONTEXT_STOPPED;
 import static org.mule.runtime.core.api.context.notification.MuleContextNotification.CONTEXT_STOPPING;
 import static org.mule.tck.MuleAssert.assertTrue;
-
 import org.mule.runtime.api.artifact.Registry;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Disposable;
@@ -30,13 +29,13 @@ import org.mule.runtime.api.lifecycle.Startable;
 import org.mule.runtime.api.lifecycle.Stoppable;
 import org.mule.runtime.api.notification.NotificationListenerRegistry;
 import org.mule.runtime.core.api.MuleContext;
+import org.mule.runtime.core.api.config.builders.RegistryConfigurationBuilder;
 import org.mule.runtime.core.api.context.notification.MuleContextListener;
 import org.mule.runtime.core.api.context.notification.MuleContextNotification;
 import org.mule.runtime.core.api.context.notification.MuleContextNotificationListener;
 import org.mule.runtime.core.api.security.SecurityManager;
 import org.mule.runtime.core.api.util.UUID;
 import org.mule.runtime.core.api.util.queue.QueueManager;
-import org.mule.runtime.core.internal.config.builders.DefaultsConfigurationBuilder;
 import org.mule.runtime.core.internal.context.DefaultMuleContextBuilder;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.runtime.core.internal.context.notification.DefaultNotificationListenerRegistry;
@@ -67,6 +66,8 @@ public class MuleContextLifecycleTestCase extends AbstractMuleTestCase {
   @Rule
   public TestServicesConfigurationBuilder testServicesConfigurationBuilder = new TestServicesConfigurationBuilder();
 
+
+
   @Before
   public void setup() throws Exception {
     ctxBuilder = new DefaultMuleContextBuilder(APP);
@@ -77,7 +78,7 @@ public class MuleContextLifecycleTestCase extends AbstractMuleTestCase {
     ctx = ctxBuilder.buildMuleContext();
 
     notificationListenerRegistry = new DefaultNotificationListenerRegistry();
-    ((MuleContextWithRegistry) ctx).getRegistry().registerObject(NotificationListenerRegistry.REGISTRY_KEY,
+    ((MuleContextWithRegistry) ctx).getRegistryBuilder().registerObject(NotificationListenerRegistry.REGISTRY_KEY,
                                                                  notificationListenerRegistry);
     testServicesConfigurationBuilder.configure(ctx);
   }
@@ -119,7 +120,7 @@ public class MuleContextLifecycleTestCase extends AbstractMuleTestCase {
   @Test(expected = IllegalStateException.class)
   public void initialiseOnStarted() throws Exception {
     ctx.initialise();
-    new DefaultsConfigurationBuilder().configure(ctx);
+    new RegistryConfigurationBuilder().configure(ctx);
     ctx.start();
 
     // Attempt to initialise once started should fail!
@@ -129,7 +130,7 @@ public class MuleContextLifecycleTestCase extends AbstractMuleTestCase {
   @Test(expected = IllegalStateException.class)
   public void initialiseOnStopped() throws Exception {
     ctx.initialise();
-    new DefaultsConfigurationBuilder().configure(ctx);
+    new RegistryConfigurationBuilder().configure(ctx);
     ctx.start();
     ctx.stop();
 
@@ -140,7 +141,7 @@ public class MuleContextLifecycleTestCase extends AbstractMuleTestCase {
   @Test(expected = IllegalStateException.class)
   public void initialiseOnDisposed() throws Exception {
     ctx.initialise();
-    new DefaultsConfigurationBuilder().configure(ctx);
+    new RegistryConfigurationBuilder().configure(ctx);
     ctx.start();
     ctx.stop();
     ctx.dispose();
@@ -161,7 +162,7 @@ public class MuleContextLifecycleTestCase extends AbstractMuleTestCase {
   public void startOnInitialised() throws Exception {
     ctx.initialise();
 
-    new DefaultsConfigurationBuilder().configure(ctx);
+    new RegistryConfigurationBuilder().configure(ctx);
     TestNotificationListener notificationListener = new TestNotificationListener();
     notificationListenerRegistry.registerListener(notificationListener);
     ctx.start();
@@ -184,7 +185,7 @@ public class MuleContextLifecycleTestCase extends AbstractMuleTestCase {
     ctx.initialise();
     assertTrue("onInitialization never called on listener", callbackListener.wasInitialized);
 
-    new DefaultsConfigurationBuilder().configure(ctx);
+    new RegistryConfigurationBuilder().configure(ctx);
     TestNotificationListener notificationListener = new TestNotificationListener();
     notificationListenerRegistry.registerListener(notificationListener);
     ctx.start();
@@ -200,7 +201,7 @@ public class MuleContextLifecycleTestCase extends AbstractMuleTestCase {
   @Test
   public void startOnStopped() throws Exception {
     ctx.initialise();
-    new DefaultsConfigurationBuilder().configure(ctx);
+    new RegistryConfigurationBuilder().configure(ctx);
     ctx.start();
 
     ctx.stop();
@@ -302,7 +303,7 @@ public class MuleContextLifecycleTestCase extends AbstractMuleTestCase {
     ctx.initialise();
     assertTrue("onInitialization never called on listener", callbackListener.wasInitialized);
 
-    new DefaultsConfigurationBuilder().configure(ctx);
+    new RegistryConfigurationBuilder().configure(ctx);
     final TestNotificationListener notificationListener = new TestNotificationListener();
     notificationListenerRegistry.registerListener(notificationListener);
 
@@ -326,7 +327,7 @@ public class MuleContextLifecycleTestCase extends AbstractMuleTestCase {
   @Test
   public void disposeOnStopped() throws Exception {
     ctx.initialise();
-    new DefaultsConfigurationBuilder().configure(ctx);
+    new RegistryConfigurationBuilder().configure(ctx);
     ctx.start();
     ctx.stop();
     ctx.dispose();
@@ -351,7 +352,7 @@ public class MuleContextLifecycleTestCase extends AbstractMuleTestCase {
   @Test
   public void notificationHasMuleContextRef() throws Exception {
     ctx.initialise();
-    new DefaultsConfigurationBuilder().configure(ctx);
+    new RegistryConfigurationBuilder().configure(ctx);
 
     final AtomicReference<MuleContext> contextFromNotification = new AtomicReference<>();
     final AtomicReference<String> resourceId = new AtomicReference<>();
@@ -369,15 +370,14 @@ public class MuleContextLifecycleTestCase extends AbstractMuleTestCase {
   }
 
   private MuleContext buildStartedMuleContext() throws Exception {
-    ctx.initialise();
-
     // DefaultMuleContext refuses to start without these objects in place
     SecurityManager securityManager = mock(SecurityManager.class);
-    ((MuleContextWithRegistry) ctx).getRegistry().registerObject(UUID.getUUID(), securityManager);
+    ((MuleContextWithRegistry) ctx).getRegistryBuilder().registerObject(UUID.getUUID(), securityManager);
 
     QueueManager queueManager = mock(QueueManager.class);
-    ((MuleContextWithRegistry) ctx).getRegistry().registerObject(UUID.getUUID(), queueManager);
+    ((MuleContextWithRegistry) ctx).getRegistryBuilder().registerObject(UUID.getUUID(), queueManager);
 
+    ctx.initialise();
     ctx.start();
     return ctx;
   }

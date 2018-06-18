@@ -21,10 +21,9 @@ import static org.mule.runtime.core.internal.event.DefaultEventContext.child;
 import static org.mule.runtime.core.internal.interception.ProcessorInterceptorManager.PROCESSOR_INTERCEPTOR_MANAGER_REGISTRY_KEY;
 import static org.mule.runtime.core.privileged.processor.MessageProcessors.newChain;
 import static org.mule.tck.MuleTestUtils.APPLE_FLOW;
-import static org.mule.tck.MuleTestUtils.createAndRegisterFlow;
-import static org.mule.test.allure.AllureConstants.RoutersFeature.ROUTERS;
+import static org.mule.tck.MuleTestUtils.createFlow;
 import static org.mule.test.allure.AllureConstants.RoutersFeature.ProcessorChainRouterStory.PROCESSOR_CHAIN_ROUTER;
-
+import static org.mule.test.allure.AllureConstants.RoutersFeature.ROUTERS;
 import org.mule.runtime.api.event.Event;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
@@ -38,10 +37,6 @@ import org.mule.runtime.core.privileged.processor.chain.DefaultMessageProcessorC
 import org.mule.runtime.core.privileged.processor.chain.MessageProcessorChain;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -52,6 +47,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import io.qameta.allure.Description;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 // TODO MULE-13550 Improve CompositeProcessorChainRouter unit tests to cover scenario that was previously causing deadlock with flow-ref
 @Feature(ROUTERS)
@@ -65,7 +63,6 @@ public class CompositeProcessorChainRouterTestCase extends AbstractMuleContextTe
   @Before
   public void setup() throws MuleException {
     scheduler = muleContext.getSchedulerService().ioScheduler();
-    createAndRegisterFlow(muleContext, APPLE_FLOW, componentLocator);
   }
 
   @Override
@@ -73,6 +70,7 @@ public class CompositeProcessorChainRouterTestCase extends AbstractMuleContextTe
     final Map<String, Object> objects = new HashMap<>();
     objects.put(REGISTRY_KEY, componentLocator);
     objects.put(PROCESSOR_INTERCEPTOR_MANAGER_REGISTRY_KEY, mock(ProcessorInterceptorManager.class));
+    objects.put(APPLE_FLOW, createFlow(muleContext, APPLE_FLOW, componentLocator));
     return objects;
   }
 

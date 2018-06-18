@@ -7,7 +7,6 @@
 package org.mule.runtime.core.internal.processor;
 
 import static java.lang.Thread.currentThread;
-import static java.util.Collections.singletonMap;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.locks.LockSupport.parkNanos;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -18,12 +17,10 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.mule.runtime.api.component.location.ConfigurationComponentLocator.REGISTRY_KEY;
 import static org.mule.runtime.core.api.construct.Flow.builder;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
 import static org.mule.tck.MuleTestUtils.APPLE_FLOW;
-import static org.mule.tck.MuleTestUtils.createAndRegisterFlow;
-
+import static org.mule.tck.MuleTestUtils.createFlow;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.util.concurrent.Latch;
 import org.mule.runtime.core.api.construct.Flow;
@@ -39,12 +36,13 @@ import org.mule.runtime.core.privileged.processor.chain.DefaultMessageProcessorC
 import org.mule.tck.junit4.AbstractReactiveProcessorTestCase;
 import org.mule.tck.testmodels.mule.TestTransaction;
 
+import java.beans.ExceptionListener;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import java.beans.ExceptionListener;
-import java.util.Map;
 
 public class AsyncDelegateMessageProcessorTestCase extends AbstractReactiveProcessorTestCase implements ExceptionListener {
 
@@ -65,13 +63,15 @@ public class AsyncDelegateMessageProcessorTestCase extends AbstractReactiveProce
 
   @Override
   protected Map<String, Object> getStartUpRegistryObjects() {
-    return singletonMap(REGISTRY_KEY, componentLocator);
+    Map<String, Object> objects = new HashMap<>();
+    flow = createFlow(muleContext, APPLE_FLOW, componentLocator);
+    objects.put(APPLE_FLOW, flow);
+    return objects;
   }
 
   @Override
   protected void doSetUp() throws Exception {
     super.doSetUp();
-    flow = createAndRegisterFlow(muleContext, APPLE_FLOW, componentLocator);
 
     messageProcessor = createAsyncDelegateMessageProcessor(target, flow);
     messageProcessor.start();

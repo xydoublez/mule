@@ -21,7 +21,7 @@ public class ObjectToStringWithCollectionTestCase extends AbstractTransformerTes
 
   @Override
   public Object getTestData() {
-    List<String> list = new ArrayList<String>();
+    List<String> list = new ArrayList<>();
     list.add("one");
     list.add(null);
     list.add("three");

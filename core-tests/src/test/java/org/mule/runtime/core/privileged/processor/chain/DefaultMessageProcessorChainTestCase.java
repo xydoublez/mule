@@ -43,11 +43,10 @@ import static org.mule.runtime.core.api.processor.ReactiveProcessor.ProcessingTy
 import static org.mule.runtime.core.privileged.processor.MessageProcessors.newChain;
 import static org.mule.runtime.core.privileged.processor.MessageProcessors.processToApply;
 import static org.mule.tck.MuleTestUtils.APPLE_FLOW;
-import static org.mule.tck.MuleTestUtils.createAndRegisterFlow;
+import static org.mule.tck.MuleTestUtils.createFlow;
 import static org.mule.tck.junit4.AbstractReactiveProcessorTestCase.Mode.BLOCKING;
 import static org.mule.tck.junit4.AbstractReactiveProcessorTestCase.Mode.NON_BLOCKING;
 import static reactor.core.publisher.Flux.from;
-
 import org.mule.runtime.api.component.AbstractComponent;
 import org.mule.runtime.api.component.location.ComponentLocation;
 import org.mule.runtime.api.exception.MuleException;
@@ -87,6 +86,13 @@ import org.mule.runtime.core.privileged.processor.MessageProcessorBuilder;
 import org.mule.tck.junit4.AbstractReactiveProcessorTestCase;
 import org.mule.tck.size.SmallTest;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -95,12 +101,6 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.reactivestreams.Publisher;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(Parameterized.class)
 @SmallTest
@@ -162,7 +162,11 @@ public class DefaultMessageProcessorChainTestCase extends AbstractReactiveProces
 
   @Override
   protected Map<String, Object> getStartUpRegistryObjects() {
-    return singletonMap(REGISTRY_KEY, componentLocator);
+    Map<String, Object> objects = new HashMap<>();
+    objects.put(REGISTRY_KEY, componentLocator);
+    objects.put(APPLE_FLOW, createFlow(muleContext, APPLE_FLOW, componentLocator));
+
+    return objects;
   }
 
   @After
@@ -700,7 +704,6 @@ public class DefaultMessageProcessorChainTestCase extends AbstractReactiveProces
 
   @Test
   public void testAll() throws Exception {
-    createAndRegisterFlow(muleContext, APPLE_FLOW, componentLocator);
     ScatterGatherRouter scatterGatherRouter = new ScatterGatherRouter();
     scatterGatherRouter.setAnnotations(getAppleFlowComponentLocationAnnotations());
     scatterGatherRouter

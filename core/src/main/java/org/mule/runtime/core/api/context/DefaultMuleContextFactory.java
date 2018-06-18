@@ -7,20 +7,18 @@
 package org.mule.runtime.core.api.context;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APP;
-
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.api.config.ConfigurationException;
 import org.mule.runtime.core.api.config.DefaultMuleConfiguration;
 import org.mule.runtime.core.api.config.MuleConfiguration;
+import org.mule.runtime.core.api.config.builders.RegistryConfigurationBuilder;
 import org.mule.runtime.core.api.config.builders.SimpleConfigurationBuilder;
 import org.mule.runtime.core.api.context.notification.MuleContextListener;
-import org.mule.runtime.core.internal.config.builders.AutoConfigurationBuilder;
 import org.mule.runtime.core.internal.context.DefaultMuleContextBuilder;
 
 import java.util.Collections;
@@ -103,6 +101,7 @@ public final class DefaultMuleContextFactory implements MuleContextFactory {
    * {@link ConfigurationBuilder} that should be used. Properties if provided are used to replace "property placeholder" value in
    * configuration files.
    */
+  //TODO: How to link the configREsouces with the parsers?
   public MuleContext createMuleContext(final String configResources, final Map<String, Object> properties)
       throws InitialisationException, ConfigurationException {
     return doCreateMuleContext(MuleContextBuilder.builder(APP), new ContextConfigurator() {
@@ -114,9 +113,9 @@ public final class DefaultMuleContextFactory implements MuleContextFactory {
           new SimpleConfigurationBuilder(properties).configure(muleContext);
         }
 
-        // Automatically resolve Configuration to be used and delegate configuration
-        // to it.
-        new Regis(configResources, emptyMap(), APP).configure(muleContext);
+        // TODO: DefaultCOnfigurationComponentLocator needs to be overwritten at some point with an useful
+        // instance.
+        new RegistryConfigurationBuilder();
       }
     });
   }
@@ -220,4 +219,6 @@ public final class DefaultMuleContextFactory implements MuleContextFactory {
 
     public abstract void configure(MuleContext muleContext) throws ConfigurationException;
   }
+
+
 }

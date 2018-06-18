@@ -63,7 +63,7 @@ public abstract class AbstractInternalRegistry implements InternalRegistry {
 
   protected LifecycleManager createLifecycleManager(LifecycleInterceptor lifecycleInterceptor) {
     // TODO(pablo.kraan): MULE-12609 - using LifecycleManager to avoid exposing RegistryLifecycleManager
-    return new RegistryLifecycleManager("registry",this, muleContext, lifecycleInterceptor);
+    return new RegistryLifecycleManager("registry", this, muleContext, lifecycleInterceptor);
   }
 
   abstract protected void doInitialise() throws InitialisationException;

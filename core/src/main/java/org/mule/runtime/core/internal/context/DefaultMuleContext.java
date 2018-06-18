@@ -412,7 +412,7 @@ public class DefaultMuleContext implements MuleContextWithRegistry, PrivilegedMu
     synchronized (lifecycleStateLock) {
       if (isStarted() || (lifecycleManager.getLastPhaseExecuted() != null
           && (lifecycleManager.getLastPhaseExecuted().equals(Startable.PHASE_NAME)
-          && lifecycleManager.isLastPhaseExecutionFailed()))) {
+              && lifecycleManager.isLastPhaseExecutionFailed()))) {
         try {
           stop();
         } catch (MuleException e) {
@@ -710,7 +710,7 @@ public class DefaultMuleContext implements MuleContextWithRegistry, PrivilegedMu
   protected void checkLifecycleForPropertySet(String propertyName, String phase) throws IllegalStateException {
     if (lifecycleManager.isPhaseComplete(phase)) {
       throw new IllegalStateException("Cannot set property: '" + propertyName + "' once the server has already been through the "
-                                          + phase + " phase.");
+          + phase + " phase.");
     }
   }
 
@@ -952,6 +952,10 @@ public class DefaultMuleContext implements MuleContextWithRegistry, PrivilegedMu
     }
     checkArgument(registryBuilder != null, "Cannot set a null registry builder");
     this.registryBuilder = registryBuilder;
+  }
+
+  public void setRegistry(MuleRegistry registry) {
+    this.registry = registry;
   }
 
   @Override

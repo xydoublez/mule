@@ -88,7 +88,7 @@ public final class LegacyRegistryUtils {
    */
   public static void registerObject(MuleContext context, String key, Object object, Object metadata)
       throws RegistrationException {
-    //getRegistry(context).registerObject(key, object, metadata);
+    throw new UnsupportedOperationException("Mule 4 registry is immutable");
   }
 
   /**
@@ -120,7 +120,7 @@ public final class LegacyRegistryUtils {
    *         lifecycle threw an exception
    */
   public static Object unregisterObject(MuleContext context, String key) throws RegistrationException {
-    //return getRegistry(context).unregisterObject(key);
+    throw new UnsupportedOperationException("Mule 4 registry is immutable");
   }
 
   /**

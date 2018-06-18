@@ -9,7 +9,7 @@ package org.mule.runtime.config.internal.dsl.model;
 import static java.util.stream.Collectors.toSet;
 import static org.mule.runtime.config.internal.dsl.model.DependencyNode.Type.TOP_LEVEL;
 import org.mule.runtime.api.component.location.Location;
-import org.mule.runtime.config.api.LazyComponentInitializer;
+import org.mule.runtime.core.api.config.LazyComponentInitializer;
 import org.mule.runtime.config.internal.model.ApplicationModel;
 import org.mule.runtime.config.internal.model.ComponentModel;
 import org.mule.runtime.dsl.api.component.config.DefaultComponentLocation;

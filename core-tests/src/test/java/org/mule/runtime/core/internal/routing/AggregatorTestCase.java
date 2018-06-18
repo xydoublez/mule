@@ -6,7 +6,6 @@
  */
 package org.mule.runtime.core.internal.routing;
 
-import static java.util.Collections.singletonMap;
 import static java.util.Optional.of;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -15,8 +14,7 @@ import static org.mule.runtime.api.component.location.ConfigurationComponentLoca
 import static org.mule.runtime.core.api.event.EventContextFactory.create;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
 import static org.mule.tck.MuleTestUtils.APPLE_FLOW;
-import static org.mule.tck.MuleTestUtils.createAndRegisterFlow;
-
+import static org.mule.tck.MuleTestUtils.createFlow;
 import org.mule.runtime.api.event.EventContext;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.message.Message;
@@ -31,13 +29,16 @@ import org.mule.runtime.core.privileged.event.MuleSession;
 import org.mule.runtime.core.privileged.event.PrivilegedEvent;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 
-import org.junit.Test;
-
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.junit.Test;
+
 
 public class AggregatorTestCase extends AbstractMuleContextTestCase {
+
+  private Flow flow;
 
   public AggregatorTestCase() {
     setStartContext(true);
@@ -45,12 +46,16 @@ public class AggregatorTestCase extends AbstractMuleContextTestCase {
 
   @Override
   protected Map<String, Object> getStartUpRegistryObjects() {
-    return singletonMap(REGISTRY_KEY, componentLocator);
+    Map<String, Object> objects = new HashMap<>();
+    objects.put(REGISTRY_KEY, componentLocator);
+    flow = createFlow(muleContext, APPLE_FLOW, componentLocator);
+    objects.put(APPLE_FLOW, flow);
+
+    return objects;
   }
 
   @Test
   public void testMessageAggregator() throws Exception {
-    Flow flow = createAndRegisterFlow(muleContext, APPLE_FLOW, componentLocator);
     MuleSession session = new DefaultMuleSession();
 
     TestEventAggregator router = new TestEventAggregator(3);

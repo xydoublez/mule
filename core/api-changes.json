@@ -1,4 +1,51 @@
 {
+  "4.2.0": {
+    "revapi": {
+      "ignore": [
+        {
+          "code": "java.field.removed",
+          "old": "field org.mule.runtime.core.privileged.lifecycle.AbstractLifecycleManager<O>.logger",
+          "package": "org.mule.runtime.core.privileged.lifecycle",
+          "classSimpleName": "AbstractLifecycleManager",
+          "fieldName": "logger",
+          "elementKind": "field",
+          "justification": "Internal and no longer needed"
+        },
+        {
+          "code": "java.class.removed",
+          "old": "interface org.mule.runtime.core.privileged.registry.InjectProcessor",
+          "package": "org.mule.runtime.core.privileged.registry",
+          "classSimpleName": "InjectProcessor",
+          "elementKind": "interface",
+          "justification": "Internal and no longer needed"
+        },
+        {
+          "code": "java.class.removed",
+          "old": "class org.mule.runtime.core.privileged.registry.JSR250ValidatorProcessor",
+          "package": "org.mule.runtime.core.privileged.registry",
+          "classSimpleName": "JSR250ValidatorProcessor",
+          "elementKind": "class",
+          "justification": "Internal and no longer needed"
+        },
+        {
+          "code": "java.class.removed",
+          "old": "interface org.mule.runtime.core.privileged.registry.ObjectProcessor",
+          "package": "org.mule.runtime.core.privileged.registry",
+          "classSimpleName": "ObjectProcessor",
+          "elementKind": "interface",
+          "justification": "Internal and no longer needed"
+        },
+        {
+          "code": "java.class.removed",
+          "old": "interface org.mule.runtime.core.privileged.registry.PreInitProcessor",
+          "package": "org.mule.runtime.core.privileged.registry",
+          "classSimpleName": "PreInitProcessor",
+          "elementKind": "interface",
+          "justification": "Internal and no longer needed"
+        }
+      ]
+    }
+  },
   "4.1.1": {
     "revapi": {
       "ignore": [

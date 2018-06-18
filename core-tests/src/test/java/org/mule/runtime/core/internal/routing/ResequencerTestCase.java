@@ -6,7 +6,6 @@
  */
 package org.mule.runtime.core.internal.routing;
 
-import static java.util.Collections.singletonMap;
 import static java.util.Optional.of;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -20,7 +19,7 @@ import static org.mule.runtime.core.api.event.EventContextFactory.create;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
 import static org.mule.runtime.dsl.api.component.config.DefaultComponentLocation.fromSingleComponent;
 import static org.mule.tck.MuleTestUtils.APPLE_FLOW;
-import static org.mule.tck.MuleTestUtils.createAndRegisterFlow;
+import static org.mule.tck.MuleTestUtils.createFlow;
 import static org.mule.tck.MuleTestUtils.createFlow;
 import org.mule.runtime.api.component.location.Location;
 import org.mule.runtime.api.event.EventContext;
@@ -36,11 +35,13 @@ import org.mule.runtime.core.internal.routing.correlation.ResequenceMessagesCorr
 import org.mule.runtime.core.privileged.event.DefaultMuleSession;
 import org.mule.runtime.core.privileged.event.MuleSession;
 import org.mule.runtime.core.privileged.event.PrivilegedEvent;
+import org.mule.tck.MuleTestUtils;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.namespace.QName;
@@ -50,22 +51,26 @@ import org.junit.Test;
 
 public class ResequencerTestCase extends AbstractMuleContextTestCase {
 
+  private Flow flow;
+
   public ResequencerTestCase() {
     setStartContext(true);
   }
 
-
-
   @Override
   protected Map<String, Object> getStartUpRegistryObjects() {
-    return singletonMap(REGISTRY_KEY, componentLocator);
+    Map<String, Object> objects = new HashMap<>();
+    objects.put(REGISTRY_KEY, componentLocator);
+
+    flow = MuleTestUtils.createFlow(muleContext, APPLE_FLOW, componentLocator);
+    objects.put(APPLE_FLOW, flow);
+
+    return objects;
   }
 
   @Test
   public void testMessageResequencer() throws Exception {
     MuleSession session = new DefaultMuleSession();
-    Flow flow = createAndRegisterFlow(muleContext, APPLE_FLOW, componentLocator);
-    assertNotNull(flow);
 
     TestEventResequencer router = new TestEventResequencer(3);
     router.setMuleContext(muleContext);

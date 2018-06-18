@@ -9,7 +9,7 @@ package org.mule.runtime.config.internal;
 import org.mule.runtime.api.component.Component;
 import org.mule.runtime.api.component.location.Location;
 import org.mule.runtime.api.exception.MuleRuntimeException;
-import org.mule.runtime.config.api.LazyComponentInitializer;
+import org.mule.runtime.core.api.config.LazyComponentInitializer;
 
 /**
  * Initializer for the creation of lazy resources.

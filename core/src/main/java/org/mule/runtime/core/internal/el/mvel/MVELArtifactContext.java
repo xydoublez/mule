@@ -7,13 +7,11 @@
 package org.mule.runtime.core.internal.el.mvel;
 
 import org.mule.runtime.api.artifact.Registry;
-import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.runtime.core.internal.el.context.AbstractArtifactContext;
 import org.mule.runtime.core.internal.registry.MuleRegistry;
 import org.mule.runtime.core.privileged.el.context.AbstractMapContext;
-import org.mule.runtime.core.privileged.registry.RegistrationException;
 
 import java.util.Map;
 import java.util.Set;
@@ -64,23 +62,12 @@ public class MVELArtifactContext extends AbstractArtifactContext {
 
     @Override
     public void doPut(String key, Object value) {
-      try {
-        registry.registerObject(key, value);
-      } catch (RegistrationException e) {
-        throw new MuleRuntimeException(e);
-      }
+      throw new UnsupportedOperationException("Mule 4 registry is immutable");
     }
 
     @Override
     public void doRemove(String key) {
-      Object value = registry.lookupObject(key);
-      if (value != null) {
-        try {
-          registry.unregisterObject(key);
-        } catch (RegistrationException e) {
-          throw new MuleRuntimeException(e);
-        }
-      }
+      throw new UnsupportedOperationException("Mule 4 registry is immutable");
     }
 
     @Override

@@ -4,42 +4,31 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.internal;
+package org.mule.runtime.core.internal.config.factory;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mule.runtime.api.scheduler.SchedulerConfig.config;
-
-import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.api.scheduler.SchedulerConfig;
 import org.mule.runtime.api.scheduler.SchedulerService;
+import org.mule.runtime.core.api.MuleContext;
+import org.mule.runtime.core.internal.registry.guice.provider.GuiceProvider;
 
 import javax.inject.Inject;
-
-import org.springframework.beans.factory.FactoryBean;
 
 /**
  * Builds a base {@link SchedulerConfig} to be provided to the calls to {@link SchedulerService}.
  * 
- * @since 4.0
+ * @since 4.2
  */
-public class SchedulerBaseConfigFactory implements FactoryBean<SchedulerConfig> {
+public class SchedulerBaseConfigProvider extends GuiceProvider<SchedulerConfig> {
 
   @Inject
   private MuleContext muleContext;
 
   @Override
-  public Class<?> getObjectType() {
-    return SchedulerConfig.class;
-  }
-
-  @Override
-  public SchedulerConfig getObject() throws Exception {
+  protected SchedulerConfig doGet() {
     return config().withPrefix(muleContext.getConfiguration().getId())
         .withShutdownTimeout(() -> muleContext.getConfiguration().getShutdownTimeout(), MILLISECONDS);
   }
 
-  @Override
-  public boolean isSingleton() {
-    return false;
-  }
 }

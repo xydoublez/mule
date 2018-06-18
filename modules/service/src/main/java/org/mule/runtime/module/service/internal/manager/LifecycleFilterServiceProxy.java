@@ -13,7 +13,7 @@ import static org.mule.runtime.core.api.util.ClassUtils.findImplementedInterface
 import org.mule.runtime.api.lifecycle.Startable;
 import org.mule.runtime.api.lifecycle.Stoppable;
 import org.mule.runtime.api.service.Service;
-import org.mule.runtime.container.internal.MetadataInvocationHandler;
+import org.mule.runtime.core.internal.registry.MetadataInvocationHandler;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;

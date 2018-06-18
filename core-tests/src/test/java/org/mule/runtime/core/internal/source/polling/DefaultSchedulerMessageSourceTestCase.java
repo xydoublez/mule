@@ -17,9 +17,8 @@ import static org.mule.runtime.api.component.location.ConfigurationComponentLoca
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.disposeIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
 import static org.mule.tck.MuleTestUtils.APPLE_FLOW;
-import static org.mule.tck.MuleTestUtils.createAndRegisterFlow;
+import static org.mule.tck.MuleTestUtils.createFlow;
 import static org.slf4j.LoggerFactory.getLogger;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.scheduler.Scheduler;
 import org.mule.runtime.api.scheduler.SchedulerService;
@@ -30,12 +29,13 @@ import org.mule.tck.junit4.AbstractMuleContextTestCase;
 import org.mule.tck.probe.PollingProber;
 import org.mule.tck.probe.Probe;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.junit.After;
 import org.junit.Test;
 import org.slf4j.Logger;
-
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class DefaultSchedulerMessageSourceTestCase extends AbstractMuleContextTestCase {
 
@@ -43,7 +43,11 @@ public class DefaultSchedulerMessageSourceTestCase extends AbstractMuleContextTe
 
   @Override
   protected Map<String, Object> getStartUpRegistryObjects() {
-    return singletonMap(REGISTRY_KEY, componentLocator);
+    Map<String, Object> objects = new HashMap<>();
+    objects.put(REGISTRY_KEY, componentLocator);
+    objects.put(APPLE_FLOW, createFlow(muleContext, APPLE_FLOW, componentLocator));
+
+    return objects;
   }
 
   @Test
@@ -105,7 +109,6 @@ public class DefaultSchedulerMessageSourceTestCase extends AbstractMuleContextTe
   }
 
   private DefaultSchedulerMessageSource createMessageSource() throws Exception {
-    createAndRegisterFlow(muleContext, APPLE_FLOW, componentLocator);
     schedulerMessageSource =
         new DefaultSchedulerMessageSource(muleContext, scheduler(), false);
     schedulerMessageSource.setAnnotations(getAppleFlowComponentLocationAnnotations());

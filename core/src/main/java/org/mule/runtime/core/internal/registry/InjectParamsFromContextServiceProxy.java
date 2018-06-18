@@ -5,7 +5,7 @@
  * LICENSE.txt file.
  */
 
-package org.mule.runtime.config.internal;
+package org.mule.runtime.core.internal.registry;
 
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isPublic;
@@ -16,7 +16,6 @@ import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import static org.mule.runtime.core.api.util.ClassUtils.findImplementedInterfaces;
 import org.mule.runtime.api.artifact.Registry;
 import org.mule.runtime.api.service.Service;
-import org.mule.runtime.container.internal.MetadataInvocationHandler;
 import org.mule.runtime.core.api.registry.IllegalDependencyInjectionException;
 import org.mule.runtime.core.internal.config.preferred.PreferredObjectSelector;
 

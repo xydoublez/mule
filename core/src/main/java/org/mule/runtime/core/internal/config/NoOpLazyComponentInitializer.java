@@ -4,10 +4,10 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.internal;
+package org.mule.runtime.core.internal.config;
 
 import org.mule.runtime.api.component.location.Location;
-import org.mule.runtime.config.api.LazyComponentInitializer;
+import org.mule.runtime.core.api.config.LazyComponentInitializer;
 
 /**
  * NoOp implementation for {@link LazyComponentInitializer}.

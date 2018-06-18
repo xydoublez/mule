@@ -16,6 +16,7 @@ import static org.mule.runtime.dsl.api.component.config.DefaultComponentLocation
 import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
 import org.mule.runtime.api.component.location.Location;
 import org.mule.runtime.api.exception.MuleException;
+import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.message.Error;
 import org.mule.runtime.core.api.Injector;
 import org.mule.runtime.core.api.MuleContext;
@@ -23,8 +24,6 @@ import org.mule.runtime.core.api.construct.Flow;
 import org.mule.runtime.core.api.exception.FlowExceptionHandler;
 import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.internal.context.DefaultMuleContext;
-import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
-import org.mule.runtime.core.internal.registry.MuleRegistry;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -83,13 +82,13 @@ public final class MuleTestUtils {
    *
    * @param mockComponentLocator a {@link Mockito#mock(Class)} {@link ConfigurationComponentLocator}
    */
-  public static Flow createAndRegisterFlow(MuleContext context, String flowName,
-                                           ConfigurationComponentLocator mockComponentLocator)
-      throws MuleException {
-    Flow flow = createFlow(context, flowName);
-    MuleRegistry registry = ((MuleContextWithRegistry) context).getRegistry();
-    if (registry != null) {
-      registry.registerFlowConstruct(flow);
+  public static Flow createFlow(MuleContext context, String flowName,
+                                ConfigurationComponentLocator mockComponentLocator) {
+    Flow flow;
+    try {
+      flow = createFlow(context, flowName);
+    } catch (Exception e) {
+      throw new MuleRuntimeException(e);
     }
     when(mockComponentLocator.find(Location.builder().globalName(flowName).build())).thenReturn(Optional.of(flow));
     return flow;

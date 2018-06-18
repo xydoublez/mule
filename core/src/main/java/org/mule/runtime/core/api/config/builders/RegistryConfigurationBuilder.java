@@ -14,12 +14,9 @@ import static org.mule.runtime.api.serialization.ObjectSerializer.DEFAULT_OBJECT
 import static org.mule.runtime.api.store.ObjectStoreManager.BASE_IN_MEMORY_OBJECT_STORE_KEY;
 import static org.mule.runtime.api.store.ObjectStoreManager.BASE_PERSISTENT_OBJECT_STORE_KEY;
 import static org.mule.runtime.api.value.ValueProviderService.VALUE_PROVIDER_SERVICE_KEY;
-import static org.mule.runtime.config.api.LazyComponentInitializer.LAZY_COMPONENT_INITIALIZER_SERVICE_KEY;
-import static org.mule.runtime.config.internal.InjectParamsFromContextServiceProxy.createInjectProviderParamsServiceProxy;
 import static org.mule.runtime.core.api.config.MuleProperties.LOCAL_OBJECT_LOCK_FACTORY;
 import static org.mule.runtime.core.api.config.MuleProperties.LOCAL_OBJECT_STORE_MANAGER;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_CLUSTER_SERVICE;
-import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_COMPONENT_INITIAL_STATE_MANAGER;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_CONFIGURATION_PROPERTIES;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_CONNECTION_MANAGER;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_CONVERTER_RESOLVER;
@@ -41,7 +38,6 @@ import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_MULE_STREAM
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_NOTIFICATION_DISPATCHER;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_NOTIFICATION_HANDLER;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_NOTIFICATION_MANAGER;
-import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_OBJECT_NAME_PROCESSOR;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_POLICY_MANAGER;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_POLICY_MANAGER_STATE_HANDLER;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_PROCESSING_TIME_WATCHER;
@@ -59,6 +55,7 @@ import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_TRANSFORMAT
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APP;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.POLICY;
 import static org.mule.runtime.core.internal.interception.ProcessorInterceptorManager.PROCESSOR_INTERCEPTOR_MANAGER_REGISTRY_KEY;
+import static org.mule.runtime.core.internal.registry.InjectParamsFromContextServiceProxy.createInjectProviderParamsServiceProxy;
 import org.mule.runtime.api.component.ConfigurationProperties;
 import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
 import org.mule.runtime.api.config.custom.ServiceConfigurator;
@@ -86,14 +83,12 @@ import org.mule.runtime.api.scheduler.SchedulerContainerPoolsConfig;
 import org.mule.runtime.api.service.Service;
 import org.mule.runtime.api.store.ObjectStore;
 import org.mule.runtime.api.store.ObjectStoreManager;
-import org.mule.runtime.config.internal.dsl.model.config.DefaultComponentInitialStateManager;
-import org.mule.runtime.config.internal.factories.ExtensionManagerFactoryBean;
-import org.mule.runtime.config.internal.factories.TransactionManagerFactoryBean;
-import org.mule.runtime.config.internal.processor.MuleObjectNameProcessor;
 import org.mule.runtime.core.api.MuleContext;
+import org.mule.runtime.core.api.component.DefaultConfigurationComponentLocator;
 import org.mule.runtime.core.api.config.DefaultMuleConfiguration;
+import org.mule.runtime.core.api.config.LazyComponentInitializer;
 import org.mule.runtime.core.api.config.bootstrap.ArtifactType;
-import org.mule.runtime.core.api.config.builders.AbstractConfigurationBuilder;
+import org.mule.runtime.core.api.context.EmptyConfigurationProperties;
 import org.mule.runtime.core.api.context.notification.MuleContextNotification;
 import org.mule.runtime.core.api.context.notification.MuleContextNotificationListener;
 import org.mule.runtime.core.api.el.ExtendedExpressionManager;
@@ -104,12 +99,15 @@ import org.mule.runtime.core.api.retry.policy.NoRetryPolicyTemplate;
 import org.mule.runtime.core.api.streaming.DefaultStreamingManager;
 import org.mule.runtime.core.api.util.queue.QueueManager;
 import org.mule.runtime.core.internal.cluster.DefaultClusterService;
-import org.mule.runtime.core.internal.component.DefaultConfigurationComponentLocator;
 import org.mule.runtime.core.internal.config.CustomService;
 import org.mule.runtime.core.internal.config.CustomServiceRegistry;
+import org.mule.runtime.core.internal.config.NoOpLazyComponentInitializer;
 import org.mule.runtime.core.internal.config.factory.DefaultExpressionManagerProvider;
 import org.mule.runtime.core.internal.config.factory.ExtensionManagerProvider;
+import org.mule.runtime.core.internal.config.factory.SchedulerBaseConfigProvider;
 import org.mule.runtime.core.internal.config.factory.TransactionManagerProvider;
+import org.mule.runtime.core.internal.config.notification.NotificationConfig;
+import org.mule.runtime.core.internal.config.notification.ServerNotificationManagerConfigurator;
 import org.mule.runtime.core.internal.connection.DelegateConnectionManagerAdapter;
 import org.mule.runtime.core.internal.connectivity.DefaultConnectivityTestingService;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
@@ -128,8 +126,8 @@ import org.mule.runtime.core.internal.policy.DefaultPolicyManager;
 import org.mule.runtime.core.internal.policy.DefaultPolicyStateHandler;
 import org.mule.runtime.core.internal.processor.interceptor.DefaultProcessorInterceptorManager;
 import org.mule.runtime.core.internal.registry.DefaultRegistry;
-import org.mule.runtime.core.internal.registry.InternalRegistryBuilder;
 import org.mule.runtime.core.internal.registry.DefaultRegistryBootstrap;
+import org.mule.runtime.core.internal.registry.InternalRegistryBuilder;
 import org.mule.runtime.core.internal.registry.guice.provider.LocalInMemoryObjectStoreProvider;
 import org.mule.runtime.core.internal.registry.guice.provider.LocalLockFactoryProvider;
 import org.mule.runtime.core.internal.registry.guice.provider.LocalObjectStoreManagerProvider;
@@ -159,10 +157,10 @@ import javax.transaction.TransactionManager;
 
 public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
 
-  private final InternalRegistryBuilder builder;
+  private InternalRegistryBuilder builder;
   private final ArtifactType artifactType;
-  private final CustomServiceRegistry customServiceRegistry;
-  private final MuleContextWithRegistry muleContext;
+  private CustomServiceRegistry customServiceRegistry;
+  private MuleContextWithRegistry muleContext;
 
   private static final ImmutableSet<String> APPLICATION_ONLY_SERVICES = ImmutableSet.<String>builder()
       .add(OBJECT_SECURITY_MANAGER)
@@ -181,68 +179,70 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
           .build();
 
   // Do not use static field. BeanDefinitions are reused and produce weird behaviour
-  private final List<Registration> defaultContextServices = unmodifiableList(asList(
-      provider(OBJECT_TRANSACTION_MANAGER, TransactionManager.class, new TransactionManagerProvider()),
-      type(OBJECT_DEFAULT_RETRY_POLICY_TEMPLATE, NoRetryPolicyTemplate.class),
-      type(OBJECT_EXPRESSION_LANGUAGE, MVELExpressionLanguage.class),
-      provider(OBJECT_EXPRESSION_MANAGER, ExtendedExpressionManager.class, new DefaultExpressionManagerProvider()),
-      provider(OBJECT_EXTENSION_MANAGER, ExtensionManager.class, new ExtensionManagerProvider()),
-      type(OBJECT_TIME_SUPPLIER, LocalTimeSupplier.class),
-      type(OBJECT_CONNECTION_MANAGER, DelegateConnectionManagerAdapter.class),
-      type(METADATA_SERVICE_KEY, MuleMetadataService.class),
-      type(OBJECT_MULE_CONFIGURATION, DefaultMuleConfiguration.class),
-      type(VALUE_PROVIDER_SERVICE_KEY, MuleValueProviderService.class),
-      type(OBJECT_TRANSACTION_FACTORY_LOCATOR, TransactionFactoryLocator.class),
-      type(OBJECT_OBJECT_NAME_PROCESSOR, MuleObjectNameProcessor.class),
-      type(OBJECT_POLICY_MANAGER, DefaultPolicyManager.class),
-      type(PROCESSOR_INTERCEPTOR_MANAGER_REGISTRY_KEY, DefaultProcessorInterceptorManager.class),
-      type(OBJECT_POLICY_MANAGER_STATE_HANDLER, DefaultPolicyStateHandler.class),
-      registerNotificationManager(),
-      type(OBJECT_NOTIFICATION_DISPATCHER, DefaultNotificationDispatcher.class),
-      type(NotificationListenerRegistry.REGISTRY_KEY, DefaultNotificationListenerRegistry.class),
-      type(EventContextService.REGISTRY_KEY, DefaultEventContextService.class),
-      provider(BASE_IN_MEMORY_OBJECT_STORE_KEY, ObjectStore.class, new LocalInMemoryObjectStoreProvider()),
-      instance(OBJECT_LOCAL_STORE_IN_MEMORY, new MuleDefaultObjectStoreFactory().createDefaultInMemoryObjectStore()),
-      provider(BASE_PERSISTENT_OBJECT_STORE_KEY, ObjectStore.class, new LocalPersistentObjectStoreProvider()),
-      instance(OBJECT_LOCAL_STORE_PERSISTENT, new MuleDefaultObjectStoreFactory().createDefaultPersistentObjectStore()),
-      type(OBJECT_STORE_MANAGER, MuleObjectStoreManager.class),
-      type(OBJECT_QUEUE_MANAGER, TransactionalQueueManager.class),
-      type(OBJECT_SECURITY_MANAGER, DefaultMuleSecurityManager.class),
-      type(OBJECT_DEFAULT_MESSAGE_PROCESSING_MANAGER, MuleMessageProcessingManager.class),
-      type(OBJECT_MULE_STREAM_CLOSER_SERVICE, DefaultStreamCloserService.class),
-      type(OBJECT_CONVERTER_RESOLVER, DynamicDataTypeConversionResolver.class),
-      type(OBJECT_LOCK_FACTORY, MuleLockFactory.class),
-      type(OBJECT_LOCK_PROVIDER, SingleServerLockProvider.class),
-      type(OBJECT_PROCESSING_TIME_WATCHER, DefaultProcessingTimeWatcher.class),
-      type(OBJECT_EXCEPTION_LOCATION_PROVIDER, MessagingExceptionLocationProvider.class),
-      type(OBJECT_MESSAGE_PROCESSING_FLOW_TRACE_MANAGER, MessageProcessingFlowTraceManager.class),
-      type(CONNECTIVITY_TESTING_SERVICE_KEY, DefaultConnectivityTestingService.class),
-      type(OBJECT_COMPONENT_INITIAL_STATE_MANAGER, DefaultComponentInitialStateManager.class),
-      type(OBJECT_STREAMING_MANAGER, DefaultStreamingManager.class),
-      type(OBJECT_TRANSFORMATION_SERVICE, ExtendedTransformationService.class),
-      instance(OBJECT_SCHEDULER_POOLS_CONFIG, SchedulerContainerPoolsConfig.getInstance()),
-      type(OBJECT_SCHEDULER_BASE_CONFIG, SchedulerBaseConfigFactory.class),
-      type(OBJECT_CLUSTER_SERVICE, DefaultClusterService.class),
-      type(LazyComponentInitializer.LAZY_COMPONENT_INITIALIZER_SERVICE_KEY, NoOpLazyComponentInitializer.class)
-  ));
+  private final List<Registration> defaultContextServices = unmodifiableList(
+      asList(
+          provider(OBJECT_TRANSACTION_MANAGER, TransactionManager.class, new TransactionManagerProvider()),
+          type(OBJECT_DEFAULT_RETRY_POLICY_TEMPLATE, NoRetryPolicyTemplate.class),
+          type(OBJECT_EXPRESSION_LANGUAGE, MVELExpressionLanguage.class),
+          provider(OBJECT_EXPRESSION_MANAGER, ExtendedExpressionManager.class, new DefaultExpressionManagerProvider()),
+          provider(OBJECT_EXTENSION_MANAGER, ExtensionManager.class, new ExtensionManagerProvider()),
+          type(OBJECT_TIME_SUPPLIER, LocalTimeSupplier.class),
+          type(OBJECT_CONNECTION_MANAGER, DelegateConnectionManagerAdapter.class),
+          type(METADATA_SERVICE_KEY, MuleMetadataService.class),
+          type(OBJECT_MULE_CONFIGURATION, DefaultMuleConfiguration.class),
+          type(VALUE_PROVIDER_SERVICE_KEY, MuleValueProviderService.class),
+          type(OBJECT_TRANSACTION_FACTORY_LOCATOR, TransactionFactoryLocator.class),
+          type(OBJECT_POLICY_MANAGER, DefaultPolicyManager.class),
+          type(PROCESSOR_INTERCEPTOR_MANAGER_REGISTRY_KEY, DefaultProcessorInterceptorManager.class),
+          type(OBJECT_POLICY_MANAGER_STATE_HANDLER, DefaultPolicyStateHandler.class),
+          registerNotificationManager(),
+          type(OBJECT_NOTIFICATION_DISPATCHER, DefaultNotificationDispatcher.class),
+          type(NotificationListenerRegistry.REGISTRY_KEY, DefaultNotificationListenerRegistry.class),
+          type(EventContextService.REGISTRY_KEY, DefaultEventContextService.class),
+          provider(BASE_IN_MEMORY_OBJECT_STORE_KEY, ObjectStore.class, new LocalInMemoryObjectStoreProvider()),
+          instance(OBJECT_LOCAL_STORE_IN_MEMORY, new MuleDefaultObjectStoreFactory().createDefaultInMemoryObjectStore()),
+          provider(BASE_PERSISTENT_OBJECT_STORE_KEY, ObjectStore.class, new LocalPersistentObjectStoreProvider()),
+          instance(OBJECT_LOCAL_STORE_PERSISTENT, new MuleDefaultObjectStoreFactory().createDefaultPersistentObjectStore()),
+          type(OBJECT_STORE_MANAGER, MuleObjectStoreManager.class),
+          type(OBJECT_QUEUE_MANAGER, TransactionalQueueManager.class),
+          type(OBJECT_SECURITY_MANAGER, DefaultMuleSecurityManager.class),
+          type(OBJECT_DEFAULT_MESSAGE_PROCESSING_MANAGER, MuleMessageProcessingManager.class),
+          type(OBJECT_MULE_STREAM_CLOSER_SERVICE, DefaultStreamCloserService.class),
+          type(OBJECT_CONVERTER_RESOLVER, DynamicDataTypeConversionResolver.class),
+          type(OBJECT_LOCK_FACTORY, MuleLockFactory.class),
+          type(OBJECT_LOCK_PROVIDER, SingleServerLockProvider.class),
+          type(OBJECT_PROCESSING_TIME_WATCHER, DefaultProcessingTimeWatcher.class),
+          type(OBJECT_EXCEPTION_LOCATION_PROVIDER, MessagingExceptionLocationProvider.class),
+          type(OBJECT_MESSAGE_PROCESSING_FLOW_TRACE_MANAGER, MessageProcessingFlowTraceManager.class),
+          type(CONNECTIVITY_TESTING_SERVICE_KEY, DefaultConnectivityTestingService.class),
+          type(OBJECT_STREAMING_MANAGER, DefaultStreamingManager.class),
+          type(OBJECT_TRANSFORMATION_SERVICE, ExtendedTransformationService.class),
+          instance(OBJECT_SCHEDULER_POOLS_CONFIG, SchedulerContainerPoolsConfig.getInstance()),
+          type(OBJECT_SCHEDULER_BASE_CONFIG, SchedulerBaseConfigProvider.class, false),
+          type(OBJECT_CLUSTER_SERVICE, DefaultClusterService.class),
+          type(LazyComponentInitializer.LAZY_COMPONENT_INITIALIZER_SERVICE_KEY, NoOpLazyComponentInitializer.class)));
 
   private final DefaultConfigurationComponentLocator componentLocator;
   private final ConfigurationProperties configurationProperties;
 
-  public RegistryConfigurationBuilder(MuleContext muleContext,
-                                      ConfigurationProperties configurationProperties,
+  public RegistryConfigurationBuilder() {
+    this(new EmptyConfigurationProperties(), APP, new DefaultConfigurationComponentLocator());
+  }
+
+  public RegistryConfigurationBuilder(ConfigurationProperties configurationProperties,
                                       ArtifactType artifactType,
                                       DefaultConfigurationComponentLocator componentLocator) {
-    this.muleContext = (MuleContextWithRegistry) muleContext;
-    this.builder = this.muleContext.getRegistryBuilder();
     this.configurationProperties = configurationProperties;
-    this.customServiceRegistry = (CustomServiceRegistry) muleContext.getCustomizationService();
     this.artifactType = artifactType;
     this.componentLocator = componentLocator;
   }
 
   @Override
   protected void doConfigure(MuleContext muleContext) throws Exception {
+    this.muleContext = (MuleContextWithRegistry) muleContext;
+    this.builder = this.muleContext.getRegistryBuilder();
+    this.customServiceRegistry = (CustomServiceRegistry) muleContext.getCustomizationService();
+
     builder.registerObject(OBJECT_MULE_CONTEXT, muleContext);
     builder.registerObject(DEFAULT_OBJECT_SERIALIZER_NAME, muleContext.getObjectSerializer());
     builder.registerObject(OBJECT_CONFIGURATION_PROPERTIES, configurationProperties);
@@ -261,7 +261,7 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
     registerObjectStore();
     registerLockFactory();
     registerQueueManager();
-    createCustomServices(muleContext);
+    createCustomServices();
   }
 
   private void loadServiceConfigurators() {
@@ -270,7 +270,7 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
         .forEach(customizer -> customizer.configure(customServiceRegistry));
   }
 
-  private void createCustomServices(MuleContext muleContext) {
+  private void createCustomServices() {
     customServiceRegistry.getCustomServices().entrySet()
         .forEach(entry -> register(getCustomServiceRegistration(entry.getValue(), entry.getKey())));
   }
@@ -293,8 +293,8 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
       registration = type(serviceId, customServiceClass.get());
     } else if (customServiceImpl.isPresent()) {
       if (customServiceImpl.get() instanceof Service) {
-        registration = instance(serviceId, InjectParamsFromContextServiceProxy.createInjectProviderParamsServiceProxy((Service) customServiceImpl.get(),
-                                                                                                                      new DefaultRegistry(muleContext)));
+        registration = instance(serviceId, createInjectProviderParamsServiceProxy((Service) customServiceImpl.get(),
+                                                                                  new DefaultRegistry(muleContext)));
       } else {
         registration = instance(serviceId, customServiceImpl.get());
       }
@@ -360,7 +360,8 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
   private Registration registerNotificationManager() {
     ServerNotificationManagerConfigurator configurator = new ServerNotificationManagerConfigurator();
     configurator.setEnabledNotifications(
-        ImmutableList.<NotificationConfig<? extends Notification, ? extends NotificationListener>>builder()
+        ImmutableList
+            .<NotificationConfig<? extends Notification, ? extends NotificationListener>>builder()
             .add(new NotificationConfig.EnabledNotificationConfig<>(MuleContextNotificationListener.class,
                                                                     MuleContextNotification.class))
             .add(new NotificationConfig.EnabledNotificationConfig<>(SecurityNotificationListener.class,
@@ -369,7 +370,8 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
                                                                     ManagementNotification.class))
             .add(new NotificationConfig.EnabledNotificationConfig<>(ConnectionNotificationListener.class,
                                                                     ConnectionNotification.class))
-            .add(new NotificationConfig.EnabledNotificationConfig<>(CustomNotificationListener.class, CustomNotification.class))
+            .add(new NotificationConfig.EnabledNotificationConfig<>(CustomNotificationListener.class,
+                                                                    CustomNotification.class))
             .add(new NotificationConfig.EnabledNotificationConfig<>(ExceptionNotificationListener.class,
                                                                     ExceptionNotification.class))
             .add(new NotificationConfig.EnabledNotificationConfig<>(TransactionNotificationListener.class,
@@ -396,7 +398,11 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
   }
 
   private Registration type(String key, Class<?> type) {
-    return new TypeRegistration(key, type);
+    return type(key, type, true);
+  }
+
+  private Registration type(String key, Class<?> type, boolean singleton) {
+    return new TypeRegistration(key, type, singleton);
   }
 
   private Registration provider(String key, Class<?> objectType, Provider<?> providerType) {
@@ -414,6 +420,7 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
     protected abstract void register();
   }
 
+
   private class InstanceRegistration extends Registration {
 
     private final Object value;
@@ -429,20 +436,24 @@ public class RegistryConfigurationBuilder extends AbstractConfigurationBuilder {
     }
   }
 
+
   private class TypeRegistration extends Registration {
 
-    private Class<?> type;
+    private final Class<?> type;
+    private final boolean singleton;
 
-    public TypeRegistration(String key, Class<?> type) {
+    public TypeRegistration(String key, Class<?> type, boolean singleton) {
       super(key);
       this.type = type;
+      this.singleton = singleton;
     }
 
     @Override
     protected void register() {
-      builder.registerType(key, type);
+      builder.registerType(key, type, singleton);
     }
   }
+
 
   private class ProviderRegistration<T> extends Registration {
 

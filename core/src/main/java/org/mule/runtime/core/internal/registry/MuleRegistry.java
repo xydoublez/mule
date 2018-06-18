@@ -83,4 +83,6 @@ public interface MuleRegistry extends InternalRegistry {
 
   void registerTransformer(Transformer transformer) throws MuleException;
 
+  void registerTransformerResolver(TransformerResolver transformerResolver) throws MuleException;
+
 }

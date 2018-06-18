@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  */
 public class HostNameFactory implements PropertyFactory {
 
-  protected static final Logger logger = LoggerFactory.getLogger(HostNameFactory.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(HostNameFactory.class);
 
   public Object create(Map<?, ?> props) throws Exception {
     // we could use getCanonicalHostName here. however, on machines behind
@@ -28,7 +28,7 @@ public class HostNameFactory implements PropertyFactory {
     try {
       return NetworkUtils.getLocalHost().getHostName();
     } catch (Exception e) {
-      logger.warn("Unable to resolve hostname, defaulting to 'localhost': " + e.getMessage(), e);
+      LOGGER.warn("Unable to resolve hostname, defaulting to 'localhost': " + e.getMessage(), e);
       return "localhost";
     }
   }

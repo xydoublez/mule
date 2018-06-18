@@ -10,7 +10,7 @@ import org.mule.runtime.api.component.Component;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.context.MuleContextAware;
 import org.mule.runtime.core.api.lifecycle.LifecycleStateAware;
-import org.mule.runtime.core.internal.component.DefaultConfigurationComponentLocator;
+import org.mule.runtime.core.api.component.DefaultConfigurationComponentLocator;
 import org.mule.runtime.dsl.api.component.ComponentFactory;
 
 import com.google.inject.Injector;

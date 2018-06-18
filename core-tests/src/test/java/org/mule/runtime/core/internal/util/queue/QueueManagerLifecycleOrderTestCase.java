@@ -22,7 +22,9 @@ import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.notification.NotificationDispatcher;
 import org.mule.runtime.core.api.MuleContext;
+import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.api.config.ConfigurationException;
+import org.mule.runtime.core.api.config.builders.AbstractConfigurationBuilder;
 import org.mule.runtime.core.api.config.builders.SimpleConfigurationBuilder;
 import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.context.DefaultMuleContextFactory;
@@ -59,6 +61,7 @@ public class QueueManagerLifecycleOrderTestCase extends AbstractMuleTestCase {
   public TestServicesConfigurationBuilder testServicesConfigurationBuilder = new TestServicesConfigurationBuilder();
 
   private MuleContext muleContext;
+  private FlowConstruct recordingFlow;
 
   @Before
   public void before() throws InitialisationException, ConfigurationException {
@@ -66,8 +69,20 @@ public class QueueManagerLifecycleOrderTestCase extends AbstractMuleTestCase {
     objects.put(OBJECT_QUEUE_MANAGER, rtqm);
     objects.put(OBJECT_SECURITY_MANAGER, new DefaultMuleSecurityManager());
     objects.put(PROCESSOR_INTERCEPTOR_MANAGER_REGISTRY_KEY, mock(ProcessorInterceptorManager.class));
-    muleContext = new DefaultMuleContextFactory().createMuleContext(testServicesConfigurationBuilder,
-                                                                    new SimpleConfigurationBuilder(objects));
+    objects.put(OBJECT_NOTIFICATION_DISPATCHER, mock(NotificationDispatcher.class));
+
+    ConfigurationBuilder flowConfigurationBuilder = new AbstractConfigurationBuilder() {
+
+      @Override
+      protected void doConfigure(MuleContext muleContext) throws Exception {
+        recordingFlow = new RecordingFlow("dummy", muleContext);
+        ((MuleContextWithRegistry) muleContext).getRegistryBuilder().registerObject("recordingFlow", recordingFlow);
+      }
+    };
+
+    muleContext = new DefaultMuleContextFactory()
+        .createMuleContext(testServicesConfigurationBuilder, new SimpleConfigurationBuilder(objects), flowConfigurationBuilder);
+
     testServicesConfigurationBuilder.configure(muleContext);
   }
 
@@ -78,16 +93,12 @@ public class QueueManagerLifecycleOrderTestCase extends AbstractMuleTestCase {
 
   @Test
   public void testStartupOrder() throws Exception {
-    ((MuleContextWithRegistry) muleContext).getRegistry().registerObject(OBJECT_NOTIFICATION_DISPATCHER,
-                                                                         mock(NotificationDispatcher.class));
-    FlowConstruct fc = new RecordingFlow("dummy", muleContext);
-    ((MuleContextWithRegistry) muleContext).getRegistry().registerFlowConstruct(fc);
     muleContext.start();
     muleContext.stop();
     assertEquals(4, startStopOrder.size());
     assertSame(rtqm, startStopOrder.get(0));
-    assertSame(fc, startStopOrder.get(1));
-    assertSame(fc, startStopOrder.get(2));
+    assertSame(recordingFlow, startStopOrder.get(1));
+    assertSame(recordingFlow, startStopOrder.get(2));
     assertSame(rtqm, startStopOrder.get(3));
 
   }
@@ -128,6 +139,7 @@ public class QueueManagerLifecycleOrderTestCase extends AbstractMuleTestCase {
       return new NotImplementedException("This is test code");
     }
   }
+
 
   private class RecordingFlow extends DefaultFlowBuilder.DefaultFlow {
 

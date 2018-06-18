@@ -4,7 +4,7 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.api;
+package org.mule.runtime.core.api.config;
 
 import org.mule.api.annotation.NoImplement;
 import org.mule.runtime.api.component.Component;
@@ -15,7 +15,7 @@ import org.mule.runtime.api.exception.MuleRuntimeException;
 /**
  * Initializer for the creation of lazy resources.
  *
- * @since 4.0
+ * @since 4.2.0
  */
 @NoImplement
 public interface LazyComponentInitializer {

@@ -9,19 +9,31 @@ package org.mule.runtime.core.internal.el.context;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.runtime.core.internal.registry.MuleRegistry;
 import org.mule.runtime.core.privileged.registry.RegistrationException;
 
-import org.junit.Test;
-
+import java.util.HashMap;
 import java.util.Map;
+
+import org.junit.Test;
 
 public class AppContextTestCase extends AbstractELTestCase {
 
+  private final Object registryObject = new Object();
+  private final String registryString = "dan";
+
   public AppContextTestCase(String mvelOptimizer) {
     super(mvelOptimizer);
+  }
+
+  @Override
+  protected Map<String, Object> getStartUpRegistryObjects() {
+    Map<String, Object> objects = new HashMap<>();
+    objects.put("myObject", registryObject);
+    objects.put("myString", registryString);
+
+    return objects;
   }
 
   @Test
@@ -71,10 +83,8 @@ public class AppContextTestCase extends AbstractELTestCase {
 
   @Test
   public void registryGet() throws RegistrationException {
-    Object o = new Object();
-    getRegistry().registerObject("myObject", o);
-    assertEquals(o, evaluate("app.registry.myObject"));
-    assertEquals(o, evaluate("app.registry['myObject']"));
+    assertEquals(registryObject, evaluate("app.registry.myObject"));
+    assertEquals(registryObject, evaluate("app.registry['myObject']"));
   }
 
   @Test
@@ -92,7 +102,6 @@ public class AppContextTestCase extends AbstractELTestCase {
 
   @Test
   public void registryContainsKey() throws RegistrationException {
-    getRegistry().registerObject("myString", "dan");
     assertTrue((Boolean) evaluate("app.registry.containsKey('myString')"));
   }
 

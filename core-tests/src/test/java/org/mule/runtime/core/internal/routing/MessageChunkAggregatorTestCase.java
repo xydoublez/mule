@@ -6,7 +6,6 @@
  */
 package org.mule.runtime.core.internal.routing;
 
-import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -15,8 +14,7 @@ import static org.mule.runtime.api.message.Message.of;
 import static org.mule.runtime.core.api.event.EventContextFactory.create;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
 import static org.mule.tck.MuleTestUtils.APPLE_FLOW;
-import static org.mule.tck.MuleTestUtils.createAndRegisterFlow;
-
+import static org.mule.tck.MuleTestUtils.createFlow;
 import org.mule.runtime.api.event.EventContext;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.core.api.construct.Flow;
@@ -27,12 +25,15 @@ import org.mule.runtime.core.privileged.event.DefaultMuleSession;
 import org.mule.runtime.core.privileged.event.MuleSession;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 
-import org.junit.Test;
-
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.junit.Test;
+
 public class MessageChunkAggregatorTestCase extends AbstractMuleContextTestCase {
+
+  private Flow flow;
 
   public MessageChunkAggregatorTestCase() {
     setStartContext(true);
@@ -40,14 +41,17 @@ public class MessageChunkAggregatorTestCase extends AbstractMuleContextTestCase 
 
   @Override
   protected Map<String, Object> getStartUpRegistryObjects() {
-    return singletonMap(REGISTRY_KEY, componentLocator);
+    Map<String, Object> objects = new HashMap<>();
+    objects.put(REGISTRY_KEY, componentLocator);
+    flow = createFlow(muleContext, APPLE_FLOW, componentLocator);
+    objects.put(APPLE_FLOW, flow);
+
+    return objects;
   }
 
   @Test
   public void testMessageProcessor() throws Exception {
     MuleSession session = new DefaultMuleSession();
-    Flow flow = createAndRegisterFlow(muleContext, APPLE_FLOW, componentLocator);
-    assertNotNull(flow);
 
     MessageChunkAggregator router = new MessageChunkAggregator();
     router.setAnnotations(getAppleFlowComponentLocationAnnotations());

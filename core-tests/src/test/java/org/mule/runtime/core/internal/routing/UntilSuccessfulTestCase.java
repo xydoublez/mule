@@ -8,7 +8,6 @@ package org.mule.runtime.core.internal.routing;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -20,9 +19,8 @@ import static org.mule.runtime.api.component.location.ConfigurationComponentLoca
 import static org.mule.runtime.api.message.Message.of;
 import static org.mule.runtime.core.api.transaction.TransactionCoordination.getInstance;
 import static org.mule.tck.MuleTestUtils.APPLE_FLOW;
-import static org.mule.tck.MuleTestUtils.createAndRegisterFlow;
+import static org.mule.tck.MuleTestUtils.createFlow;
 import static org.mule.tck.util.MuleContextUtils.eventBuilder;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.core.api.event.CoreEvent;
 import org.mule.runtime.core.api.processor.Processor;
@@ -32,6 +30,11 @@ import org.mule.runtime.core.internal.exception.MessagingException;
 import org.mule.runtime.core.privileged.processor.InternalProcessor;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 
+import java.io.ByteArrayInputStream;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,10 +42,6 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import java.io.ByteArrayInputStream;
-import java.util.Collection;
-import java.util.Map;
 
 @RunWith(Parameterized.class)
 public class UntilSuccessfulTestCase extends AbstractMuleContextTestCase {
@@ -93,13 +92,16 @@ public class UntilSuccessfulTestCase extends AbstractMuleContextTestCase {
 
   @Override
   protected Map<String, Object> getStartUpRegistryObjects() {
-    return singletonMap(REGISTRY_KEY, componentLocator);
+    Map<String, Object> objects = new HashMap<>();
+    objects.put(REGISTRY_KEY, componentLocator);
+    objects.put(APPLE_FLOW, createFlow(muleContext, APPLE_FLOW, componentLocator));
+
+    return objects;
   }
 
   @Override
   protected void doSetUp() throws Exception {
     super.doSetUp();
-    createAndRegisterFlow(muleContext, APPLE_FLOW, componentLocator);
     untilSuccessful = buildUntilSuccessful(1000L);
     if (tx) {
       getInstance().bindTransaction(mock(Transaction.class));
@@ -202,7 +204,4 @@ public class UntilSuccessfulTestCase extends AbstractMuleContextTestCase {
     // and their payload
     assertEquals(testEvent.getMessage(), eventReceived.getMessage());
   }
-
-
-
 }

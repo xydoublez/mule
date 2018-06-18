@@ -8,7 +8,6 @@ package org.mule.runtime.core.internal.transformer.simple;
 
 import static org.junit.Assert.assertEquals;
 import static org.mule.runtime.core.api.construct.Flow.builder;
-
 import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.core.api.construct.Flow;
@@ -17,11 +16,11 @@ import org.mule.runtime.core.api.transformer.TransformerException;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 
-import org.junit.Test;
-
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.junit.Test;
 
 /**
  * Highlights the issue: MULE-4599 where dispose cannot be called on a transformer since it is a prototype in Spring, so spring
@@ -44,7 +43,12 @@ public class RegistryTransformerLifecycleTestCase extends AbstractMuleContextTes
     TransformerLifecycleTracker transformer = new TransformerLifecycleTracker();
     transformer.setProperty("foo");
     Flow flow = builder("flow", muleContext).processors(transformer).build();
-    ((MuleContextWithRegistry) muleContext).getRegistry().registerFlowConstruct(flow);
+
+    flow.initialise();
+    flow.start();
+
+    flow.stop();
+    flow.dispose();
 
     muleContext.dispose();
     assertLifecycle(transformer);

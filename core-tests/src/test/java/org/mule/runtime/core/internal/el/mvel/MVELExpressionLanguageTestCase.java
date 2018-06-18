@@ -31,7 +31,6 @@ import static org.mule.runtime.core.internal.el.mvel.MVELExpressionLanguageTestC
 import static org.mule.runtime.core.internal.el.mvel.MVELExpressionLanguageTestCase.Variant.EXPRESSION_WITH_DELIMITER;
 import static org.mule.runtime.dsl.api.component.config.DefaultComponentLocation.fromSingleComponent;
 import static org.mule.tck.junit4.matcher.DataTypeMatcher.like;
-
 import org.mule.mvel2.CompileException;
 import org.mule.mvel2.ParserContext;
 import org.mule.mvel2.PropertyAccessException;
@@ -50,22 +49,11 @@ import org.mule.runtime.core.api.config.MuleManifest;
 import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.event.CoreEvent;
 import org.mule.runtime.core.api.expression.ExpressionRuntimeException;
-import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
-import org.mule.runtime.core.internal.el.context.MessageContext;
 import org.mule.runtime.core.internal.el.mvel.function.RegexExpressionLanguageFuntion;
 import org.mule.runtime.core.internal.message.InternalMessage;
 import org.mule.runtime.core.privileged.event.PrivilegedEvent;
-import org.mule.runtime.core.privileged.registry.RegistrationException;
 import org.mule.runtime.dsl.api.component.config.DefaultComponentLocation;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -88,6 +76,14 @@ import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
 import javax.activation.MimeType;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class MVELExpressionLanguageTestCase extends AbstractMuleContextTestCase {
@@ -122,8 +118,8 @@ public class MVELExpressionLanguageTestCase extends AbstractMuleContextTestCase 
     flowConstruct = mock(FlowConstruct.class, withSettings().extraInterfaces(Component.class));
     when(flowConstruct.getName()).thenReturn("myFlow");
     final DefaultComponentLocation location = fromSingleComponent("myFlow");
-    when(((Component) flowConstruct).getAnnotation(LOCATION_KEY)).thenReturn(location);
-    when(((Component) flowConstruct).getLocation()).thenReturn(location);
+    when((flowConstruct).getAnnotation(LOCATION_KEY)).thenReturn(location);
+    when((flowConstruct).getLocation()).thenReturn(location);
   }
 
   @Test
@@ -176,8 +172,6 @@ public class MVELExpressionLanguageTestCase extends AbstractMuleContextTestCase 
 
   @Test
   public void testEvaluateMapOfStringObject() throws Exception {
-    PrivilegedEvent event = createEvent();
-
     // Custom variables (via method param)
     assertEquals(1, evaluate("foo", singletonMap("foo", 1)));
     assertEquals("bar", evaluate("foo", singletonMap("foo", "bar")));
@@ -214,47 +208,6 @@ public class MVELExpressionLanguageTestCase extends AbstractMuleContextTestCase 
   public void regexFunction() throws Exception {
     final PrivilegedEvent testEvent = this.<PrivilegedEvent.Builder>getEventBuilder().message(of("TESTfooTEST")).build();
     assertEquals("foo", evaluate("regex('TEST(\\\\w+)TEST')", testEvent));
-  }
-
-  @Test
-  public void appTakesPrecedenceOverEverything() throws Exception {
-    mvel.setAliases(singletonMap("app", "'other1'"));
-    PrivilegedEvent event = this.<PrivilegedEvent.Builder>getEventBuilder().message(of("")).addVariable("app", "otherb").build();
-    ((MuleContextWithRegistry) muleContext).getRegistry().registerObject("foo",
-                                                                         (ExpressionLanguageExtension) context -> context
-                                                                               .addVariable("app", "otherc"));
-    mvel.initialise();
-    assertEquals(MVELArtifactContext.class, evaluate("app", event).getClass());
-  }
-
-  @Test
-  public void messageTakesPrecedenceOverEverything() throws Exception {
-    mvel.setAliases(singletonMap("message", "'other1'"));
-    PrivilegedEvent event =
-        this.<PrivilegedEvent.Builder>getEventBuilder().message(of("")).addVariable("message", "other2").build();
-    ((MuleContextWithRegistry) muleContext).getRegistry().registerObject("foo",
-                                                                         (ExpressionLanguageExtension) context -> context
-                                                                               .addVariable("message", "other3"));
-    mvel.initialise();
-    assertEquals(MessageContext.class, evaluate("message", event).getClass());
-  }
-
-  @Test
-  public void extensionTakesPrecedenceOverAutoResolved() throws Exception {
-    PrivilegedEvent event = this.<PrivilegedEvent.Builder>getEventBuilder().message(of("")).addVariable("foo", "other").build();
-    ((MuleContextWithRegistry) muleContext).getRegistry()
-        .registerObject("key", (ExpressionLanguageExtension) context -> context.addVariable("foo", "bar"));
-    mvel.initialise();
-    assertEquals("bar", evaluate("foo", event));
-  }
-
-  @Test
-  public void aliasTakesPrecedenceOverAutoResolved() throws RegistrationException, InitialisationException {
-    mvel.setAliases(singletonMap("foo", "'bar'"));
-    ((MuleContextWithRegistry) muleContext).getRegistry()
-        .registerObject("key", (ExpressionLanguageExtension) context -> context.addVariable("foo", "other"));
-    mvel.initialise();
-    assertEquals("bar", evaluate("foo"));
   }
 
   @Test

@@ -6,7 +6,6 @@
  */
 package org.mule.runtime.core.internal.routing;
 
-import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
@@ -19,8 +18,7 @@ import static org.mule.runtime.api.message.Message.of;
 import static org.mule.runtime.core.api.event.EventContextFactory.create;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
 import static org.mule.tck.MuleTestUtils.APPLE_FLOW;
-import static org.mule.tck.MuleTestUtils.createAndRegisterFlow;
-
+import static org.mule.tck.MuleTestUtils.createFlow;
 import org.mule.runtime.api.event.EventContext;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.core.api.construct.Flow;
@@ -31,31 +29,37 @@ import org.mule.runtime.core.internal.message.InternalMessage;
 import org.mule.tck.SensingNullMessageProcessor;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.junit.Test;
+
 public class SimpleCollectionAggregatorTestCase extends AbstractMuleContextTestCase {
 
+  private Flow flow;
+
+  
   public SimpleCollectionAggregatorTestCase() {
     setStartContext(true);
   }
 
   @Override
   protected Map<String, Object> getStartUpRegistryObjects() {
-    return singletonMap(REGISTRY_KEY, componentLocator);
+    Map<String, Object> objects = new HashMap<>();
+    objects.put(REGISTRY_KEY, componentLocator);
+
+    flow = createFlow(muleContext, APPLE_FLOW, componentLocator);
+    objects.put(APPLE_FLOW, flow);
+    
+    return objects;
   }
 
   @Test
   public void testAggregateMultipleEvents() throws Exception {
-
-    Flow flow = createAndRegisterFlow(muleContext, APPLE_FLOW, componentLocator);
-    assertNotNull(flow);
-
     SimpleCollectionAggregator router = new SimpleCollectionAggregator();
     SensingNullMessageProcessor sensingMessageProcessor = getSensingNullMessageProcessor();
     router.setListener(sensingMessageProcessor);
@@ -98,9 +102,6 @@ public class SimpleCollectionAggregatorTestCase extends AbstractMuleContextTestC
 
   @Test
   public void testAggregateSingleEvent() throws Exception {
-    Flow flow = createAndRegisterFlow(muleContext, APPLE_FLOW, componentLocator);
-    assertNotNull(flow);
-
     SimpleCollectionAggregator router = new SimpleCollectionAggregator();
     SensingNullMessageProcessor sensingMessageProcessor = getSensingNullMessageProcessor();
     router.setListener(sensingMessageProcessor);
@@ -130,9 +131,6 @@ public class SimpleCollectionAggregatorTestCase extends AbstractMuleContextTestC
 
   @Test
   public void testAggregateMessageCollections() throws Exception {
-    Flow flow = createAndRegisterFlow(muleContext, APPLE_FLOW, componentLocator);
-    assertNotNull(flow);
-
     SimpleCollectionAggregator router = new SimpleCollectionAggregator();
     router.setMuleContext(muleContext);
     router.setAnnotations(getAppleFlowComponentLocationAnnotations());

@@ -12,26 +12,29 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mule.runtime.api.component.AbstractComponent.LOCATION_KEY;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.core.api.event.CoreEvent;
 import org.mule.runtime.core.api.transformer.TransformerException;
-import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
 import org.mule.runtime.core.internal.exception.MessagingException;
 import org.mule.runtime.core.privileged.event.PrivilegedEvent;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 import org.mule.tck.testmodels.fruit.Apple;
 
-import org.junit.Test;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Test;
+
 public class InvokerMessageProcessorTestCase extends AbstractMuleContextTestCase {
 
   private InvokerMessageProcessor invoker;
+
+  @Override
+  protected Map<String, Object> getStartUpRegistryObjects() {
+    return singletonMap("object", new TestInvokeObject());
+  }
 
   @Override
   protected void doSetUp() throws Exception {
@@ -205,8 +208,6 @@ public class InvokerMessageProcessorTestCase extends AbstractMuleContextTestCase
 
   @Test
   public void testLookupClassInstance() throws MuleException, Exception {
-    ((MuleContextWithRegistry) muleContext).getRegistry().registerObject("object", new TestInvokeObject());
-
     invoker = new InvokerMessageProcessor();
     invoker.setMuleContext(muleContext);
     invoker.setAnnotations(singletonMap(LOCATION_KEY, TEST_CONNECTOR_LOCATION));
