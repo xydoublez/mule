@@ -13,10 +13,10 @@ import org.mule.runtime.api.deployment.meta.MuleDeployableModel;
 import org.mule.runtime.deployment.model.api.DeployableArtifactDescriptor;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPluginDescriptor;
 import org.mule.runtime.module.artifact.api.descriptor.AbstractArtifactDescriptorFactory;
+import org.mule.runtime.module.artifact.api.descriptor.ArtifactDescriptorValidatorBuilder;
 import org.mule.runtime.module.artifact.api.descriptor.BundleDependency;
 import org.mule.runtime.module.artifact.api.descriptor.ClassLoaderModel;
 import org.mule.runtime.module.artifact.api.descriptor.DescriptorLoaderRepository;
-import org.mule.runtime.module.artifact.api.descriptor.ArtifactDescriptorValidatorBuilder;
 import org.mule.runtime.module.deployment.impl.internal.plugin.ArtifactPluginDescriptorLoader;
 
 import com.google.common.collect.ImmutableSet;
@@ -65,7 +65,7 @@ public abstract class AbstractDeployableDescriptorFactory<M extends MuleDeployab
       throws IOException {
     Set<ArtifactPluginDescriptor> pluginDescriptors = new HashSet<>();
     for (BundleDependency bundleDependency : classLoaderModel.getDependencies()) {
-      if (bundleDependency.getDescriptor().isPlugin()) {
+      if (bundleDependency.getDescriptor().isPlugin() && bundleDependency.getBundleUri() != null) {
         File pluginFile = new File(bundleDependency.getBundleUri());
         pluginDescriptors.add(artifactPluginDescriptorLoader.load(pluginFile));
       }

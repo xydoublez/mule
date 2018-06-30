@@ -178,7 +178,7 @@ public class DefaultApplicationFactory extends AbstractDeployableArtifactFactory
       Set<ArtifactPluginDescriptor> pluginDescriptors = new HashSet<>();
 
       for (BundleDependency bundleDependency : descriptor.getClassLoaderModel().getDependencies()) {
-        if (bundleDependency.getDescriptor().isPlugin()) {
+        if (bundleDependency.getDescriptor().isPlugin() && bundleDependency.getBundleUri() != null) {
           File pluginZip = new File(bundleDependency.getBundleUri());
           try {
             pluginDescriptors.add(artifactPluginDescriptorLoader.load(pluginZip));
