@@ -80,7 +80,7 @@ public class ProxyAddBindingOperationInfoInterceptor extends AbstractInDatabindi
         // In case there already exists an action, the binding operation should
         // not be added.
         String action = (String) message.get(SOAP_ACTION);
-        if (!isEmpty(action))
+        if (isEmptyAction(action))
         {
             return;
         }
@@ -100,5 +100,10 @@ public class ProxyAddBindingOperationInfoInterceptor extends AbstractInDatabindi
 
         BindingOperationInfo operation = getOperation(message, new QName(xmlReader.getNamespaceURI(), opName));
         message.getExchange().put(BindingOperationInfo.class, operation);
+    }
+
+    private boolean isEmptyAction(String action)
+    {
+        return !isEmpty(action) && !isEmpty(action.trim());
     }
 }
