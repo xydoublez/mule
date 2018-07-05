@@ -33,7 +33,6 @@ import static org.mule.runtime.config.internal.dsl.spring.BeanDefinitionFactory.
 import static org.mule.runtime.config.internal.dsl.spring.ComponentModelHelper.resolveComponentType;
 import static org.mule.runtime.core.api.el.ExpressionManager.DEFAULT_EXPRESSION_PREFIX;
 import static org.mule.runtime.core.api.exception.Errors.Identifiers.ANY_IDENTIFIER;
-import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.disposeIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
 import static org.mule.runtime.extension.api.util.NameUtils.hyphenize;
 import static org.mule.runtime.extension.api.util.NameUtils.pluralize;
@@ -73,13 +72,13 @@ import org.mule.runtime.app.declaration.api.ElementDeclaration;
 import org.mule.runtime.config.api.dsl.model.ComponentBuildingDefinitionRegistry;
 import org.mule.runtime.config.api.dsl.model.ConfigurationParameters;
 import org.mule.runtime.config.api.dsl.model.DslElementModelFactory;
-import org.mule.runtime.config.api.dsl.model.ResourceProvider;
 import org.mule.runtime.config.api.dsl.model.properties.ConfigurationPropertiesProvider;
 import org.mule.runtime.config.api.dsl.model.properties.ConfigurationPropertiesProviderFactory;
 import org.mule.runtime.config.api.dsl.model.properties.ConfigurationProperty;
 import org.mule.runtime.config.api.dsl.processor.ArtifactConfig;
 import org.mule.runtime.config.api.dsl.processor.ConfigFile;
 import org.mule.runtime.config.api.dsl.processor.ConfigLine;
+import org.mule.runtime.config.internal.ArtifactAstHelper;
 import org.mule.runtime.config.internal.dsl.model.ComponentLocationVisitor;
 import org.mule.runtime.config.internal.dsl.model.ComponentModelReader;
 import org.mule.runtime.config.internal.dsl.model.DefaultConfigurationParameters;
@@ -98,12 +97,9 @@ import org.mule.runtime.config.internal.dsl.model.extension.xml.MacroExpansionMo
 import org.mule.runtime.config.internal.dsl.processor.ObjectTypeVisitor;
 import org.mule.runtime.config.internal.dsl.processor.xml.XmlCustomAttributeHandler;
 import org.mule.runtime.core.api.config.ConfigurationException;
-import org.mule.runtime.core.api.extension.MuleExtensionModelProvider;
-import org.mule.runtime.core.api.util.ClassUtils;
-import org.mule.runtime.dsl.api.ResourceProvider;
-import org.mule.runtime.core.api.extension.MuleModuleExtensionModelProvider;
 import org.mule.runtime.core.api.extension.RuntimeExtensionModelProvider;
 import org.mule.runtime.core.api.registry.SpiServiceRegistry;
+import org.mule.runtime.dsl.api.ResourceProvider;
 import org.mule.runtime.dsl.api.component.ComponentBuildingDefinition;
 import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
 import org.mule.runtime.dsl.api.component.config.DefaultComponentLocation;
@@ -405,7 +401,7 @@ public class ApplicationModel {
     EnvironmentPropertiesConfigurationProvider environmentPropertiesConfigurationProvider =
         new EnvironmentPropertiesConfigurationProvider();
     ConfigurationPropertiesProvider globalPropertiesConfigurationAttributeProvider =
-          createProviderFromGlobalProperties(artifactAstHelper);
+        createProviderFromGlobalProperties(artifactAstHelper);
 
     DefaultConfigurationPropertiesResolver environmentPropertiesConfigurationPropertiesResolver =
         new DefaultConfigurationPropertiesResolver(empty(), environmentPropertiesConfigurationProvider);
@@ -423,13 +419,6 @@ public class ApplicationModel {
     FileConfigurationPropertiesProvider externalPropertiesConfigurationProvider =
         new FileConfigurationPropertiesProvider(externalResourceProvider, "External files");
 
-<<<<<<< HEAD
-=======
-    ConfigurationPropertiesProvider deploymentPropertiesConfigurationProperties =
-        new MapConfigurationPropertiesProvider(deploymentProperties,
-                                               "Deployment properties");
-
->>>>>>> sdf
     Optional<ConfigurationPropertiesResolver> parentConfigurationPropertiesResolver = of(localResolver);
     if (parentConfigurationProperties.isPresent()) {
       parentConfigurationPropertiesResolver =
@@ -699,6 +688,28 @@ public class ApplicationModel {
     return componentModel;
   }
 
+  private ConfigurationPropertiesProvider createProviderFromGlobalProperties(ArtifactAstHelper artifactAstHelper) {
+    final Map<String, ConfigurationProperty> globalProperties = new HashMap<>();
+
+    artifactAstHelper.executeOnGlobalComponents(componentAstHolder -> {
+      if (componentAstHolder.getComponentAst().getComponentIdentifier().equals(GLOBAL_PROPERTY)) {
+        String key =
+            componentAstHolder.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX).name("key").build())
+                .get().getSimpleParameterValueAst().getRawValue();
+        String rawValue =
+            componentAstHolder.getParameterAstHolder(ComponentIdentifier.builder().namespace(CORE_PREFIX).name("value").build())
+                .get().getSimpleParameterValueAst().getRawValue();
+        globalProperties.put(key,
+                             new DefaultConfigurationProperty(format("global-property - file: %s - lineNumber %s",
+                                                                     componentAstHolder.getComponentAst().getSourceCodeLocation()
+                                                                         .getFilename(),
+                                                                     componentAstHolder.getComponentAst().getSourceCodeLocation()
+                                                                         .getStartLine()),
+                                                              key, rawValue));
+      }
+    });
+    return new GlobalPropertyConfigurationPropertiesProvider(globalProperties);
+  }
 
   private ConfigurationPropertiesProvider createProviderFromGlobalProperties(ArtifactConfig artifactConfig) {
     final Map<String, ConfigurationProperty> globalProperties = new HashMap<>();
