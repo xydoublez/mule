@@ -264,12 +264,12 @@ public class EventCorrelator implements Startable, Stoppable, Disposable
                     if (returnEvent != null && !returnEvent.equals(VoidMuleEvent.getInstance()))
                     {
                         returnEvent.getMessage().setCorrelationId(groupId);
-                    }
-                    
-                    String rootId = group.getCommonRootId();
-                    if (rootId != null)
-                    {
-                        returnEvent.getMessage().setMessageRootId(rootId);
+                        
+                        String rootId = group.getCommonRootId();
+                        if (rootId != null)
+                        {
+                            returnEvent.getMessage().setMessageRootId(rootId);
+                        }
                     }
 
                     // remove the eventGroup as no further message will be received
