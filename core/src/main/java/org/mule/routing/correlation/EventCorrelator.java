@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.mule.VoidMuleEvent;
 import org.mule.api.MessagingException;
 import org.mule.api.MuleContext;
 import org.mule.api.MuleEvent;
@@ -260,7 +261,11 @@ public class EventCorrelator implements Startable, Stoppable, Disposable
 
                         throw routingException;
                     }
-                    returnEvent.getMessage().setCorrelationId(groupId);
+                    if (returnEvent != null && !returnEvent.equals(VoidMuleEvent.class))
+                    {
+                        returnEvent.getMessage().setCorrelationId(groupId);
+                    }
+                    
                     String rootId = group.getCommonRootId();
                     if (rootId != null)
                     {
