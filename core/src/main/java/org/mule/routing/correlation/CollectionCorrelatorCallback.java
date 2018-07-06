@@ -6,6 +6,7 @@
  */
 package org.mule.routing.correlation;
 
+import org.mule.VoidMuleEvent;
 import org.mule.api.MuleContext;
 import org.mule.api.MuleEvent;
 import org.mule.api.MuleMessage;
@@ -50,7 +51,21 @@ public class CollectionCorrelatorCallback implements EventCorrelatorCallback
     @Override
     public MuleEvent aggregateEvents(EventGroup events) throws AggregationException
     {
-        return events.getMessageCollectionEvent();
+        MuleEvent returnEvent = events.getMessageCollectionEvent();
+        
+        throwAggregationExceptionIfEventsWereNotAggregated(events, returnEvent);
+        
+        return returnEvent;
+    }
+
+    private void throwAggregationExceptionIfEventsWereNotAggregated(EventGroup events, MuleEvent returnEvent) throws AggregationException
+    {
+        // if there were more than one event and the aggregated event is Void Mule
+        // there was an error and it must be informed.
+        if (returnEvent.equals(VoidMuleEvent.getInstance()) && events.size() > 0)
+        {
+            throw new AggregationException(events, null, null);
+        }
     }
 
     protected MuleSession getMergedSession(MuleEvent[] events)

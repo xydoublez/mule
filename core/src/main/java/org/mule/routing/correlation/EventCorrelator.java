@@ -6,6 +6,14 @@
  */
 package org.mule.routing.correlation;
 
+import java.io.Serializable;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.mule.api.MessagingException;
 import org.mule.api.MuleContext;
 import org.mule.api.MuleEvent;
@@ -36,15 +44,6 @@ import org.mule.util.concurrent.ThreadNameHelper;
 import org.mule.util.monitor.Expirable;
 import org.mule.util.monitor.ExpiryMonitor;
 import org.mule.util.store.DeserializationPostInitialisable;
-
-import java.io.Serializable;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 public class EventCorrelator implements Startable, Stoppable, Disposable
 {
@@ -387,6 +386,18 @@ public class EventCorrelator implements Startable, Stoppable, Disposable
         {
             throw new MessagingException(group.getMessageCollectionEvent(), e);
         }
+        
+        try
+        {
+            if(isGroupAlreadyProcessed(group.getGroupId()))
+            {
+                return;
+            }
+        }
+        catch (ObjectStoreException e)
+        {
+            throw new MessagingException(group.getMessageCollectionEvent(), e);
+        }
 
         if (isFailOnTimeout())
         {
@@ -411,6 +422,8 @@ public class EventCorrelator implements Startable, Stoppable, Disposable
                 logger.warn("Failed to clear group with id " + group.getGroupId()
                             + " since underlying ObjectStore threw Exception:" + e.getMessage());
             }
+            
+                
             throw new CorrelationTimeoutException(CoreMessages.correlationTimedOut(group.getGroupId()),
                                                   groupCollectionEvent);
         }
