@@ -261,7 +261,7 @@ public class EventCorrelator implements Startable, Stoppable, Disposable
 
                         throw routingException;
                     }
-                    if (returnEvent != null && !returnEvent.equals(VoidMuleEvent.class))
+                    if (returnEvent != null && !returnEvent.equals(VoidMuleEvent.getInstance()))
                     {
                         returnEvent.getMessage().setCorrelationId(groupId);
                     }
