@@ -60,9 +60,7 @@ public class CollectionCorrelatorCallback implements EventCorrelatorCallback
 
     private void throwAggregationExceptionIfEventsWereNotAggregated(EventGroup events, MuleEvent returnEvent) throws AggregationException
     {
-        // if there were more than one event and the aggregated event is Void Mule
-        // there was an error and it must be informed.
-        if (returnEvent.equals(VoidMuleEvent.getInstance()) && events.size() > 0)
+        if (returnEvent.equals(VoidMuleEvent.getInstance()))
         {
             throw new AggregationException(events, null, null);
         }
