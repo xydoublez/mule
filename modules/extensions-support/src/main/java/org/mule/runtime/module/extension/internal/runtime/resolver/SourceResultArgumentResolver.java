@@ -13,14 +13,15 @@ import static org.mule.runtime.core.api.exception.Errors.ComponentIdentifiers.Ha
 import static org.mule.runtime.extension.api.runtime.source.SourceResult.invocationError;
 import static org.mule.runtime.extension.api.runtime.source.SourceResult.responseError;
 import static org.mule.runtime.extension.api.runtime.source.SourceResult.success;
+
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.message.Error;
-import org.mule.runtime.api.util.LazyValue;
 import org.mule.runtime.extension.api.runtime.operation.ExecutionContext;
 import org.mule.runtime.extension.api.runtime.source.SourceCallbackContext;
 import org.mule.runtime.extension.api.runtime.source.SourceResult;
 
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * {@link ArgumentResolver} implementation which create instances of {@link SourceResult}
@@ -44,8 +45,8 @@ public class SourceResultArgumentResolver implements ArgumentResolver<SourceResu
   }
 
   @Override
-  public LazyValue<SourceResult> resolve(ExecutionContext executionContext) {
-    return new LazyValue<>(() -> {
+  public Supplier<SourceResult> resolve(ExecutionContext executionContext) {
+    return () -> {
       Error error = errorArgumentResolver.resolve(executionContext).get();
       SourceCallbackContext callbackContext = callbackContextArgumentResolver.resolve(executionContext).get();
 
@@ -57,7 +58,7 @@ public class SourceResultArgumentResolver implements ArgumentResolver<SourceResu
             ? invocationError(error, callbackContext)
             : responseError(error, callbackContext);
       }
-    });
+    };
   }
 
   private boolean isErrorGeneratingErrorResponse(String identifier) {
