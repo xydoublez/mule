@@ -27,6 +27,7 @@ import static org.mule.runtime.extension.api.ExtensionConstants.TARGET_VALUE_PAR
 import static org.mule.runtime.module.extension.api.util.MuleExtensionUtils.getInitialiserEvent;
 import static org.mule.runtime.module.extension.internal.runtime.resolver.ResolverUtils.resolveValue;
 import static org.mule.runtime.module.extension.internal.runtime.resolver.ValueResolvingContext.from;
+import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getMemberField;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getMemberName;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.isVoid;
 import static org.mule.runtime.module.extension.internal.util.MuleExtensionUtils.getOperationExecutorFactory;
@@ -84,6 +85,9 @@ import org.mule.runtime.module.extension.internal.runtime.resolver.ValueResolver
 import org.mule.runtime.module.extension.internal.runtime.resolver.ValueResolvingContext;
 import org.mule.runtime.module.extension.internal.util.ReflectionCache;
 
+import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
@@ -91,8 +95,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
-import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
 import reactor.core.publisher.Mono;
 
 /**
@@ -355,7 +357,12 @@ public abstract class ComponentMessageProcessor<T extends ComponentModel> extend
     fieldParameters.forEach(p -> {
       ValueResolver resolver = resolverSet.getResolvers().get(p.getName());
       if (resolver != null) {
-        groupBuilder.addPropertyResolver(getMemberName(p), resolver);
+        Optional<Field> memberField = getMemberField(p);
+        if (memberField.isPresent()) {
+          groupBuilder.addPropertyResolver(getMemberField(p).get(), resolver);
+        } else {
+          groupBuilder.addPropertyResolver(p.getName(), resolver);
+        }
       }
     });
     return groupBuilder;
