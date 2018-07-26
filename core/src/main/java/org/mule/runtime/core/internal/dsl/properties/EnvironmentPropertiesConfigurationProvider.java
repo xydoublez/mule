@@ -4,12 +4,9 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.internal.dsl.model.config;
+package org.mule.runtime.core.internal.dsl.properties;
 
 import static java.lang.System.getProperties;
-
-import org.mule.runtime.config.api.dsl.model.properties.ConfigurationPropertiesProvider;
-import org.mule.runtime.config.api.dsl.model.properties.ConfigurationProperty;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +14,9 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Supplier;
+
+import org.mule.runtime.api.dsl.ConfigurationProperty;
+import org.mule.runtime.dsl.api.properties.ConfigurationPropertiesProvider;
 
 /**
  * {@link ConfigurationPropertiesProvider} implementation that makes the system properties and the environment variables available

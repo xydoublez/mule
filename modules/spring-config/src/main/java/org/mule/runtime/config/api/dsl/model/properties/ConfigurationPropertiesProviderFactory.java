@@ -14,8 +14,10 @@ import org.mule.runtime.config.api.dsl.model.ResourceProvider;
 /**
  * Builds the provider for a custom configuration properties element.
  *
+ * @deprecated use {@link org.mule.runtime.dsl.api.properties.ConfigurationPropertiesProviderFactory} instead
  * @since 4.1
  */
+@Deprecated
 @NoImplement
 public interface ConfigurationPropertiesProviderFactory {
 
@@ -33,4 +35,5 @@ public interface ConfigurationPropertiesProviderFactory {
    */
   ConfigurationPropertiesProvider createProvider(ConfigurationParameters parameters,
                                                  ResourceProvider externalResourceProvider);
+
 }

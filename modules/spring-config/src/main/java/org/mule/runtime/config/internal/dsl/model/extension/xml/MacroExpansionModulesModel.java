@@ -30,7 +30,7 @@ import org.jgrapht.traverse.TopologicalOrderIterator;
 
 import org.mule.runtime.api.artifact.ast.SimpleParameterValueAst;
 import org.mule.runtime.api.meta.model.ExtensionModel;
-import org.mule.runtime.config.internal.ArtifactAstHelper;
+import org.mule.runtime.core.api.dsl.ArtifactAstHelper;
 import org.mule.runtime.config.internal.model.ApplicationModel;
 import org.mule.runtime.config.internal.model.ComponentModel;
 import org.mule.runtime.extension.api.property.XmlExtensionModelProperty;

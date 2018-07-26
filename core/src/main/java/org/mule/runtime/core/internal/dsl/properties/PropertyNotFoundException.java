@@ -4,12 +4,12 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.internal.dsl.model.config;
+package org.mule.runtime.core.internal.dsl.properties;
 
 import static java.lang.String.format;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
-import static org.mule.runtime.config.internal.dsl.model.config.DefaultConfigurationPropertiesResolver.PLACEHOLDER_PREFIX;
-import static org.mule.runtime.config.internal.dsl.model.config.DefaultConfigurationPropertiesResolver.PLACEHOLDER_SUFFIX;
+import static org.mule.runtime.core.internal.dsl.properties.DefaultConfigurationPropertiesResolver.PLACEHOLDER_PREFIX;
+import static org.mule.runtime.core.internal.dsl.properties.DefaultConfigurationPropertiesResolver.PLACEHOLDER_SUFFIX;
 
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.i18n.I18nMessage;

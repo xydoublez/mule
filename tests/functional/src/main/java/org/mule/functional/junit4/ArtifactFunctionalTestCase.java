@@ -30,9 +30,11 @@ import org.junit.runner.RunWith;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.serialization.ObjectSerializer;
 import org.mule.runtime.api.service.Service;
-import org.mule.runtime.core.api.artifact.dsl.xml.ArtifactXmlBasedAstBuilder;
 import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.api.config.builders.SimpleConfigurationBuilder;
+import org.mule.runtime.core.api.extension.RuntimeExtensionModelProvider;
+import org.mule.runtime.core.internal.dsl.MuleExtensionModelProvider;
+import org.mule.runtime.dsl.xml.api.ArtifactXmlBasedAstBuilder;
 import org.mule.runtime.module.artifact.api.classloader.ArtifactClassLoader;
 import org.mule.runtime.module.artifact.api.classloader.ClassLoaderRepository;
 import org.mule.runtime.module.artifact.api.classloader.net.MuleArtifactUrlStreamHandler;
@@ -252,8 +254,7 @@ public abstract class ArtifactFunctionalTestCase extends FunctionalTestCase {
   @Override
   protected ArtifactXmlBasedAstBuilder createArtifactAstBuilder(Set<String> configFiles) {
     return super.createArtifactAstBuilder(configFiles)
-        .setExtensionModels(extensionsManagerConfigurationBuilder.getExtensionModels())
-        .setClassLoader(applicationClassLoader);
+        .setExtensionModelProvider(new MuleExtensionModelProvider(extensionsManagerConfigurationBuilder.getExtensionModels()));
   }
 
   /**

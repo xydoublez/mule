@@ -4,7 +4,7 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.dsl.model.internal.config;
+package org.mule.runtime.core.internal.dsl.properties;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -18,10 +18,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import org.mule.runtime.api.lifecycle.InitialisationException;
-import org.mule.runtime.config.api.dsl.model.ResourceProvider;
-import org.mule.runtime.config.api.dsl.model.ResourceProviderAdapter;
-import org.mule.runtime.config.api.dsl.model.properties.DefaultConfigurationPropertiesProvider;
-import org.mule.runtime.config.internal.dsl.model.config.ConfigurationPropertiesException;
+import org.mule.runtime.core.internal.dsl.ClassLoaderResourceProvider;
+import org.mule.runtime.dsl.api.ResourceProvider;
 
 import io.qameta.allure.Description;
 import io.qameta.allure.Feature;
@@ -39,7 +37,7 @@ public class YamlConfigurationPropertiesComponentTestCase {
 
   @Before
   public void setUp() {
-    externalResourceProvider = new ResourceProviderAdapter(Thread.currentThread().getContextClassLoader());
+    externalResourceProvider = new ClassLoaderResourceProvider(Thread.currentThread().getContextClassLoader());
   }
 
   @Description("Validates the values obtained for the different types in the properties")

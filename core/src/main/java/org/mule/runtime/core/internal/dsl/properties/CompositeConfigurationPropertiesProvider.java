@@ -4,21 +4,21 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.internal.dsl.model.config;
+package org.mule.runtime.core.internal.dsl.properties;
 
 import static java.util.Optional.empty;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.disposeIfNeeded;
-import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
 import static org.slf4j.LoggerFactory.getLogger;
-
-import org.mule.runtime.api.lifecycle.Disposable;
-import org.mule.runtime.api.lifecycle.Initialisable;
-import org.mule.runtime.api.lifecycle.InitialisationException;
-import org.mule.runtime.config.api.dsl.model.properties.ConfigurationPropertiesProvider;
-import org.mule.runtime.config.api.dsl.model.properties.ConfigurationProperty;
 
 import java.util.List;
 import java.util.Optional;
+
+import org.mule.runtime.api.dsl.ConfigurationProperty;
+import org.mule.runtime.api.lifecycle.Disposable;
+import org.mule.runtime.api.lifecycle.Initialisable;
+import org.mule.runtime.api.lifecycle.InitialisationException;
+import org.mule.runtime.core.api.lifecycle.LifecycleUtils;
+import org.mule.runtime.dsl.api.properties.ConfigurationPropertiesProvider;
 
 import org.slf4j.Logger;
 
@@ -35,7 +35,7 @@ public class CompositeConfigurationPropertiesProvider implements ConfigurationPr
   @Override
   public void initialise() throws InitialisationException {
     for (ConfigurationPropertiesProvider configurationPropertiesProvider : configurationPropertiesProviders) {
-      initialiseIfNeeded(configurationPropertiesProvider);
+      LifecycleUtils.initialiseIfNeeded(configurationPropertiesProvider);
     }
   }
 

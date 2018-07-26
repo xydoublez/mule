@@ -18,12 +18,12 @@ import java.util.Set;
 import org.mule.runtime.api.artifact.ast.ArtifactAst;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.core.api.artifact.dsl.xml.ArtifactXmlBasedAstBuilder;
 import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.api.config.DefaultMuleConfiguration;
 import org.mule.runtime.core.api.context.DefaultMuleContextFactory;
 import org.mule.runtime.core.api.context.MuleContextBuilder;
 import org.mule.runtime.core.api.context.MuleContextFactory;
+import org.mule.runtime.core.api.dsl.xml.MuleArtifactXmlBasedAstBuilder;
 import org.mule.runtime.core.api.extension.RuntimeExtensionModelProvider;
 import org.mule.runtime.core.api.registry.SpiServiceRegistry;
 import org.mule.tck.junit4.MockExtensionManagerConfigurationBuilder;
@@ -91,10 +91,8 @@ public class ApplicationContextBuilder {
     for (RuntimeExtensionModelProvider runtimeExtensionModelProvider : runtimeExtensionModelProviders) {
       extensions.add(runtimeExtensionModelProvider.createExtensionModel());
     }
-    ArtifactAst artifactAst = ArtifactXmlBasedAstBuilder.builder()
-        .setClassLoader(Thread.currentThread().getContextClassLoader())
+    ArtifactAst artifactAst = MuleArtifactXmlBasedAstBuilder.builder(extensions)
         .setConfigFiles(ImmutableSet.copyOf(configResource))
-        .setExtensionModels(extensions)
         .build();
     return createConfigurationBuilder(artifactAst, domainContext);
   }

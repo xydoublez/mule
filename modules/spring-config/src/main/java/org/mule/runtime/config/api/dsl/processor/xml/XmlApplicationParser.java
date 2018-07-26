@@ -28,7 +28,7 @@ import org.mule.runtime.config.api.dsl.processor.ConfigLine;
 import org.mule.runtime.config.api.dsl.processor.ConfigLineProvider;
 import org.mule.runtime.config.api.dsl.xml.StaticXmlNamespaceInfo;
 import org.mule.runtime.config.api.dsl.xml.StaticXmlNamespaceInfoProvider;
-import org.mule.runtime.dsl.internal.parser.xml.XmlMetadataAnnotations;
+import org.mule.runtime.dsl.xml.internal.parser.XmlMetadataAnnotations;
 import org.mule.runtime.core.api.registry.ServiceRegistry;
 import org.mule.runtime.core.api.registry.SpiServiceRegistry;
 import org.mule.runtime.dsl.api.xml.XmlNamespaceInfo;

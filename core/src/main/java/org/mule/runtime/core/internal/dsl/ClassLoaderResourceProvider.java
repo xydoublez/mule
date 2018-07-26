@@ -4,7 +4,7 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.module.deployment.impl.internal.artifact;
+package org.mule.runtime.core.internal.dsl;
 
 import static org.mule.runtime.core.api.util.ClassUtils.getResourceOrFail;
 
@@ -15,9 +15,6 @@ import java.net.URL;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.dsl.api.ResourceProvider;
 
-/**
- * Resource provider implementation that delegates to an actual class loader.
- */
 public class ClassLoaderResourceProvider implements ResourceProvider {
 
   private ClassLoader classLoader;
@@ -35,5 +32,4 @@ public class ClassLoaderResourceProvider implements ResourceProvider {
       throw new MuleRuntimeException(e);
     }
   }
-
 }

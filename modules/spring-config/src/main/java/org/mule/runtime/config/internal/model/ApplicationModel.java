@@ -34,6 +34,7 @@ import static org.mule.runtime.config.internal.dsl.spring.ComponentModelHelper.r
 import static org.mule.runtime.core.api.el.ExpressionManager.DEFAULT_EXPRESSION_PREFIX;
 import static org.mule.runtime.core.api.exception.Errors.Identifiers.ANY_IDENTIFIER;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
+import static org.mule.runtime.core.api.util.ClassUtils.loadClass;
 import static org.mule.runtime.extension.api.util.NameUtils.hyphenize;
 import static org.mule.runtime.extension.api.util.NameUtils.pluralize;
 import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
@@ -56,13 +57,13 @@ import java.util.function.Consumer;
 
 import javax.xml.namespace.QName;
 
-import org.apache.commons.lang3.ClassUtils;
-
+import org.mule.runtime.api.artifact.ast.ArtifactAst;
 import org.mule.runtime.api.component.AbstractComponent;
 import org.mule.runtime.api.component.Component;
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.component.ConfigurationProperties;
 import org.mule.runtime.api.component.TypedComponentIdentifier;
+import org.mule.runtime.api.dsl.ConfigurationProperty;
 import org.mule.runtime.api.dsl.DslResolvingContext;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
@@ -70,39 +71,38 @@ import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.app.declaration.api.ArtifactDeclaration;
 import org.mule.runtime.app.declaration.api.ElementDeclaration;
 import org.mule.runtime.config.api.dsl.model.ComponentBuildingDefinitionRegistry;
-import org.mule.runtime.config.api.dsl.model.ConfigurationParameters;
 import org.mule.runtime.config.api.dsl.model.DslElementModelFactory;
-import org.mule.runtime.config.api.dsl.model.properties.ConfigurationPropertiesProvider;
-import org.mule.runtime.config.api.dsl.model.properties.ConfigurationPropertiesProviderFactory;
-import org.mule.runtime.config.api.dsl.model.properties.ConfigurationProperty;
+import org.mule.runtime.config.api.dsl.model.ResourceProviderAdapter;
 import org.mule.runtime.config.api.dsl.processor.ArtifactConfig;
 import org.mule.runtime.config.api.dsl.processor.ConfigFile;
 import org.mule.runtime.config.api.dsl.processor.ConfigLine;
-import org.mule.runtime.config.internal.ArtifactAstHelper;
 import org.mule.runtime.config.internal.dsl.model.ComponentLocationVisitor;
 import org.mule.runtime.config.internal.dsl.model.ComponentModelReader;
-import org.mule.runtime.config.internal.dsl.model.DefaultConfigurationParameters;
 import org.mule.runtime.config.internal.dsl.model.ExtensionModelHelper;
-import org.mule.runtime.config.internal.dsl.model.config.CompositeConfigurationPropertiesProvider;
-import org.mule.runtime.config.internal.dsl.model.config.ConfigurationPropertiesResolver;
-import org.mule.runtime.config.internal.dsl.model.config.DefaultConfigurationPropertiesResolver;
-import org.mule.runtime.config.internal.dsl.model.config.DefaultConfigurationProperty;
-import org.mule.runtime.config.internal.dsl.model.config.EnvironmentPropertiesConfigurationProvider;
-import org.mule.runtime.config.internal.dsl.model.config.FileConfigurationPropertiesProvider;
-import org.mule.runtime.config.internal.dsl.model.config.GlobalPropertyConfigurationPropertiesProvider;
-import org.mule.runtime.config.internal.dsl.model.config.MapConfigurationPropertiesProvider;
-import org.mule.runtime.config.internal.dsl.model.config.PropertiesResolverConfigurationProperties;
-import org.mule.runtime.config.internal.dsl.model.config.RuntimeConfigurationException;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.MacroExpansionModulesModel;
 import org.mule.runtime.config.internal.dsl.processor.ObjectTypeVisitor;
 import org.mule.runtime.config.internal.dsl.processor.xml.XmlCustomAttributeHandler;
 import org.mule.runtime.core.api.config.ConfigurationException;
+import org.mule.runtime.core.api.dsl.ArtifactAstHelper;
 import org.mule.runtime.core.api.extension.RuntimeExtensionModelProvider;
 import org.mule.runtime.core.api.registry.SpiServiceRegistry;
+import org.mule.runtime.core.internal.dsl.properties.CompositeConfigurationPropertiesProvider;
+import org.mule.runtime.core.internal.dsl.properties.ConfigurationPropertiesResolver;
+import org.mule.runtime.core.internal.dsl.properties.DefaultConfigurationParameters;
+import org.mule.runtime.core.internal.dsl.properties.DefaultConfigurationPropertiesResolver;
+import org.mule.runtime.core.internal.dsl.properties.DefaultConfigurationProperty;
+import org.mule.runtime.core.internal.dsl.properties.EnvironmentPropertiesConfigurationProvider;
+import org.mule.runtime.core.internal.dsl.properties.FileConfigurationPropertiesProvider;
+import org.mule.runtime.core.internal.dsl.properties.GlobalPropertyConfigurationPropertiesProvider;
+import org.mule.runtime.core.internal.dsl.properties.MapConfigurationPropertiesProvider;
+import org.mule.runtime.core.internal.dsl.properties.PropertiesResolverConfigurationProperties;
+import org.mule.runtime.core.internal.dsl.properties.RuntimeConfigurationException;
 import org.mule.runtime.dsl.api.ResourceProvider;
 import org.mule.runtime.dsl.api.component.ComponentBuildingDefinition;
 import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
 import org.mule.runtime.dsl.api.component.config.DefaultComponentLocation;
+import org.mule.runtime.dsl.api.properties.ConfigurationPropertiesProvider;
+import org.mule.runtime.dsl.api.properties.ConfigurationPropertiesProviderFactory;
 
 import org.slf4j.Logger;
 import org.w3c.dom.Node;
@@ -199,13 +199,6 @@ public class ApplicationModel {
   public static final ComponentIdentifier MODULE_OPERATION_CHAIN =
       builder().namespace(CORE_PREFIX).name(MODULE_OPERATION_CHAIN_ELEMENT).build();
 
-  public static final ComponentIdentifier CORE_NAME_PARAMETER_IDENTIFIER =
-      builder().namespace(CORE_PREFIX).name("name").build();
-
-  public static final ComponentIdentifier CORE_VALUE_PARAMETER_IDENTIFIER =
-      builder().namespace(CORE_PREFIX).name("value").build();
-
-
   // TODO MULE-13042 - remove this constants and their usages one this code gets migrated to use extension models.
   public static final String MUNIT_PREFIX = "munit";
   public static final ComponentIdentifier MUNIT_TEST_IDENTIFIER =
@@ -292,6 +285,7 @@ public class ApplicationModel {
           .build();
 
   private final Optional<ComponentBuildingDefinitionRegistry> componentBuildingDefinitionRegistry;
+  private final ArtifactAstHelper artifactAstHelper;
   private List<ComponentModel> muleComponentModels = new LinkedList<>();
   private PropertiesResolverConfigurationProperties configurationProperties;
   private ResourceProvider externalResourceProvider;
@@ -307,10 +301,11 @@ public class ApplicationModel {
    * @param artifactDeclaration an {@link ArtifactDeclaration}
    * @throws Exception when the application configuration has semantic errors.
    */
-  public ApplicationModel(ArtifactConfig artifactConfig, ArtifactDeclaration artifactDeclaration,
+  public ApplicationModel(ArtifactConfig artifactConfig, ArtifactDeclaration artifactDeclaration, ArtifactAst artifactAst,
                           ResourceProvider externalResourceProvider)
       throws Exception {
-    this(artifactConfig, artifactDeclaration, emptySet(), emptyMap(), empty(), of(new ComponentBuildingDefinitionRegistry()),
+    this(artifactConfig, artifactDeclaration, artifactAst, emptySet(), emptyMap(), empty(),
+         of(new ComponentBuildingDefinitionRegistry()),
          true, externalResourceProvider);
   }
 
@@ -333,6 +328,7 @@ public class ApplicationModel {
    */
   // TODO: MULE-9638 remove this optional
   public ApplicationModel(ArtifactConfig artifactConfig, ArtifactDeclaration artifactDeclaration,
+                          ArtifactAst artifactAst,
                           Set<ExtensionModel> extensionModels,
                           Map<String, String> deploymentProperties,
                           Optional<ConfigurationProperties> parentConfigurationProperties,
@@ -342,6 +338,7 @@ public class ApplicationModel {
 
     this.componentBuildingDefinitionRegistry = componentBuildingDefinitionRegistry;
     this.externalResourceProvider = externalResourceProvider;
+    this.artifactAstHelper = new ArtifactAstHelper(artifactAst);
     createConfigurationAttributeResolver(artifactConfig, parentConfigurationProperties, deploymentProperties);
     convertConfigFileToComponentModel(artifactConfig);
     convertArtifactDeclarationToComponentModel(extensionModels, artifactDeclaration);
@@ -522,10 +519,10 @@ public class ApplicationModel {
 
                 DefaultConfigurationParameters.Builder configurationParametersBuilder =
                     DefaultConfigurationParameters.builder();
-                ConfigurationParameters configurationParameters =
+                org.mule.runtime.dsl.api.properties.ConfigurationParameters configurationParameters =
                     resolveConfigurationParameters(configurationParametersBuilder, componentConfigLine, localResolver);
                 ConfigurationPropertiesProvider provider = providerFactoriesMap.get(componentIdentifier)
-                    .createProvider(configurationParameters, externalResourceProvider);
+                    .createProvider(configurationParameters, new ResourceProviderAdapter(externalResourceProvider));
                 if (provider instanceof Component) {
                   Component providerComponent = (Component) provider;
                   TypedComponentIdentifier typedComponentIdentifier = TypedComponentIdentifier.builder()
@@ -553,9 +550,9 @@ public class ApplicationModel {
     return configConfigurationPropertiesProviders;
   }
 
-  private ConfigurationParameters resolveConfigurationParameters(DefaultConfigurationParameters.Builder configurationParametersBuilder,
-                                                                 ConfigLine componentConfigLine,
-                                                                 ConfigurationPropertiesResolver localResolver) {
+  private org.mule.runtime.dsl.api.properties.ConfigurationParameters resolveConfigurationParameters(DefaultConfigurationParameters.Builder configurationParametersBuilder,
+                                                                                                     ConfigLine componentConfigLine,
+                                                                                                     ConfigurationPropertiesResolver localResolver) {
     componentConfigLine.getConfigAttributes().forEach((key, value) -> configurationParametersBuilder
         .withSimpleParameter(key, localResolver.resolveValue(value.getValue())));
     for (ConfigLine childConfigLine : componentConfigLine.getChildren()) {
@@ -588,7 +585,8 @@ public class ApplicationModel {
           String classParameter = componentModel.getParameters().get(CLASS_ATTRIBUTE);
           if (classParameter != null) {
             try {
-              componentModel.setType(ClassUtils.loadClass(classParameter, Thread.currentThread().getContextClassLoader()));
+              componentModel.setType(
+                                     loadClass(classParameter, Thread.currentThread().getContextClassLoader()));
             } catch (ClassNotFoundException e) {
               throw new RuntimeConfigurationException(createStaticMessage(e.getMessage()), e);
             }
@@ -1164,6 +1162,11 @@ public class ApplicationModel {
         });
       });
     }
+  }
+
+  // TODO review remove
+  public void close() {
+
   }
 }
 

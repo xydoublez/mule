@@ -4,7 +4,7 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.internal;
+package org.mule.runtime.core.api.dsl;
 
 import static java.lang.System.identityHashCode;
 import static java.util.Optional.empty;
@@ -20,6 +20,7 @@ import org.mule.runtime.api.artifact.ast.ComponentAst;
 import org.mule.runtime.api.artifact.ast.ConfigurationAst;
 import org.mule.runtime.api.artifact.ast.ConnectionProviderAst;
 import org.mule.runtime.api.artifact.ast.ConstructAst;
+import org.mule.runtime.api.artifact.ast.SimpleParameterValueAst;
 import org.mule.runtime.api.component.ComponentIdentifier;
 
 public class ArtifactAstHelper {
@@ -40,10 +41,16 @@ public class ArtifactAstHelper {
         .forEach(task);
   }
 
+  public void executeOnEverySimpleParameterAst(Consumer<SimpleParameterValueAst> task) {
+    this.artifactAst.getGlobalComponents().stream()
+        .forEach(componentAst -> componentAst.getNestedSimpleParameterValues().stream()
+            .forEach(task));
+  }
+
   public static void executeOnNestedProcessors(ComponentAst componentAst, Consumer<ComponentAstHolder> task) {
     if (componentAst instanceof ConstructAst) {
       ConstructAst constructAst = (ConstructAst) componentAst;
-      constructAst.getProcessorComponents().stream()
+      constructAst.getNestedComponentsAst().stream()
           .forEach(innerComponentAst -> {
             task.accept(new ComponentAstHolder(innerComponentAst));
             executeOnNestedProcessors(innerComponentAst, task);

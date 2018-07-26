@@ -4,7 +4,7 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.internal.dsl.model.config;
+package org.mule.runtime.core.internal.dsl.properties;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -13,12 +13,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 
-import org.mule.runtime.config.api.dsl.model.ResourceProvider;
-import org.mule.runtime.config.api.dsl.model.properties.ConfigurationPropertiesProvider;
-import org.mule.runtime.config.api.dsl.model.properties.ConfigurationProperty;
+import org.mule.runtime.api.dsl.ConfigurationProperty;
 import org.mule.runtime.core.api.exception.ResourceNotFoundException;
 import org.mule.runtime.core.api.util.IOUtils;
 import org.mule.runtime.dsl.api.ResourceProvider;
+import org.mule.runtime.dsl.api.properties.ConfigurationPropertiesProvider;
 
 /**
  * File based properties provider, using an external resource provider.

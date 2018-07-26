@@ -81,6 +81,122 @@
           "classSimpleName": "Builder",
           "elementKind": "interface",
           "justification": "This interface is not meant to be extended by the user"
+        },
+        {
+          "code": "java.method.parameterTypeChanged",
+          "old": "parameter void org.mule.runtime.core.api.config.builders.AbstractResourceConfigurationBuilder::<init>(===org.mule.runtime.core.api.config.ConfigResource[]===, java.util.Map<java.lang.String, java.lang.String>)",
+          "new": "parameter void org.mule.runtime.core.api.config.builders.AbstractResourceConfigurationBuilder::<init>(===org.mule.runtime.api.artifact.ast.ArtifactAst===, java.util.Map<java.lang.String, java.lang.String>)",
+          "oldType": "org.mule.runtime.core.api.config.ConfigResource[]",
+          "newType": "org.mule.runtime.api.artifact.ast.ArtifactAst",
+          "package": "org.mule.runtime.core.api.config.builders",
+          "classSimpleName": "AbstractResourceConfigurationBuilder",
+          "methodName": "<init>",
+          "parameterIndex": "0",
+          "elementKind": "parameter",
+          "justification": "Not meant to be consumed by usesr"
+        },
+        {
+          "code": "java.method.removed",
+          "old": "method void org.mule.runtime.core.api.config.builders.AbstractResourceConfigurationBuilder::<init>(java.lang.String, java.util.Map<java.lang.String, java.lang.String>) throws org.mule.runtime.core.api.config.ConfigurationException",
+          "package": "org.mule.runtime.core.api.config.builders",
+          "classSimpleName": "AbstractResourceConfigurationBuilder",
+          "methodName": "<init>",
+          "elementKind": "constructor",
+          "justification": "Not meant to be consumed by usesr"
+        },
+        {
+          "code": "java.method.removed",
+          "old": "method void org.mule.runtime.core.api.config.builders.AbstractResourceConfigurationBuilder::<init>(java.lang.String[], java.util.Map<java.lang.String, java.lang.String>) throws org.mule.runtime.core.api.config.ConfigurationException",
+          "package": "org.mule.runtime.core.api.config.builders",
+          "classSimpleName": "AbstractResourceConfigurationBuilder",
+          "methodName": "<init>",
+          "elementKind": "constructor",
+          "justification": "Not meant to be consumed by usesr"
+        },
+        {
+          "code": "java.method.parameterTypeChanged",
+          "old": "parameter org.mule.runtime.core.api.MuleContext org.mule.runtime.core.api.context.DefaultMuleContextFactory::createMuleContext(===java.lang.String===) throws org.mule.runtime.api.lifecycle.InitialisationException, org.mule.runtime.core.api.config.ConfigurationException",
+          "new": "parameter org.mule.runtime.core.api.MuleContext org.mule.runtime.core.api.context.DefaultMuleContextFactory::createMuleContext(===org.mule.runtime.core.api.config.ConfigurationBuilder[]===) throws org.mule.runtime.api.lifecycle.InitialisationException, org.mule.runtime.core.api.config.ConfigurationException",
+          "oldType": "java.lang.String",
+          "newType": "org.mule.runtime.core.api.config.ConfigurationBuilder[]",
+          "package": "org.mule.runtime.core.api.context",
+          "classSimpleName": "DefaultMuleContextFactory",
+          "methodName": "createMuleContext",
+          "parameterIndex": "0",
+          "elementKind": "parameter",
+          "justification": "Not meant to be consumed by usesr"
+        },
+        {
+          "code": "java.method.parameterTypeChanged",
+          "old": "parameter org.mule.runtime.core.api.MuleContext org.mule.runtime.core.api.context.DefaultMuleContextFactory::createMuleContext(===java.lang.String===, java.util.Map<java.lang.String, java.lang.Object>) throws org.mule.runtime.api.lifecycle.InitialisationException, org.mule.runtime.core.api.config.ConfigurationException",
+          "new": "parameter org.mule.runtime.core.api.MuleContext org.mule.runtime.core.api.context.DefaultMuleContextFactory::createMuleContext(===org.mule.runtime.core.api.config.ConfigurationBuilder===, java.util.Map<java.lang.String, java.lang.Object>) throws org.mule.runtime.api.lifecycle.InitialisationException, org.mule.runtime.core.api.config.ConfigurationException",
+          "oldType": "java.lang.String",
+          "newType": "org.mule.runtime.core.api.config.ConfigurationBuilder",
+          "package": "org.mule.runtime.core.api.context",
+          "classSimpleName": "DefaultMuleContextFactory",
+          "methodName": "createMuleContext",
+          "parameterIndex": "0",
+          "elementKind": "parameter",
+          "justification": "Not meant to be consumed by usesr"
+        },
+        {
+          "code": "java.method.numberOfParametersChanged",
+          "old": "method org.mule.runtime.core.api.MuleContext org.mule.runtime.core.api.context.DefaultMuleContextFactory::createMuleContext(org.mule.runtime.core.api.config.ConfigurationBuilder, java.util.Map<java.lang.String, java.lang.Object>) throws org.mule.runtime.api.lifecycle.InitialisationException, org.mule.runtime.core.api.config.ConfigurationException",
+          "new": "method org.mule.runtime.core.api.MuleContext org.mule.runtime.core.api.context.DefaultMuleContextFactory::createMuleContext(org.mule.runtime.core.api.config.ConfigurationBuilder, java.util.Map<java.lang.String, java.lang.Object>, org.mule.runtime.core.api.config.MuleConfiguration) throws org.mule.runtime.api.lifecycle.InitialisationException, org.mule.runtime.core.api.config.ConfigurationException",
+          "package": "org.mule.runtime.core.api.context",
+          "classSimpleName": "DefaultMuleContextFactory",
+          "methodName": "createMuleContext",
+          "elementKind": "method",
+          "justification": "Not meant to be consumed by usesr"
+        },
+        {
+          "code": "java.method.numberOfParametersChanged",
+          "old": "method org.mule.runtime.core.api.MuleContext org.mule.runtime.core.api.context.DefaultMuleContextFactory::createMuleContext(org.mule.runtime.core.api.config.ConfigurationBuilder, java.util.Map<java.lang.String, java.lang.Object>, org.mule.runtime.core.api.config.MuleConfiguration) throws org.mule.runtime.api.lifecycle.InitialisationException, org.mule.runtime.core.api.config.ConfigurationException",
+          "new": "method org.mule.runtime.core.api.MuleContext org.mule.runtime.core.api.context.DefaultMuleContextFactory::createMuleContext(org.mule.runtime.core.api.config.ConfigurationBuilder, org.mule.runtime.core.api.context.MuleContextBuilder) throws org.mule.runtime.api.lifecycle.InitialisationException, org.mule.runtime.core.api.config.ConfigurationException",
+          "package": "org.mule.runtime.core.api.context",
+          "classSimpleName": "DefaultMuleContextFactory",
+          "methodName": "createMuleContext",
+          "elementKind": "method",
+          "justification": "Not meant to be consumed by usesr"
+        },
+        {
+          "code": "java.method.parameterTypeChanged",
+          "old": "parameter org.mule.runtime.core.api.MuleContext org.mule.runtime.core.api.context.DefaultMuleContextFactory::createMuleContext(===org.mule.runtime.core.api.config.ConfigurationBuilder===, org.mule.runtime.core.api.context.MuleContextBuilder) throws org.mule.runtime.api.lifecycle.InitialisationException, org.mule.runtime.core.api.config.ConfigurationException",
+          "new": "parameter org.mule.runtime.core.api.MuleContext org.mule.runtime.core.api.context.DefaultMuleContextFactory::createMuleContext(===org.mule.runtime.api.artifact.ast.ArtifactAst===, java.util.Map<java.lang.String, java.lang.Object>) throws org.mule.runtime.api.lifecycle.InitialisationException, org.mule.runtime.core.api.config.ConfigurationException",
+          "oldType": "org.mule.runtime.core.api.config.ConfigurationBuilder",
+          "newType": "org.mule.runtime.api.artifact.ast.ArtifactAst",
+          "package": "org.mule.runtime.core.api.context",
+          "classSimpleName": "DefaultMuleContextFactory",
+          "methodName": "createMuleContext",
+          "parameterIndex": "0",
+          "elementKind": "parameter",
+          "justification": "Not meant to be consumed by usesr"
+        },
+        {
+          "code": "java.method.parameterTypeChanged",
+          "old": "parameter org.mule.runtime.core.api.MuleContext org.mule.runtime.core.api.context.DefaultMuleContextFactory::createMuleContext(org.mule.runtime.core.api.config.ConfigurationBuilder, ===org.mule.runtime.core.api.context.MuleContextBuilder===) throws org.mule.runtime.api.lifecycle.InitialisationException, org.mule.runtime.core.api.config.ConfigurationException",
+          "new": "parameter org.mule.runtime.core.api.MuleContext org.mule.runtime.core.api.context.DefaultMuleContextFactory::createMuleContext(org.mule.runtime.api.artifact.ast.ArtifactAst, ===java.util.Map<java.lang.String, java.lang.Object>===) throws org.mule.runtime.api.lifecycle.InitialisationException, org.mule.runtime.core.api.config.ConfigurationException",
+          "oldType": "org.mule.runtime.core.api.context.MuleContextBuilder",
+          "newType": "java.util.Map<java.lang.String, java.lang.Object>",
+          "package": "org.mule.runtime.core.api.context",
+          "classSimpleName": "DefaultMuleContextFactory",
+          "methodName": "createMuleContext",
+          "parameterIndex": "1",
+          "elementKind": "parameter",
+          "justification": "Not meant to be consumed by usesr"
+        },
+        {
+          "code": "java.method.parameterTypeChanged",
+          "old": "parameter org.mule.runtime.core.api.MuleContext org.mule.runtime.core.api.context.DefaultMuleContextFactory::createMuleContext(===org.mule.runtime.core.api.config.ConfigurationBuilder[]===) throws org.mule.runtime.api.lifecycle.InitialisationException, org.mule.runtime.core.api.config.ConfigurationException",
+          "new": "parameter org.mule.runtime.core.api.MuleContext org.mule.runtime.core.api.context.DefaultMuleContextFactory::createMuleContext(===org.mule.runtime.api.artifact.ast.ArtifactAst===) throws org.mule.runtime.api.lifecycle.InitialisationException, org.mule.runtime.core.api.config.ConfigurationException",
+          "oldType": "org.mule.runtime.core.api.config.ConfigurationBuilder[]",
+          "newType": "org.mule.runtime.api.artifact.ast.ArtifactAst",
+          "package": "org.mule.runtime.core.api.context",
+          "classSimpleName": "DefaultMuleContextFactory",
+          "methodName": "createMuleContext",
+          "parameterIndex": "0",
+          "elementKind": "parameter",
+          "justification": "Not meant to be consumed by usesr"
         }
       ]
     }

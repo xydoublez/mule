@@ -38,9 +38,8 @@ import org.mule.runtime.api.meta.model.util.IdempotentExtensionWalker;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.GlobalElementComponentModelModelProperty;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.OperationComponentModelModelProperty;
 import org.mule.runtime.config.internal.model.ComponentModel;
-import org.mule.runtime.config.internal.ArtifactAstHelper;
-import org.mule.runtime.config.internal.ComponentAstHolder;
-import org.mule.runtime.config.internal.dsl.model.extension.xml.property.GlobalElementComponentModelModelProperty;
+import org.mule.runtime.core.api.dsl.ArtifactAstHelper;
+import org.mule.runtime.core.api.dsl.ComponentAstHolder;
 import org.mule.runtime.core.api.el.ExpressionManager;
 import org.mule.runtime.extension.api.declaration.fluent.util.IdempotentDeclarationWalker;
 import org.mule.runtime.extension.api.dsl.syntax.resolver.DslSyntaxResolver;
@@ -102,10 +101,11 @@ public class StereotypesDiscoveryDeclarationEnricher implements DeclarationEnric
               .ifPresent(modelProperty -> {
                 ComponentModel bodyComponentModel = modelProperty.getBodyComponentModel();
 
-                declaration.getAllParameters().stream()
-                    .filter(parameterDeclaration -> parameterDeclaration.getType() instanceof StringType)
-                    .forEach(parameterDeclaration -> traverseProperty(bodyComponentModel.getInnerComponents(),
-                                                                      parameterDeclaration));
+                //TODO change to use AST
+                //declaration.getAllParameters().stream()
+                //    .filter(parameterDeclaration -> parameterDeclaration.getType() instanceof StringType)
+                //    .forEach(parameterDeclaration -> traverseProperty(bodyComponentModel.getInnerComponents(),
+                //                                                      parameterDeclaration));
               });
 
 

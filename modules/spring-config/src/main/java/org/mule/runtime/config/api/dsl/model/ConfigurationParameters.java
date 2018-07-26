@@ -6,17 +6,19 @@
  */
 package org.mule.runtime.config.api.dsl.model;
 
+import java.util.List;
+
 import org.mule.api.annotation.NoImplement;
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.util.Pair;
 
-import java.util.List;
-
 /**
  * Representation of the DSL configuration parameters of a component.
- * 
+ *
+ * @deprecated use {@link org.mule.runtime.dsl.api.properties.ConfigurationParameters} instead.
  * @since 4.1
  */
+@Deprecated
 @NoImplement
 public interface ConfigurationParameters {
 

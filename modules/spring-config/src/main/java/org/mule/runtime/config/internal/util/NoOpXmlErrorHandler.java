@@ -8,7 +8,7 @@ package org.mule.runtime.config.internal.util;
 
 import static java.util.Collections.emptyList;
 
-import org.mule.runtime.dsl.internal.parser.xml.XmlGathererErrorHandler;
+import org.mule.runtime.dsl.xml.internal.parser.XmlGathererErrorHandler;
 
 import java.util.List;
 

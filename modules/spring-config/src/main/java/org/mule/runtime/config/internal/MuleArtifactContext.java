@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -72,9 +73,9 @@ import org.mule.runtime.config.api.dsl.processor.SimpleConfigAttribute;
 import org.mule.runtime.config.api.dsl.processor.xml.XmlApplicationParser;
 import org.mule.runtime.config.internal.dsl.model.ConfigurationDependencyResolver;
 import org.mule.runtime.config.internal.dsl.model.SpringComponentModel;
-import org.mule.runtime.config.internal.dsl.model.config.DefaultConfigurationPropertiesResolver;
-import org.mule.runtime.config.internal.dsl.model.config.EnvironmentPropertiesConfigurationProvider;
-import org.mule.runtime.config.internal.dsl.model.config.RuntimeConfigurationException;
+import org.mule.runtime.core.internal.dsl.properties.DefaultConfigurationPropertiesResolver;
+import org.mule.runtime.core.internal.dsl.properties.EnvironmentPropertiesConfigurationProvider;
+import org.mule.runtime.core.internal.dsl.properties.RuntimeConfigurationException;
 import org.mule.runtime.config.internal.dsl.spring.BeanDefinitionFactory;
 import org.mule.runtime.config.internal.editors.MulePropertyEditorRegistrar;
 import org.mule.runtime.config.internal.model.ApplicationModel;
@@ -93,25 +94,11 @@ import org.mule.runtime.core.api.registry.SpiServiceRegistry;
 import org.mule.runtime.core.api.transformer.Converter;
 import org.mule.runtime.core.api.util.IOUtils;
 import org.mule.runtime.core.internal.context.MuleContextWithRegistry;
+import org.mule.runtime.core.internal.dsl.ClassLoaderResourceProvider;
 import org.mule.runtime.core.internal.registry.DefaultRegistry;
 import org.mule.runtime.core.internal.registry.MuleRegistryHelper;
 import org.mule.runtime.core.internal.registry.TransformerResolver;
 import org.mule.runtime.dsl.api.config.ConfigResource;
-import org.mule.runtime.dsl.internal.ClassLoaderResourceProvider;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,6 +147,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
   private final Optional<ConfigurationProperties> parentConfigurationProperties;
   private final DefaultRegistry serviceDiscoverer;
   private final ConfigurationDependencyResolver dependencyResolver;
+  private final ArtifactAst artifactAst;
   protected ApplicationModel applicationModel;
   protected MuleContextWithRegistry muleContext;
   private org.mule.runtime.dsl.api.config.ConfigResource[] artifactConfigResources;
@@ -219,7 +207,6 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
     this.artifactType = artifactType;
     this.artifactDeclaration = artifactDeclaration;
     this.parentConfigurationProperties = parentConfigurationProperties;
-    this.artifactConfigResources = (ConfigResource[]) artifactAst.getConfigResources();
     this.xmlConfigurationDocumentLoader =
         artifactAst.isDisableXmlValidations() ? noValidationDocumentLoader() : schemaValidatingDocumentLoader();
     this.serviceDiscoverer = new DefaultRegistry(muleContext);
@@ -281,7 +268,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
       ArtifactConfig artifactConfig = resolveArtifactConfig(extensions);
       org.mule.runtime.dsl.api.ResourceProvider externalResourceProvider =
           new ClassLoaderResourceProvider(muleContext.getExecutionClassLoader());
-      applicationModel = new ApplicationModel(artifactConfig, artifactDeclaration, extensions,
+      applicationModel = new ApplicationModel(artifactConfig, artifactDeclaration, artifactAst, extensions,
                                               artifactProperties, parentConfigurationProperties,
                                               of(componentBuildingDefinitionRegistry),
                                               true, uri -> externalResourceProvider.getResourceAsStream(uri));

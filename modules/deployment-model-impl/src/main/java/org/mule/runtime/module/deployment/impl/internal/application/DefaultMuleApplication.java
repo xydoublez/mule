@@ -28,15 +28,18 @@ import static org.mule.runtime.module.deployment.impl.internal.util.DeploymentPr
 
 import java.io.File;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.mule.runtime.api.artifact.Registry;
 import org.mule.runtime.api.artifact.ast.ArtifactAst;
+import org.mule.runtime.api.component.ConfigurationProperties;
 import org.mule.runtime.api.connectivity.ConnectivityTestingService;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Stoppable;
@@ -53,8 +56,13 @@ import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.context.notification.MuleContextListener;
 import org.mule.runtime.core.api.context.notification.MuleContextNotification;
 import org.mule.runtime.core.api.context.notification.MuleContextNotificationListener;
+import org.mule.runtime.core.api.dsl.ArtifactConfigurationPropertiesProviderFactory;
+import org.mule.runtime.core.api.dsl.MuleDslConfigurationPropertiesProcessor;
+import org.mule.runtime.core.api.dsl.xml.MuleArtifactXmlBasedAstBuilder;
 import org.mule.runtime.core.api.extension.ExtensionManager;
-import org.mule.runtime.core.api.artifact.dsl.xml.ArtifactXmlBasedAstBuilder;
+import org.mule.runtime.core.internal.dsl.ClassLoaderResourceProvider;
+import org.mule.runtime.core.internal.dsl.MuleExtensionModelProvider;
+import org.mule.runtime.core.internal.dsl.properties.ConfigurationPropertiesResolver;
 import org.mule.runtime.core.internal.lifecycle.phases.NotInLifecyclePhase;
 import org.mule.runtime.core.internal.logging.LogUtil;
 import org.mule.runtime.deployment.model.api.DeploymentInitException;
@@ -68,6 +76,7 @@ import org.mule.runtime.deployment.model.api.artifact.ArtifactContext;
 import org.mule.runtime.deployment.model.api.domain.Domain;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPlugin;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPluginDescriptor;
+import org.mule.runtime.dsl.api.ResourceProvider;
 import org.mule.runtime.module.artifact.api.classloader.ArtifactClassLoader;
 import org.mule.runtime.module.artifact.api.classloader.ClassLoaderRepository;
 import org.mule.runtime.module.artifact.api.classloader.DisposableClassLoader;
@@ -221,12 +230,27 @@ public class DefaultMuleApplication implements Application {
 
       Set<ExtensionModel> allExtensionModels = getExtensionModels(domain);
 
-      this.artifactAst = ArtifactXmlBasedAstBuilder.builder()
-          .setClassLoader(deploymentClassLoader.getClassLoader())
+      ResourceProvider resourceProvider = new ClassLoaderResourceProvider(deploymentClassLoader.getClassLoader());
+
+      this.artifactAst = MuleArtifactXmlBasedAstBuilder.builder(allExtensionModels)
+          .setResourceProvider(resourceProvider)
           .setConfigFiles(descriptor.getConfigResources())
-          .setExtensionModels(allExtensionModels)
+          .setExtensionModelProvider(new MuleExtensionModelProvider(allExtensionModels))
           .build();
 
+      Optional<Properties> deploymentPropertiesOptional = descriptor.getDeploymentProperties();
+      Map<String, String> deploymenyPropertiesAsMap = deploymentPropertiesOptional.map(properties -> {
+        Map<String, String> propertiesAsMap = new HashMap();
+        properties.forEach((key, value) -> propertiesAsMap.put(key.toString(), value.toString()));
+        return propertiesAsMap;
+      }).orElse(Collections.emptyMap());
+
+      ConfigurationPropertiesResolver configurationPropertiesResolver =
+          new ArtifactConfigurationPropertiesProviderFactory(resourceProvider)
+              .create(artifactAst, domain.getRegistry().lookupByType(ConfigurationProperties.class), deploymenyPropertiesAsMap);
+
+      new MuleDslConfigurationPropertiesProcessor(artifactAst, configurationPropertiesResolver, resourceProvider)
+          .resolveConfigurationPlaceholders();
 
       ArtifactContextBuilder artifactBuilder =
           newBuilder().setArtifactProperties(merge(descriptor.getAppProperties(), getProperties())).setArtifactType(APP)

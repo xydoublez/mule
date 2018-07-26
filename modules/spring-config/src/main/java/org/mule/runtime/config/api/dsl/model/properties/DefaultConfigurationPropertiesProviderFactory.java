@@ -32,10 +32,10 @@ public final class DefaultConfigurationPropertiesProviderFactory implements Conf
   @Override
   public ConfigurationPropertiesProvider createProvider(ConfigurationParameters parameters,
                                                         ResourceProvider externalResourceProvider) {
-
     String file = parameters.getStringParameter("file");
     Preconditions.checkArgument(file != null, "Required attribute 'file' of 'configuration-properties' not found");
     String encoding = parameters.getStringParameter("encoding");
     return new DefaultConfigurationPropertiesProvider(file, encoding, externalResourceProvider);
   }
+
 }

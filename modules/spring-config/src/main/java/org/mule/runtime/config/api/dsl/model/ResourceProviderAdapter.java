@@ -8,18 +8,16 @@ package org.mule.runtime.config.api.dsl.model;
 
 import java.io.InputStream;
 
-import org.mule.runtime.dsl.internal.ClassLoaderResourceProvider;
-
 public class ResourceProviderAdapter implements ResourceProvider {
 
-  private ClassLoaderResourceProvider classLoaderResourceProvider;
+  private org.mule.runtime.dsl.api.ResourceProvider delegate;
 
-  public ResourceProviderAdapter(ClassLoader classloader) {
-    this.classLoaderResourceProvider = new ClassLoaderResourceProvider(classloader);
+  public ResourceProviderAdapter(org.mule.runtime.dsl.api.ResourceProvider resourceProvider) {
+    this.delegate = resourceProvider;
   }
 
   @Override
   public InputStream getResourceAsStream(String uri) {
-    return classLoaderResourceProvider.getResourceAsStream(uri);
+    return delegate.getResourceAsStream(uri);
   }
 }

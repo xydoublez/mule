@@ -44,10 +44,10 @@ public class OptionalObjectsIgnoredTestCase extends AbstractMuleTestCase {
   public void before() throws Exception {
     muleContext =
         (MuleContextWithRegistry) new DefaultMuleContextFactory().createMuleContext(testServicesConfigurationBuilder,
-                                                                                      new MockExtensionManagerConfigurationBuilder(),
-                                                                                      new SpringXmlConfigurationBuilder(ArtifactAst
-                                                                                          .builder().build(),
-                                                                                                                        emptyMap()));
+                                                                                    new MockExtensionManagerConfigurationBuilder(),
+                                                                                    new SpringXmlConfigurationBuilder(ArtifactAst
+                                                                                        .builder().build(),
+                                                                                                                      emptyMap()));
     muleContext.start();
     muleContext.getRegistry().lookupByType(Calendar.class);
   }

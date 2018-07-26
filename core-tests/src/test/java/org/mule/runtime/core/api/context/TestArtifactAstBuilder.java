@@ -9,14 +9,17 @@ package org.mule.runtime.core.api.context;
 import java.util.Set;
 
 import org.mule.runtime.api.artifact.ast.ArtifactAst;
-import org.mule.runtime.core.api.artifact.dsl.xml.ArtifactXmlBasedAstBuilder;
+import org.mule.runtime.core.api.dsl.xml.MuleArtifactXmlBasedAstBuilder;
+import org.mule.runtime.core.internal.dsl.ClassLoaderResourceProvider;
+import org.mule.runtime.dsl.xml.api.ArtifactXmlBasedAstBuilder;
 
 public class TestArtifactAstBuilder {
 
-  private ArtifactXmlBasedAstBuilder artifactXmlBasedAstBuilder = ArtifactXmlBasedAstBuilder.builder();
+  private ArtifactXmlBasedAstBuilder artifactXmlBasedAstBuilder = MuleArtifactXmlBasedAstBuilder.builder();
 
   private TestArtifactAstBuilder() {
-    artifactXmlBasedAstBuilder.setClassLoader(Thread.currentThread().getContextClassLoader());
+    artifactXmlBasedAstBuilder
+        .setResourceProvider(new ClassLoaderResourceProvider(Thread.currentThread().getContextClassLoader()));
   }
 
   public static TestArtifactAstBuilder builder() {

@@ -12,7 +12,8 @@ import org.junit.Test;
 
 import org.mule.runtime.api.artifact.ast.ArtifactAst;
 import org.mule.runtime.config.internal.model.ApplicationModel;
-import org.mule.runtime.core.api.artifact.dsl.xml.ArtifactXmlBasedAstBuilder;
+import org.mule.runtime.core.api.dsl.xml.MuleArtifactXmlBasedAstBuilder;
+import org.mule.runtime.dsl.xml.api.ArtifactXmlBasedAstBuilder;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -137,9 +138,8 @@ public class ComponentModelReaderHelperTestCase {
   }
 
   private ApplicationModel getComponentModel(String applicationXml) throws Exception {
-    ArtifactAst artifactAst = ArtifactXmlBasedAstBuilder.builder()
+    ArtifactAst artifactAst = MuleArtifactXmlBasedAstBuilder.builder()
         .setConfigFiles(ImmutableSet.of(applicationXml))
-        .setClassLoader(Thread.currentThread().getContextClassLoader())
         .setDisableXmlValidations(true)
         .build();
     // ApplicationModel applicationModel =

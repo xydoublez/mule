@@ -18,7 +18,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.fail;
 import static org.mule.runtime.api.dsl.DslResolvingContext.getDefault;
 import static org.mule.runtime.core.api.exception.Errors.ComponentIdentifiers.Handleable.ANY;
-import static org.mule.runtime.core.internal.processor.chain.ModuleOperationMessageProcessorChainBuilder.MODULE_CONNECTION_GLOBAL_ELEMENT_NAME;
 import static org.mule.runtime.extension.api.ExtensionConstants.TARGET_PARAMETER_DESCRIPTION;
 import static org.mule.runtime.extension.api.ExtensionConstants.TARGET_PARAMETER_NAME;
 import static org.mule.runtime.extension.api.ExtensionConstants.TARGET_VALUE_PARAMETER_DESCRIPTION;
@@ -74,13 +73,7 @@ import org.mule.test.petstore.extension.PetStoreConnector;
 
 import com.google.common.collect.ImmutableSet;
 
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
 import io.qameta.allure.Description;
 
@@ -127,7 +120,7 @@ public class XmlExtensionLoaderTestCase extends AbstractMuleTestCase {
     Optional<OperationComponentModelModelProperty> modelProperty =
         operationModel.getModelProperty(OperationComponentModelModelProperty.class);
     assertThat(modelProperty.isPresent(), is(true));
-    assertThat(modelProperty.get().getBodyAst().getProcessorComponents().size(), is(1));
+    assertThat(modelProperty.get().getBodyAst().getNestedComponentsAst().size(), is(1));
 
     assertThat(operationModel.getOutput().getType().getMetadataFormat(), is(MetadataFormat.JAVA));
     assertThat(operationModel.getOutput().getType(), instanceOf(StringType.class));
@@ -167,7 +160,7 @@ public class XmlExtensionLoaderTestCase extends AbstractMuleTestCase {
     Optional<OperationComponentModelModelProperty> modelProperty =
         operationModel.get().getModelProperty(OperationComponentModelModelProperty.class);
     assertThat(modelProperty.isPresent(), is(true));
-    assertThat(modelProperty.get().getBodyAst().getProcessorComponents().size(), is(1));
+    assertThat(modelProperty.get().getBodyAst().getNestedComponentsAst().size(), is(1));
   }
 
   @Test
@@ -200,7 +193,7 @@ public class XmlExtensionLoaderTestCase extends AbstractMuleTestCase {
     Optional<OperationComponentModelModelProperty> modelProperty =
         operationModel.get().getModelProperty(OperationComponentModelModelProperty.class);
     assertThat(modelProperty.isPresent(), is(true));
-    assertThat(modelProperty.get().getBodyAst().getProcessorComponents().size(), is(1));
+    assertThat(modelProperty.get().getBodyAst().getNestedComponentsAst().size(), is(1));
   }
 
   @Test
@@ -233,7 +226,7 @@ public class XmlExtensionLoaderTestCase extends AbstractMuleTestCase {
     Optional<OperationComponentModelModelProperty> modelProperty =
         operation.getModelProperty(OperationComponentModelModelProperty.class);
     assertThat(modelProperty.isPresent(), is(true));
-    assertThat(modelProperty.get().getBodyAst().getProcessorComponents().size(), is(1));
+    assertThat(modelProperty.get().getBodyAst().getNestedComponentsAst().size(), is(1));
   }
 
   @Test
@@ -278,7 +271,7 @@ public class XmlExtensionLoaderTestCase extends AbstractMuleTestCase {
     Optional<OperationComponentModelModelProperty> modelProperty =
         operation.getModelProperty(OperationComponentModelModelProperty.class);
     assertThat(modelProperty.isPresent(), is(true));
-    assertThat(modelProperty.get().getBodyAst().getProcessorComponents().size(), is(1));
+    assertThat(modelProperty.get().getBodyAst().getNestedComponentsAst().size(), is(1));
   }
 
   @Test
@@ -385,7 +378,7 @@ public class XmlExtensionLoaderTestCase extends AbstractMuleTestCase {
     Optional<OperationComponentModelModelProperty> modelProperty =
         operationModel.getModelProperty(OperationComponentModelModelProperty.class);
     assertThat(modelProperty.isPresent(), is(true));
-    assertThat(modelProperty.get().getBodyAst().getProcessorComponents().size(), is(2));
+    assertThat(modelProperty.get().getBodyAst().getNestedComponentsAst().size(), is(2));
   }
 
   @Test
@@ -426,7 +419,7 @@ public class XmlExtensionLoaderTestCase extends AbstractMuleTestCase {
       Optional<OperationComponentModelModelProperty> modelProperty =
           operationModel.getModelProperty(OperationComponentModelModelProperty.class);
       assertThat(modelProperty.isPresent(), is(true));
-      assertThat(modelProperty.get().getBodyAst().getProcessorComponents().size(), is(1));
+      assertThat(modelProperty.get().getBodyAst().getNestedComponentsAst().size(), is(1));
 
       assertThat(operationModel.getOutput().getType().getMetadataFormat(), is(MetadataFormat.JAVA));
       assertThat(operationModel.getOutput().getType(), instanceOf(VoidType.class));
@@ -508,18 +501,18 @@ public class XmlExtensionLoaderTestCase extends AbstractMuleTestCase {
     assertThat(modelProperty.isPresent(), is(true));
 
 
-//TODO migrate assetions
-    //assertThat(modelProperty.get().getBodyConstructAst().getProcessorComponents().size(), is(2));
-//    assertThat(modelProperty.get().getBodyComponentModel().getInnerComponents().size(), is(2));
-//
-//    Optional<OperationModel> callFlowOp = configurationModel.getOperationModel("call-flow");
-//    assertThat(callFlowOp.isPresent(), is(true));
-//    assertThat(callFlowOp.get().getAllParameterModels().size(), is(3));
-//    ParameterModel referenceParameter = callFlowOp.get().getAllParameterModels().get(0);
-//    assertParameterWithStereotypes(referenceParameter, "reference", MuleStereotypes.FLOW);
-//    assertThat(callFlowOp.get().getAllParameterModels().get(1).getName(), is(TARGET_PARAMETER_NAME));
-//    assertThat(callFlowOp.get().getAllParameterModels().get(2).getName(), is(TARGET_VALUE_PARAMETER_NAME));
-    assertThat(modelProperty.get().getBodyAst().getProcessorComponents().size(), is(2));
+    //TODO migrate assetions
+    //assertThat(modelProperty.get().getBodyConstructAst().getNestedComponentsAst().size(), is(2));
+    //    assertThat(modelProperty.get().getBodyComponentModel().getInnerComponents().size(), is(2));
+    //
+    //    Optional<OperationModel> callFlowOp = configurationModel.getOperationModel("call-flow");
+    //    assertThat(callFlowOp.isPresent(), is(true));
+    //    assertThat(callFlowOp.get().getAllParameterModels().size(), is(3));
+    //    ParameterModel referenceParameter = callFlowOp.get().getAllParameterModels().get(0);
+    //    assertParameterWithStereotypes(referenceParameter, "reference", MuleStereotypes.FLOW);
+    //    assertThat(callFlowOp.get().getAllParameterModels().get(1).getName(), is(TARGET_PARAMETER_NAME));
+    //    assertThat(callFlowOp.get().getAllParameterModels().get(2).getName(), is(TARGET_VALUE_PARAMETER_NAME));
+    assertThat(modelProperty.get().getBodyAst().getNestedComponentsAst().size(), is(2));
   }
 
   private void assertParameterWithStereotypes(ParameterModel parameterModel, String propertyName,
@@ -549,10 +542,10 @@ public class XmlExtensionLoaderTestCase extends AbstractMuleTestCase {
 
   private void assertTestConnectionModuleOn(String modulePath) {
     ExtensionModel extensionModel = getExtensionModelFrom(modulePath);
-  // TODO add test with two stereotypes usages for the same property that belong to different types, and then fail during compile
-  // time
-  // TODO add a test with something that has stereotype and also a usage for simple strings, making it work
-  // TODO add a test with something that has stereotype in two different properties and choose the more restrictive one
+    // TODO add test with two stereotypes usages for the same property that belong to different types, and then fail during compile
+    // time
+    // TODO add a test with something that has stereotype and also a usage for simple strings, making it work
+    // TODO add a test with something that has stereotype in two different properties and choose the more restrictive one
 
     //TODO migrate assertions
     //assertThat(extensionModel.getName(), is("module-test-connection"));

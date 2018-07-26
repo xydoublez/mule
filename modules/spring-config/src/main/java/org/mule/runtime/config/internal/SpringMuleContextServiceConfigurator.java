@@ -85,7 +85,7 @@ import org.mule.runtime.api.notification.TransactionNotificationListener;
 import org.mule.runtime.api.scheduler.SchedulerContainerPoolsConfig;
 import org.mule.runtime.api.service.Service;
 import org.mule.runtime.config.internal.NotificationConfig.EnabledNotificationConfig;
-import org.mule.runtime.config.internal.dsl.model.config.DefaultComponentInitialStateManager;
+import org.mule.runtime.core.internal.dsl.properties.DefaultComponentInitialStateManager;
 import org.mule.runtime.config.internal.factories.ConstantFactoryBean;
 import org.mule.runtime.config.internal.factories.ExtensionManagerFactoryBean;
 import org.mule.runtime.config.internal.factories.MuleContextFactoryBean;

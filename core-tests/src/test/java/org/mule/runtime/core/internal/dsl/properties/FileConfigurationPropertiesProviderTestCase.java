@@ -4,7 +4,7 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.dsl.model.internal.config;
+package org.mule.runtime.core.internal.dsl.properties;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -20,10 +20,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import org.mule.runtime.config.internal.dsl.model.config.DefaultConfigurationPropertiesResolver;
-import org.mule.runtime.config.internal.dsl.model.config.FileConfigurationPropertiesProvider;
+import org.mule.runtime.core.internal.dsl.properties.DefaultConfigurationPropertiesResolver;
+import org.mule.runtime.core.internal.dsl.properties.FileConfigurationPropertiesProvider;
+import org.mule.runtime.core.internal.dsl.ClassLoaderResourceProvider;
 import org.mule.runtime.dsl.api.ResourceProvider;
-import org.mule.runtime.dsl.internal.ClassLoaderResourceProvider;
 import org.mule.tck.junit4.AbstractMuleTestCase;
 
 import io.qameta.allure.Feature;

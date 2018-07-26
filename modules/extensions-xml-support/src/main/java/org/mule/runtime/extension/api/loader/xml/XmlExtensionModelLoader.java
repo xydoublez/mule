@@ -86,7 +86,8 @@ public class XmlExtensionModelLoader extends ExtensionModelLoader {
     final Optional<String> declarationPath = context.getParameter(RESOURCE_DECLARATION);
     final List<String> resourcesPaths = context.<List<String>>getParameter(RESOURCES_PATHS).orElse(emptyList());
     //TODO revert the force to false.
-    final XmlExtensionLoaderDelegate delegate = new XmlExtensionLoaderDelegate(modulePath, validateXml, declarationPath, resourcesPaths);
+    final XmlExtensionLoaderDelegate delegate =
+        new XmlExtensionLoaderDelegate(modulePath, validateXml, declarationPath, resourcesPaths);
     delegate.declare(context);
   }
 

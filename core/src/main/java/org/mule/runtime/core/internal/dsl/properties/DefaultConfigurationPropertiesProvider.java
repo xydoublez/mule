@@ -4,20 +4,12 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.api.dsl.model.properties;
+package org.mule.runtime.core.internal.dsl.properties;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Optional.of;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
-import org.mule.api.annotation.NoExtend;
-import org.mule.runtime.api.component.AbstractComponent;
-import org.mule.runtime.api.component.location.ComponentLocation;
-import org.mule.runtime.api.lifecycle.Initialisable;
-import org.mule.runtime.api.lifecycle.InitialisationException;
-import org.mule.runtime.config.api.dsl.model.ResourceProvider;
-import org.mule.runtime.config.internal.dsl.model.config.DefaultConfigurationProperty;
-import org.mule.runtime.core.internal.dsl.properties.ConfigurationPropertiesException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +20,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
+import org.mule.api.annotation.NoExtend;
+import org.mule.runtime.api.component.AbstractComponent;
+import org.mule.runtime.api.component.location.ComponentLocation;
+import org.mule.runtime.dsl.api.properties.ConfigurationPropertiesProvider;
+import org.mule.runtime.api.dsl.ConfigurationProperty;
+import org.mule.runtime.api.lifecycle.Initialisable;
+import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.core.api.exception.ResourceNotFoundException;
+import org.mule.runtime.dsl.api.ResourceProvider;
 
 import org.yaml.snakeyaml.Yaml;
 

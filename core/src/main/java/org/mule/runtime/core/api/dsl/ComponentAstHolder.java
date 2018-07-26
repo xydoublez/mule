@@ -4,11 +4,11 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.internal;
+package org.mule.runtime.core.api.dsl;
 
 import static java.util.Optional.ofNullable;
-import static org.mule.runtime.config.internal.model.ApplicationModel.CORE_NAME_PARAMETER_IDENTIFIER;
-import static org.mule.runtime.config.internal.model.ApplicationModel.CORE_VALUE_PARAMETER_IDENTIFIER;
+import static org.mule.runtime.api.component.ComponentIdentifier.builder;
+import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,9 +21,16 @@ import org.mule.runtime.api.component.ComponentIdentifier;
 
 public class ComponentAstHolder {
 
+  private static final ComponentIdentifier CORE_NAME_PARAMETER_IDENTIFIER =
+      builder().namespace(CORE_PREFIX).name("name").build();
+
+  private static final ComponentIdentifier CORE_VALUE_PARAMETER_IDENTIFIER =
+      builder().namespace(CORE_PREFIX).name("value").build();
+
   private final ComponentAst componentAst;
   private boolean enabled = true;
   private Map<ComponentIdentifier, ParameterAstHolder> parameterAstHolderMap = new HashMap<>();
+
 
   public ComponentAstHolder(ComponentAst componentAst) {
     this.componentAst = componentAst;

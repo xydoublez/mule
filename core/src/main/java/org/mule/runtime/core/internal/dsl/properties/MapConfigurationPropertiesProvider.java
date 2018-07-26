@@ -4,13 +4,13 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.internal.dsl.model.config;
+package org.mule.runtime.core.internal.dsl.properties;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 
-import org.mule.runtime.config.api.dsl.model.properties.ConfigurationPropertiesProvider;
-import org.mule.runtime.config.api.dsl.model.properties.ConfigurationProperty;
+import org.mule.runtime.dsl.api.properties.ConfigurationPropertiesProvider;
+import org.mule.runtime.api.dsl.ConfigurationProperty;
 
 import java.util.Map;
 import java.util.Optional;

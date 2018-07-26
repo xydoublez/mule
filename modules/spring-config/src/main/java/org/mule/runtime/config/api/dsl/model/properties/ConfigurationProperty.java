@@ -12,8 +12,10 @@ import org.mule.runtime.api.component.Component;
 /**
  * Represents a configuration attribute.
  *
+ * @deprecated use {@link org.mule.runtime.dsl.api.properties.ConfigurationPropertiesProviderFactory} instead
  * @since 4.1
  */
+@Deprecated
 @NoImplement
 public interface ConfigurationProperty {
 

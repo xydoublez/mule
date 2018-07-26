@@ -4,17 +4,17 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.internal.dsl.model;
-
-import org.mule.runtime.api.component.ComponentIdentifier;
-import org.mule.runtime.api.util.MultiMap;
-import org.mule.runtime.api.util.Pair;
-import org.mule.runtime.config.api.dsl.model.ConfigurationParameters;
+package org.mule.runtime.core.internal.dsl.properties;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.mule.runtime.api.component.ComponentIdentifier;
+import org.mule.runtime.api.util.MultiMap;
+import org.mule.runtime.api.util.Pair;
+import org.mule.runtime.dsl.api.properties.ConfigurationParameters;
 
 public class DefaultConfigurationParameters implements ConfigurationParameters {
 

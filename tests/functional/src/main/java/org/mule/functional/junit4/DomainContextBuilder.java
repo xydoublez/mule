@@ -18,7 +18,7 @@ import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.api.config.DefaultMuleConfiguration;
 import org.mule.runtime.core.api.context.DefaultMuleContextFactory;
 import org.mule.runtime.core.api.context.MuleContextBuilder;
-import org.mule.runtime.core.api.artifact.dsl.xml.ArtifactXmlBasedAstBuilder;
+import org.mule.runtime.core.api.dsl.xml.MuleArtifactXmlBasedAstBuilder;
 import org.mule.tck.config.TestServicesConfigurationBuilder;
 import org.mule.tck.junit4.MockExtensionManagerConfigurationBuilder;
 
@@ -63,8 +63,7 @@ public class DomainContextBuilder {
   }
 
   protected ConfigurationBuilder getDomainBuilder(String[] configResources) throws Exception {
-    return createConfigurationBuilder(ArtifactXmlBasedAstBuilder.builder()
-        .setClassLoader(Thread.currentThread().getContextClassLoader())
+    return createConfigurationBuilder(MuleArtifactXmlBasedAstBuilder.builder()
         .setConfigFiles(ImmutableSet.copyOf(configResources)).build(), emptyMap(), DOMAIN);
   }
 }
