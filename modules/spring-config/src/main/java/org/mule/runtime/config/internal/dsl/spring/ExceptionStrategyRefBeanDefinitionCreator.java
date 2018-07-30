@@ -25,7 +25,7 @@ class ExceptionStrategyRefBeanDefinitionCreator extends BeanDefinitionCreator {
 
   @Override
   boolean handleRequest(CreateBeanDefinitionRequest createBeanDefinitionRequest) {
-    ComponentModel componentModel = createBeanDefinitionRequest.getComponentModel();
+    ComponentModel componentModel = createBeanDefinitionRequest.getComponentAst();
     if (componentModel.getIdentifier().equals(EXCEPTION_STRATEGY_REFERENCE_IDENTIFIER)) {
       componentModel.setType(FlowExceptionHandler.class);
       ((SpringComponentModel) componentModel)

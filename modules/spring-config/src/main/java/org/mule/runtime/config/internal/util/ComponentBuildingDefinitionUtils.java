@@ -9,7 +9,7 @@ package org.mule.runtime.config.internal.util;
 
 import static java.util.Collections.emptySet;
 import org.mule.runtime.api.meta.model.ExtensionModel;
-import org.mule.runtime.config.api.dsl.model.ComponentBuildingDefinitionRegistry;
+import org.mule.runtime.core.api.dsl.ComponentBuildingDefinitionRegistry;
 import org.mule.runtime.core.api.registry.ServiceRegistry;
 import org.mule.runtime.dsl.api.component.ComponentBuildingDefinition;
 import org.mule.runtime.dsl.api.component.ComponentBuildingDefinitionProvider;

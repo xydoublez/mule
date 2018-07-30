@@ -36,7 +36,7 @@ import org.mule.runtime.api.dsl.ConfigurationProperty;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.core.internal.dsl.properties.CompositeConfigurationPropertiesProvider;
-import org.mule.runtime.core.internal.dsl.properties.ConfigurationPropertiesResolver;
+import org.mule.runtime.core.api.dsl.properties.ConfigurationPropertiesResolver;
 import org.mule.runtime.core.internal.dsl.properties.DefaultConfigurationParameters;
 import org.mule.runtime.core.internal.dsl.properties.DefaultConfigurationPropertiesResolver;
 import org.mule.runtime.core.internal.dsl.properties.DefaultConfigurationProperty;
@@ -102,7 +102,7 @@ public class ArtifactConfigurationPropertiesProviderFactory {
     FileConfigurationPropertiesProvider externalPropertiesConfigurationProvider =
         new FileConfigurationPropertiesProvider(resourceProvider, "External files");
 
-    Optional<org.mule.runtime.core.internal.dsl.properties.ConfigurationPropertiesResolver> parentConfigurationPropertiesResolver =
+    Optional<ConfigurationPropertiesResolver> parentConfigurationPropertiesResolver =
         of(localResolver);
     if (parentConfigurationProperties.isPresent()) {
       parentConfigurationPropertiesResolver =
@@ -178,7 +178,7 @@ public class ArtifactConfigurationPropertiesProviderFactory {
   }
 
   private List<ConfigurationPropertiesProvider> getConfigurationPropertiesProvidersFromComponents(ArtifactAst artifactAst,
-                                                                                                  org.mule.runtime.core.internal.dsl.properties.ConfigurationPropertiesResolver localResolver) {
+                                                                                                  ConfigurationPropertiesResolver localResolver) {
 
     Map<ComponentIdentifier, ConfigurationPropertiesProviderFactory> providerFactoriesMap = new HashMap<>();
 
@@ -237,7 +237,7 @@ public class ArtifactConfigurationPropertiesProviderFactory {
 
   private ConfigurationParameters resolveConfigurationParameters(DefaultConfigurationParameters.Builder configurationParametersBuilder,
                                                                  ComponentAst componentAst,
-                                                                 org.mule.runtime.core.internal.dsl.properties.ConfigurationPropertiesResolver localResolver) {
+                                                                 ConfigurationPropertiesResolver localResolver) {
 
     // TODO review this code. Local resolver should be applied later on or define what to do if it fails. Also we are not setting
     // the ResolvedValueResult

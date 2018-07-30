@@ -6,8 +6,7 @@
  */
 package org.mule.runtime.config.internal.dsl.spring;
 
-import org.mule.runtime.config.internal.model.ComponentModel;
-import org.mule.runtime.config.internal.dsl.model.SpringComponentModel;
+import org.mule.runtime.api.artifact.ast.ComponentAst;
 import org.mule.runtime.dsl.api.component.ComponentBuildingDefinition;
 
 /**
@@ -18,32 +17,32 @@ import org.mule.runtime.dsl.api.component.ComponentBuildingDefinition;
  */
 public class CreateBeanDefinitionRequest {
 
-  private final ComponentModel parentComponentModel;
-  private final SpringComponentModel componentModel;
+  private final ComponentAst parentComponentAst;
+  private final ComponentAst componentAst;
   private final ComponentBuildingDefinition componentBuildingDefinition;
 
   /**
-   * @param parentComponentModel the parent component model. Some language construct processing depends on the context.
-   * @param componentModel the holder for the configuration attributes defined by the user
+   * @param parentComponentAst the parent component model. Some language construct processing depends on the context.
+   * @param componentAst the holder for the configuration attributes defined by the user
    * @param componentBuildingDefinition the definition to build the domain object that will represent the configuration on runtime
    */
-  public CreateBeanDefinitionRequest(ComponentModel parentComponentModel, SpringComponentModel componentModel,
+  public CreateBeanDefinitionRequest(ComponentAst parentComponentAst, ComponentAst componentAst,
                                      ComponentBuildingDefinition componentBuildingDefinition) {
-    this.parentComponentModel = parentComponentModel;
-    this.componentModel = componentModel;
+    this.parentComponentAst = parentComponentAst;
+    this.componentAst = componentAst;
     this.componentBuildingDefinition = componentBuildingDefinition;
   }
 
 
-  public SpringComponentModel getComponentModel() {
-    return componentModel;
+  public ComponentAst getComponentAst() {
+    return componentAst;
   }
 
   public ComponentBuildingDefinition getComponentBuildingDefinition() {
     return componentBuildingDefinition;
   }
 
-  public ComponentModel getParentComponentModel() {
-    return parentComponentModel;
+  public ComponentAst getParentComponentAst() {
+    return parentComponentAst;
   }
 }

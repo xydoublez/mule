@@ -35,7 +35,7 @@ class ObjectBeanDefinitionCreator extends BeanDefinitionCreator {
 
   @Override
   boolean handleRequest(CreateBeanDefinitionRequest createBeanDefinitionRequest) {
-    SpringComponentModel componentModel = createBeanDefinitionRequest.getComponentModel();
+    SpringComponentModel componentModel = createBeanDefinitionRequest.getComponentAst();
     if (!componentModel.getIdentifier().equals(buildFromStringRepresentation("mule:object"))) {
       return false;
     }

@@ -17,6 +17,7 @@ import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.util.Pair;
+import org.mule.runtime.core.api.dsl.properties.ConfigurationPropertiesResolver;
 import org.mule.runtime.core.api.lifecycle.LifecycleUtils;
 import org.mule.runtime.dsl.api.properties.ConfigurationPropertiesProvider;
 

@@ -122,7 +122,7 @@ import org.mule.runtime.core.api.extension.RuntimeExtensionModelProvider;
 import org.mule.runtime.core.api.registry.SpiServiceRegistry;
 import org.mule.runtime.core.api.util.UUID;
 import org.mule.runtime.core.internal.dsl.ClassLoaderResourceProvider;
-import org.mule.runtime.core.internal.dsl.properties.ConfigurationPropertiesResolver;
+import org.mule.runtime.core.api.dsl.properties.ConfigurationPropertiesResolver;
 import org.mule.runtime.core.internal.dsl.properties.DefaultConfigurationPropertiesResolver;
 import org.mule.runtime.core.internal.dsl.properties.DefaultConfigurationProperty;
 import org.mule.runtime.core.internal.dsl.properties.EnvironmentPropertiesConfigurationProvider;

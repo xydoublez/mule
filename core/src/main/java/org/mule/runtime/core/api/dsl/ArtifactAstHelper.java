@@ -44,6 +44,7 @@ public class ArtifactAstHelper {
   public void executeOnEverySimpleParameterAst(Consumer<SimpleParameterValueAst> task) {
     this.artifactAst.getGlobalComponents().stream()
         .forEach(componentAst -> componentAst.getNestedSimpleParameterValues().stream()
+            .map(pair -> pair.getSecond())
             .forEach(task));
   }
 

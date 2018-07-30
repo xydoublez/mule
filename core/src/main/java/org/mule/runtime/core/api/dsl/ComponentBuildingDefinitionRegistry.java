@@ -4,7 +4,7 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.config.api.dsl.model;
+package org.mule.runtime.core.api.dsl;
 
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.dsl.api.component.ComponentBuildingDefinition;
@@ -21,6 +21,7 @@ import java.util.Optional;
  *
  * @since 4.0
  */
+//TODO see if we can remove this class from the API
 public final class ComponentBuildingDefinitionRegistry {
 
   private Map<ComponentIdentifier, ComponentBuildingDefinition<?>> builderDefinitionsMap = new HashMap<>();

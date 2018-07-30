@@ -51,16 +51,18 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+import org.mule.runtime.api.artifact.ast.ArtifactAst;
+import org.mule.runtime.api.artifact.ast.ComponentAst;
+import org.mule.runtime.api.artifact.ast.SimpleParameterValueAst;
 import org.mule.runtime.api.component.Component;
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.exception.ErrorTypeRepository;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.message.ErrorType;
-import org.mule.runtime.config.api.dsl.model.ComponentBuildingDefinitionRegistry;
 import org.mule.runtime.config.api.dsl.processor.AbstractAttributeDefinitionVisitor;
 import org.mule.runtime.config.internal.SpringConfigurationComponentLocator;
-import org.mule.runtime.config.internal.dsl.model.SpringComponentModel;
 import org.mule.runtime.config.internal.model.ComponentModel;
+import org.mule.runtime.core.api.dsl.ComponentBuildingDefinitionRegistry;
 import org.mule.runtime.core.api.exception.ErrorTypeMatcher;
 import org.mule.runtime.core.api.exception.SingleErrorTypeMatcher;
 import org.mule.runtime.core.api.functional.Either;
@@ -108,6 +110,7 @@ public class BeanDefinitionFactory {
           .add(DOC_DESCRIPTION_IDENTIFIER)
           .add(GLOBAL_PROPERTY_IDENTIFIER)
           .build();
+  private final ArtifactAst artifactAst;
 
   private Set<ComponentIdentifier> ignoredMuleExtensionComponentIdentifiers;
 
@@ -130,12 +133,14 @@ public class BeanDefinitionFactory {
   private Set<String> syntheticErrorNamespaces = new HashSet<>();
 
   /**
+   * @param artifactAst
    * @param componentBuildingDefinitionRegistry a registry with all the known {@code ComponentBuildingDefinition}s by the
    *        artifact.
    * @param errorTypeRepository
    */
-  public BeanDefinitionFactory(ComponentBuildingDefinitionRegistry componentBuildingDefinitionRegistry,
+  public BeanDefinitionFactory(ArtifactAst artifactAst, ComponentBuildingDefinitionRegistry componentBuildingDefinitionRegistry,
                                ErrorTypeRepository errorTypeRepository) {
+    this.artifactAst = artifactAst;
     this.componentBuildingDefinitionRegistry = componentBuildingDefinitionRegistry;
     this.errorTypeRepository = errorTypeRepository;
     this.componentModelProcessor = buildComponentModelProcessorChainOfResponsability();
@@ -146,7 +151,7 @@ public class BeanDefinitionFactory {
 
   private void registerConfigurationPropertyProviders() {
     ServiceLoader<ConfigurationPropertiesProviderFactory> providerFactories =
-        java.util.ServiceLoader.load(ConfigurationPropertiesProviderFactory.class);
+        ServiceLoader.load(ConfigurationPropertiesProviderFactory.class);
     providerFactories.forEach(service -> {
       ignoredMuleExtensionComponentIdentifiers.add(service.getSupportedComponentIdentifier());
     });
@@ -166,90 +171,101 @@ public class BeanDefinitionFactory {
   /**
    * Creates a {@code BeanDefinition} by traversing the {@code ComponentModel} and its children.
    *
-   * @param parentComponentModel the parent component model since the bean definition to be created may depend on the context.
-   * @param componentModel the component model from which we want to create the bean definition.
+   * @param parentComponentAst the parent component model since the bean definition to be created may depend on the context.
+   * @param componentAst the component model from which we want to create the bean definition.
    * @param registry the bean registry since it may be required to get other bean definitions to create this one or to register
    *        the bean definition.
-   * @param componentModelPostProcessor a function to post process the bean definition.
+   * @param componentAstPostProcessor a function to post process the bean definition.
    * @param oldParsingMechanism a function to execute the old parsing mechanism if required by children {@code ComponentModel}s
    * @param componentLocator where the locations of any {@link Component}'s locations must be registered
    * @return the {@code BeanDefinition} of the component model.
    */
-  public BeanDefinition resolveComponentRecursively(SpringComponentModel parentComponentModel,
-                                                    SpringComponentModel componentModel, BeanDefinitionRegistry registry,
-                                                    BiConsumer<ComponentModel, BeanDefinitionRegistry> componentModelPostProcessor,
+  public BeanDefinition resolveComponentRecursively(ComponentAst parentComponentAst,
+                                                    ComponentAst componentAst, BeanDefinitionRegistry registry,
+                                                    BiConsumer<ComponentAst, BeanDefinitionRegistry> componentAstPostProcessor,
                                                     BiFunction<Element, BeanDefinition, Either<BeanDefinition, BeanReference>> oldParsingMechanism,
                                                     SpringConfigurationComponentLocator componentLocator) {
-    List<ComponentModel> innerComponents = componentModel.getInnerComponents();
+    List<ComponentAst> innerComponents = componentAst.getAllNestedComponentAst();
     if (!innerComponents.isEmpty()) {
-      for (ComponentModel innerComponent : innerComponents) {
-        resolveComponentRecursively(componentModel, (SpringComponentModel) innerComponent, registry,
-                                    componentModelPostProcessor, oldParsingMechanism, componentLocator);
+      for (ComponentAst innerComponentAst : innerComponents) {
+        resolveComponentRecursively(componentAst, innerComponentAst, registry,
+                                    componentAstPostProcessor, oldParsingMechanism, componentLocator);
       }
     }
-    return resolveComponent(parentComponentModel, componentModel, registry, componentModelPostProcessor, componentLocator);
+    return resolveComponent(parentComponentAst, componentAst, registry, componentAstPostProcessor, componentLocator);
   }
 
-  private BeanDefinition resolveComponent(ComponentModel parentComponentModel, SpringComponentModel componentModel,
+  private BeanDefinition resolveComponent(ComponentAst parentComponentAst, ComponentAst componentAst,
                                           BeanDefinitionRegistry registry,
-                                          BiConsumer<ComponentModel, BeanDefinitionRegistry> componentDefinitionModelProcessor,
+                                          BiConsumer<ComponentAst, BeanDefinitionRegistry> componentDefinitionModelProcessor,
                                           SpringConfigurationComponentLocator componentLocator) {
-    if (isComponentIgnored(componentModel.getIdentifier())) {
+    if (isComponentIgnored(componentAst.getComponentIdentifier())) {
       return null;
     }
 
-    if (!componentModel.isEnabled()) {
+    if (!componentAst.isEnabled()) {
       // Just register the location, for support of lazyInit scenarios
-      componentLocator.addComponentLocation(componentModel.getComponentLocation());
+      componentLocator.addComponentLocation(componentAst.getComponentLocation());
       return null;
     }
 
-    resolveComponentBeanDefinition(parentComponentModel, componentModel);
-    componentDefinitionModelProcessor.accept(componentModel, registry);
+    resolveComponentBeanDefinition(parentComponentAst, componentAst);
+    componentDefinitionModelProcessor.accept(componentAst, registry);
 
     // TODO MULE-9638: Once we migrate all core definitions we need to define a mechanism for customizing
     // how core constructs are processed.
-    processMuleConfiguration(componentModel, registry);
-    processMuleSecurityManager(componentModel, registry);
-    processRaiseError(componentModel);
+    processMuleConfiguration(componentAst, registry);
+    processMuleSecurityManager(componentAst, registry);
+    processRaiseError(componentAst);
 
-    componentBuildingDefinitionRegistry.getBuildingDefinition(componentModel.getIdentifier())
+    componentBuildingDefinitionRegistry.getBuildingDefinition(componentAst.getComponentIdentifier())
         .ifPresent(componentBuildingDefinition -> {
-          if ((componentModel.getType() != null) && Component.class.isAssignableFrom(componentModel.getType())) {
-            addAnnotation(ANNOTATION_NAME, componentModel.getIdentifier(), componentModel);
+          if ((componentAst.getType() != null) && Component.class.isAssignableFrom(componentAst.getType())) {
+            addAnnotation(ANNOTATION_NAME, componentAst.getComponentIdentifier(), componentAst);
             // We need to use a mutable map since spring will resolve the properties placeholder present in the value if needed
             // and it will be done by mutating the same map.
-            addAnnotation(ANNOTATION_PARAMETERS, new HashMap<>(componentModel.getParameters()), componentModel);
+            // TODO review this. Is not considering the parameter namespace.
+            HashMap<String, String> componentParameters = new HashMap<>();
+            componentAst.getParameters()
+                .forEach(parameterAst -> {
+                  if (parameterAst.getValue() instanceof SimpleParameterValueAst) {
+                    componentParameters.put(parameterAst.getParameterIdentifier().getIdentifier().getName(),
+                                            parameterAst.getValueAsSimpleParameterValueAst().getRawValue());
+                  }
+                });
+            addAnnotation(ANNOTATION_PARAMETERS, componentParameters, componentAst);
             // add any error mappings if present
-            List<ComponentModel> errorMappingComponents = componentModel.getInnerComponents().stream()
-                .filter(innerComponent -> ERROR_MAPPING_IDENTIFIER.equals(innerComponent.getIdentifier())).collect(toList());
-            if (!errorMappingComponents.isEmpty()) {
-              addAnnotation(ANNOTATION_ERROR_MAPPINGS, errorMappingComponents.stream().map(innerComponent -> {
-                Map<String, String> parameters = innerComponent.getParameters();
-                ComponentIdentifier source = buildFromStringRepresentation(parameters.get(SOURCE_TYPE));
+            List<ComponentAst> errorMappingComponentsAst = componentAst.getAllNestedComponentAst().stream()
+                .filter(innerComponent -> ERROR_MAPPING_IDENTIFIER.equals(innerComponent.getComponentIdentifier()))
+                .collect(toList());
+            if (!errorMappingComponentsAst.isEmpty()) {
+              addAnnotation(ANNOTATION_ERROR_MAPPINGS, errorMappingComponentsAst.stream().map(innerComponentAst -> {
+                ComponentIdentifier source = buildFromStringRepresentation(innerComponentAst
+                    .getSameNamespaceSimpleParameterValue(SOURCE_TYPE).orElse(null));
 
                 ErrorType errorType = errorTypeRepository
                     .lookupErrorType(source)
                     .orElseThrow(() -> new MuleRuntimeException(createStaticMessage("Could not find error '%s'.", source)));
 
                 ErrorTypeMatcher errorTypeMatcher = new SingleErrorTypeMatcher(errorType);
-                ErrorType targetValue = resolveErrorType(parameters.get(TARGET_TYPE));
+                ErrorType targetValue =
+                    resolveErrorType(innerComponentAst.getSameNamespaceSimpleParameterValue(TARGET_TYPE).orElse(null));
                 return new ErrorMapping(errorTypeMatcher, targetValue);
-              }).collect(toList()), componentModel);
+              }).collect(toList()), componentAst);
             }
-            componentLocator.addComponentLocation(componentModel.getComponentLocation());
+            componentLocator.addComponentLocation(componentAst.getComponentLocation());
           }
         });
 
-    addAnnotation(LOCATION_KEY, componentModel.getComponentLocation(), componentModel);
+    addAnnotation(LOCATION_KEY, componentAst.getComponentLocation(), componentAst);
 
-    BeanDefinition beanDefinition = componentModel.getBeanDefinition();
+    BeanDefinition beanDefinition = (BeanDefinition) componentAst.getBeanDefinition();
     return beanDefinition;
   }
 
-  private void processRaiseError(ComponentModel componentModel) {
-    if (componentModel.getIdentifier().equals(RAISE_ERROR_IDENTIFIER)) {
-      resolveErrorType(componentModel.getParameters().get("type"));
+  private void processRaiseError(ComponentAst componentAst) {
+    if (componentAst.getComponentIdentifier().equals(RAISE_ERROR_IDENTIFIER)) {
+      resolveErrorType(componentAst.getSameNamespaceSimpleParameterValue("type").orElse(null));
     }
   }
 
@@ -284,20 +300,22 @@ public class BeanDefinitionFactory {
     return errorTypeRepository.addErrorType(errorIdentifier, errorTypeRepository.getAnyErrorType());
   }
 
-  private void processMuleConfiguration(ComponentModel componentModel, BeanDefinitionRegistry registry) {
-    if (componentModel.getIdentifier().equals(CONFIGURATION_IDENTIFIER)) {
+  private void processMuleConfiguration(ComponentAst componentAst, BeanDefinitionRegistry registry) {
+    if (componentAst.getComponentIdentifier().equals(CONFIGURATION_IDENTIFIER)) {
       AtomicReference<BeanDefinition> defaultRetryPolicyTemplate = new AtomicReference<>();
       AtomicReference<BeanDefinition> expressionLanguage = new AtomicReference<>();
 
-      componentModel.getInnerComponents().stream().forEach(childComponentModel -> {
-        if (areMatchingTypes(RetryPolicyTemplate.class, childComponentModel.getType())) {
-          defaultRetryPolicyTemplate.set(((SpringComponentModel) childComponentModel).getBeanDefinition());
+      componentAst.getAllNestedComponentAst().stream().forEach(childComponentAst -> {
+        if (areMatchingTypes(RetryPolicyTemplate.class, childComponentAst.getType())) {
+          defaultRetryPolicyTemplate.set((BeanDefinition) childComponentAst.getBeanDefinition());
         }
-        if (areMatchingTypes(MVELExpressionLanguage.class, childComponentModel.getType())) {
-          expressionLanguage.set(((SpringComponentModel) childComponentModel).getBeanDefinition());
+        if (areMatchingTypes(MVELExpressionLanguage.class, childComponentAst.getType())) {
+          expressionLanguage.set((BeanDefinition) childComponentAst.getBeanDefinition());
         }
       });
-      String defaultObjectSerializer = componentModel.getParameters().get("defaultObjectSerializer-ref");
+
+      String defaultObjectSerializer =
+          componentAst.getSameNamespaceSimpleParameterValue("defaultObjectSerializer-ref").orElse(null);
       if (defaultObjectSerializer != null) {
         if (defaultObjectSerializer != DEFAULT_OBJECT_SERIALIZER_NAME) {
           registry.removeBeanDefinition(DEFAULT_OBJECT_SERIALIZER_NAME);
@@ -313,55 +331,58 @@ public class BeanDefinitionFactory {
     }
   }
 
-  private void processMuleSecurityManager(ComponentModel componentModel, BeanDefinitionRegistry registry) {
-    if (componentModel.getIdentifier().equals(SECURITY_MANAGER_IDENTIFIER)) {
-      componentModel.getInnerComponents().stream().forEach(childComponentModel -> {
-        String identifier = childComponentModel.getIdentifier().getName();
+  private void processMuleSecurityManager(ComponentAst componentAst, BeanDefinitionRegistry registry) {
+    if (componentAst.getComponentIdentifier().equals(SECURITY_MANAGER_IDENTIFIER)) {
+      componentAst.getAllNestedComponentAst().stream().forEach(childComponentModel -> {
+        String identifier = childComponentModel.getComponentIdentifier().getName();
         if (identifier.equals("password-encryption-strategy")
             || identifier.equals("secret-key-encryption-strategy")) {
-          registry.registerBeanDefinition(childComponentModel.getNameAttribute(),
-                                          ((SpringComponentModel) childComponentModel).getBeanDefinition());
+          registry.registerBeanDefinition(childComponentModel.getNameParameterValueOrNull(),
+                                          (BeanDefinition) childComponentModel.getBeanDefinition());
         }
       });
     }
   }
 
 
-  private void resolveComponentBeanDefinition(ComponentModel parentComponentModel, SpringComponentModel componentModel) {
+  private void resolveComponentBeanDefinition(ComponentAst parentComponentAst, ComponentAst componentAst) {
     Optional<ComponentBuildingDefinition<?>> buildingDefinitionOptional =
-        componentBuildingDefinitionRegistry.getBuildingDefinition(componentModel.getIdentifier());
-    if (buildingDefinitionOptional.isPresent() || customBuildersComponentIdentifiers.contains(componentModel.getIdentifier())) {
-      this.componentModelProcessor.processRequest(new CreateBeanDefinitionRequest(parentComponentModel, componentModel,
+        componentBuildingDefinitionRegistry.getBuildingDefinition(componentAst.getComponentIdentifier());
+    if (buildingDefinitionOptional.isPresent()
+        || customBuildersComponentIdentifiers.contains(componentAst.getComponentIdentifier())) {
+      this.componentModelProcessor.processRequest(new CreateBeanDefinitionRequest(parentComponentAst, componentAst,
                                                                                   buildingDefinitionOptional.orElse(null)));
     } else {
-      boolean isWrapperComponent = isWrapperComponent(componentModel.getIdentifier(), of(parentComponentModel.getIdentifier()));
+      boolean isWrapperComponent =
+          isWrapperComponent(componentAst.getComponentIdentifier(), of(parentComponentAst.getComponentIdentifier()));
       if (!isWrapperComponent) {
         throw new MuleRuntimeException(createStaticMessage(format("No component building definition for element %s. It may be that there's a dependency "
-            + "missing to the project that handle that extension.", componentModel.getIdentifier())));
+            + "missing to the project that handle that extension.", componentAst.getComponentIdentifier())));
       }
-      processComponentWrapper(componentModel);
+      processComponentWrapper(componentAst);
     }
   }
 
-  private void processComponentWrapper(SpringComponentModel componentModel) {
+  private void processComponentWrapper(ComponentAst componentAst) {
     ComponentBuildingDefinition<?> parentBuildingDefinition =
-        componentBuildingDefinitionRegistry.getBuildingDefinition(componentModel.getParent().getIdentifier()).get();
+        componentBuildingDefinitionRegistry
+            .getBuildingDefinition(artifactAst.getParentComponentAst(componentAst).get().getComponentIdentifier()).get();
     Map<String, WrapperElementType> wrapperIdentifierAndTypeMap = getWrapperIdentifierAndTypeMap(parentBuildingDefinition);
-    WrapperElementType wrapperElementType = wrapperIdentifierAndTypeMap.get(componentModel.getIdentifier().getName());
+    WrapperElementType wrapperElementType = wrapperIdentifierAndTypeMap.get(componentAst.getComponentIdentifier().getName());
     if (wrapperElementType.equals(SINGLE)) {
-      if (componentModel.getInnerComponents().isEmpty()) {
+      if (componentAst.getAllNestedComponentAst().isEmpty()) {
         String location =
-            componentModel.getComponentLocation() != null ? componentModel.getComponentLocation().getLocation() : "";
+            componentAst.getComponentLocation() != null ? componentAst.getComponentLocation().getLocation() : "";
         throw new IllegalStateException(format("Element [%s] located at [%s] does not have any child element declared, but one is required.",
-                                               componentModel.getIdentifier(), location));
+                                               componentAst.getComponentIdentifier(), location));
       }
-      final SpringComponentModel firstComponentModel = (SpringComponentModel) componentModel.getInnerComponents().get(0);
-      componentModel.setType(firstComponentModel.getType());
-      componentModel.setBeanDefinition(firstComponentModel.getBeanDefinition());
-      componentModel.setBeanReference(firstComponentModel.getBeanReference());
+      final ComponentAst firstComponentAst = componentAst.getAllNestedComponentAst().get(0);
+      componentAst.setType(firstComponentAst.getType());
+      componentAst.setBeanDefinition(firstComponentAst.getBeanDefinition());
+      componentAst.setBeanReference(firstComponentAst.getBeanReference());
     } else {
       throw new IllegalStateException(format("Element %s does not have a building definition and it should since it's of type %s",
-                                             componentModel.getIdentifier(), wrapperElementType));
+                                             componentAst.getComponentIdentifier(), wrapperElementType));
     }
   }
 

@@ -52,49 +52,58 @@ public class SpringXmlConfigurationBuilder extends AbstractResourceConfiguration
   private ApplicationContext parentContext;
   private MuleArtifactContext muleArtifactContext;
   private ArtifactType artifactType;
+  private ConfigurationProperties configurationProperties;
 
   public SpringXmlConfigurationBuilder(ArtifactAst artifactAst, Map<String, String> artifactProperties,
+                                       ConfigurationProperties configurationProperties,
                                        ArtifactType artifactType, boolean enableLazyInit)
       throws ConfigurationException {
-    super(artifactAst, artifactProperties);
+    super(artifactAst, artifactProperties, configurationProperties);
     this.artifactType = artifactType;
     this.enableLazyInit = enableLazyInit;
   }
 
-  public SpringXmlConfigurationBuilder(ArtifactAst artifactAst, Map<String, String> artifactProperties, ArtifactType artifactType)
+  public SpringXmlConfigurationBuilder(ArtifactAst artifactAst, Map<String, String> artifactProperties,
+                                       ConfigurationProperties configurationProperties, ArtifactType artifactType)
       throws ConfigurationException {
-    this(artifactAst, artifactProperties, artifactType, false);
+    this(artifactAst, artifactProperties, configurationProperties, artifactType, false);
   }
 
-  public SpringXmlConfigurationBuilder(ArtifactAst artifactAst) throws ConfigurationException {
-    this(artifactAst, emptyMap(), APP);
+  public SpringXmlConfigurationBuilder(ArtifactAst artifactAst, ConfigurationProperties configurationProperties)
+      throws ConfigurationException {
+    this(artifactAst, emptyMap(), configurationProperties, APP);
   }
 
-  public SpringXmlConfigurationBuilder(ArtifactAst artifactAst, Map<String, String> artifactProperties)
+  public SpringXmlConfigurationBuilder(ArtifactAst artifactAst, Map<String, String> artifactProperties,
+                                       ConfigurationProperties configurationProperties)
       throws ConfigurationException {
-    this(artifactAst, artifactProperties, APP, false);
+    this(artifactAst, artifactProperties, configurationProperties, APP, false);
   }
 
-  public SpringXmlConfigurationBuilder(ArtifactAst artifactAst, boolean enableLazyInit)
+  public SpringXmlConfigurationBuilder(ArtifactAst artifactAst, ConfigurationProperties configurationProperties,
+                                       boolean enableLazyInit)
       throws ConfigurationException {
-    super(artifactAst, emptyMap());
+    super(artifactAst, emptyMap(), configurationProperties);
     this.artifactType = APP;
     this.enableLazyInit = enableLazyInit;
   }
 
   public SpringXmlConfigurationBuilder(ArtifactAst artifactAst, ArtifactDeclaration artifactDeclaration,
-                                       Map<String, String> artifactProperties, ArtifactType artifactType,
+                                       Map<String, String> artifactProperties, ConfigurationProperties configurationProperties,
+                                       ArtifactType artifactType,
                                        boolean enableLazyInitialisation)
       throws ConfigurationException {
-    this(artifactAst, artifactProperties, artifactType, enableLazyInitialisation);
+    this(artifactAst, artifactProperties, configurationProperties, artifactType, enableLazyInitialisation);
     this.artifactDeclaration = artifactDeclaration;
+    this.configurationProperties = configurationProperties;
   }
 
   public static ConfigurationBuilder createConfigurationBuilder(ArtifactAst artifactAst, MuleContext domainContext,
+                                                                ConfigurationProperties configurationProperties,
                                                                 boolean enableLazyInitialisation)
       throws ConfigurationException {
     final SpringXmlConfigurationBuilder springXmlConfigurationBuilder =
-        new SpringXmlConfigurationBuilder(artifactAst, emptyMap(), APP, enableLazyInitialisation);
+        new SpringXmlConfigurationBuilder(artifactAst, emptyMap(), configurationProperties, APP, enableLazyInitialisation);
     if (domainContext != null) {
       springXmlConfigurationBuilder.setParentContext(domainContext);
     }
@@ -145,12 +154,14 @@ public class SpringXmlConfigurationBuilder extends AbstractResourceConfiguration
                                          getArtifactProperties(), artifactType,
                                          resolveContextArtifactPluginClassLoaders(),
                                          resolveComponentModelInitializer(),
+                                         configurationProperties,
                                          resolveParentConfigurationProperties());
     }
 
     return new MuleArtifactContext(muleContext, artifactDeclaration, artifactAst,
                                    optionalObjectsController,
                                    getArtifactProperties(), artifactType, resolveContextArtifactPluginClassLoaders(),
+                                   configurationProperties,
                                    resolveParentConfigurationProperties());
   }
 

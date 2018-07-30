@@ -41,9 +41,8 @@ import org.mule.runtime.api.metadata.MetadataService;
 import org.mule.runtime.api.util.Reference;
 import org.mule.runtime.api.value.ValueProviderService;
 import org.mule.runtime.app.declaration.api.ArtifactDeclaration;
-import org.mule.runtime.config.internal.dsl.model.ConfigurationDependencyResolver;
-import org.mule.runtime.config.internal.dsl.model.MinimalApplicationModelGenerator;
-import org.mule.runtime.config.internal.model.ApplicationModel;
+import org.mule.runtime.config.internal.dsl.model.ArtifactAstDependencyResolver;
+import org.mule.runtime.config.internal.dsl.model.MinimalArtifactAstGenerator;
 import org.mule.runtime.config.internal.model.ComponentModel;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.MuleDeploymentProperties;
@@ -94,12 +93,14 @@ public class LazyMuleArtifactContext extends MuleArtifactContext
                                  Map<String, String> artifactProperties, ArtifactType artifactType,
                                  List<ClassLoader> pluginsClassLoaders,
                                  Optional<ComponentModelInitializer> parentComponentModelInitializer,
+                                 ConfigurationProperties configurationProperties,
                                  Optional<ConfigurationProperties> parentConfigurationProperties)
       throws BeansException {
     super(muleContext, artifactDeclaration, artifactAst, optionalObjectsController,
-          extendArtifactProperties(artifactProperties), artifactType, pluginsClassLoaders, parentConfigurationProperties);
+          extendArtifactProperties(artifactProperties), artifactType, pluginsClassLoaders, configurationProperties,
+          parentConfigurationProperties);
     this.componentLocator = new SpringConfigurationComponentLocator();
-    this.applicationModel.executeOnEveryMuleComponentTree(componentModel -> componentModel.setEnabled(false));
+    artifactAst.getAllNestedComponentsAst().forEach(componentAst -> componentAst.setEnabled(true));
 
     this.parentComponentModelInitializer = parentComponentModelInitializer;
 
@@ -222,24 +223,26 @@ public class LazyMuleArtifactContext extends MuleArtifactContext
 
     Reference<List<String>> createdComponents = new Reference<>();
     withContextClassLoader(muleContext.getExecutionClassLoader(), () -> {
-      applicationModel.executeOnEveryMuleComponentTree(componentModel -> componentModel.setEnabled(false));
+      artifactAst.getAllNestedComponentsAst().forEach(componentAst -> componentAst.setEnabled(true));
 
-      ConfigurationDependencyResolver dependencyResolver = new ConfigurationDependencyResolver(this.applicationModel,
-                                                                                               componentBuildingDefinitionRegistry);
-      MinimalApplicationModelGenerator minimalApplicationModelGenerator =
-          new MinimalApplicationModelGenerator(dependencyResolver);
-      Reference<ApplicationModel> minimalApplicationModel = new Reference<>();
+      ArtifactAstDependencyResolver dependencyResolver = new ArtifactAstDependencyResolver(this.artifactAst,
+                                                                                           componentBuildingDefinitionRegistry);
+      MinimalArtifactAstGenerator minimalArtifactAstGenerator =
+          new MinimalArtifactAstGenerator(dependencyResolver);
+      Reference<ArtifactAst> minimalArtifactAst = new Reference<>();
       predicateOptional
-          .ifPresent(predicate -> minimalApplicationModel.set(minimalApplicationModelGenerator.getMinimalModel(predicate)));
+          .ifPresent(predicate -> minimalArtifactAst.set(minimalArtifactAstGenerator.getMinimalArtifactAst(predicate)));
       locationOptional
-          .ifPresent(location -> minimalApplicationModel.set(minimalApplicationModelGenerator.getMinimalModel(location)));
+          .ifPresent(location -> minimalArtifactAst.set(minimalArtifactAstGenerator.getMinimalArtifactAst(location)));
 
       // First unregister any already initialized/started component
       unregisterBeans(alreadyCreatedApplicationComponents);
       if (alreadyCreatedApplicationComponents.contains(OBJECT_SECURITY_MANAGER)) {
         try {
-          // Has to be created before as the factory for SecurityManager (MuleSecurityManagerConfigurator) is expecting to retrieve
-          // it (through MuleContext and registry) while creating it. See org.mule.runtime.core.api.security.MuleSecurityManagerConfigurator.doGetObject
+          // Has to be created before as the factory for SecurityManager (MuleSecurityManagerConfigurator) is expecting to
+          // retrieve
+          // it (through MuleContext and registry) while creating it. See
+          // org.mule.runtime.core.api.security.MuleSecurityManagerConfigurator.doGetObject
           muleContext.getRegistry().registerObject(OBJECT_SECURITY_MANAGER, new DefaultMuleSecurityManager());
         } catch (RegistrationException e) {
           throw new IllegalStateException("Couldn't create a new instance of Mule security manager", e);
@@ -267,7 +270,7 @@ public class LazyMuleArtifactContext extends MuleArtifactContext
       }
 
       List<String> applicationComponents =
-          createApplicationComponents((DefaultListableBeanFactory) this.getBeanFactory(), minimalApplicationModel.get(), false);
+          createApplicationComponents((DefaultListableBeanFactory) this.getBeanFactory(), minimalArtifactAst.get(), false);
 
       createdComponents.set(applicationComponents);
 

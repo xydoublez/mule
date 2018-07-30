@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.mule.runtime.api.artifact.ast.ArtifactAst;
+import org.mule.runtime.api.component.ConfigurationProperties;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.i18n.I18nMessageFactory;
 import org.mule.runtime.core.api.MuleContext;
@@ -36,8 +37,9 @@ public class AutoConfigurationBuilder extends AbstractResourceConfigurationBuild
   private final ArtifactType artifactType;
   private MuleContext parentContext;
 
-  public AutoConfigurationBuilder(ArtifactAst artifactAst, Map<String, String> artifactProperties, ArtifactType artifactType) {
-    super(artifactAst, artifactProperties);
+  public AutoConfigurationBuilder(ArtifactAst artifactAst, Map<String, String> artifactProperties, ArtifactType artifactType,
+                                  ConfigurationProperties configurationProperties) {
+    super(artifactAst, artifactProperties, configurationProperties);
     this.artifactType = artifactType;
   }
 

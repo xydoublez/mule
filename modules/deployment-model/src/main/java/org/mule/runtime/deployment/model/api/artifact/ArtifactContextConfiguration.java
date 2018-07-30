@@ -17,6 +17,7 @@ import java.util.Optional;
 
 import org.mule.api.annotation.NoInstantiate;
 import org.mule.runtime.api.artifact.ast.ArtifactAst;
+import org.mule.runtime.api.component.ConfigurationProperties;
 import org.mule.runtime.api.config.custom.ServiceConfigurator;
 import org.mule.runtime.app.declaration.api.ArtifactDeclaration;
 import org.mule.runtime.core.api.MuleContext;
@@ -40,6 +41,7 @@ public final class ArtifactContextConfiguration {
   private List<ServiceConfigurator> serviceConfigurators = emptyList();
   private Optional<MuleContext> parentContext = empty();
   private ArtifactAst artifactAst;
+  private ConfigurationProperties configurationProperties;
 
   private ArtifactContextConfiguration() {}
 
@@ -125,6 +127,13 @@ public final class ArtifactContextConfiguration {
   }
 
   /**
+   * @return the object to be used programmatically by mule components to resolve properties
+   */
+  public ConfigurationProperties getConfigurationProperties() {
+    return configurationProperties;
+  }
+
+  /**
    * Builder for {@code ArtifactContextConfiguration}.
    */
   public static class ArtifactContextConfigurationBuilder {
@@ -164,6 +173,15 @@ public final class ArtifactContextConfiguration {
      */
     public ArtifactContextConfigurationBuilder setArtifactProperties(Map<String, String> artifactProperties) {
       artifactContextConfiguration.artifactProperties = artifactProperties;
+      return this;
+    }
+
+    /**
+     * @param configurationProperties the object to be used programmatically by mule components to resolve properties
+     * @return {@code this} builder
+     */
+    public ArtifactContextConfigurationBuilder setConfigurationProperties(ConfigurationProperties configurationProperties) {
+      artifactContextConfiguration.configurationProperties = configurationProperties;
       return this;
     }
 

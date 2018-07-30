@@ -33,7 +33,7 @@ class CollectionBeanDefinitionCreator extends BeanDefinitionCreator {
 
   @Override
   boolean handleRequest(CreateBeanDefinitionRequest createBeanDefinitionRequest) {
-    SpringComponentModel componentModel = (SpringComponentModel) createBeanDefinitionRequest.getComponentModel();
+    SpringComponentModel componentModel = (SpringComponentModel) createBeanDefinitionRequest.getComponentAst();
     ComponentBuildingDefinition componentBuildingDefinition = createBeanDefinitionRequest.getComponentBuildingDefinition();
     ObjectTypeVisitor objectTypeVisitor = new ObjectTypeVisitor(componentModel);
     componentBuildingDefinition.getTypeDefinition().visit(objectTypeVisitor);

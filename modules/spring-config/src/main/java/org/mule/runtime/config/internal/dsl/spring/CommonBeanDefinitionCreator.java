@@ -107,12 +107,12 @@ public class CommonBeanDefinitionCreator extends BeanDefinitionCreator {
 
   @Override
   public boolean handleRequest(CreateBeanDefinitionRequest request) {
-    SpringComponentModel componentModel = request.getComponentModel();
+    SpringComponentModel componentModel = request.getComponentAst();
     ComponentBuildingDefinition buildingDefinition = request.getComponentBuildingDefinition();
     componentModel.setType(retrieveComponentType(componentModel, buildingDefinition));
     BeanDefinitionBuilder beanDefinitionBuilder = createBeanDefinitionBuilder(componentModel, buildingDefinition);
     processAnnotations(componentModel, beanDefinitionBuilder);
-    processComponentDefinitionModel(request.getParentComponentModel(), componentModel, buildingDefinition, beanDefinitionBuilder);
+    processComponentDefinitionModel(request.getParentComponentAst(), componentModel, buildingDefinition, beanDefinitionBuilder);
     return true;
   }
 

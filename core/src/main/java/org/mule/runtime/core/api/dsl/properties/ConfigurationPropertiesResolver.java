@@ -4,8 +4,9 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.runtime.core.internal.dsl.properties;
+package org.mule.runtime.core.api.dsl.properties;
 
+//TODO see if this class can be removed from the API
 public interface ConfigurationPropertiesResolver {
 
   /**

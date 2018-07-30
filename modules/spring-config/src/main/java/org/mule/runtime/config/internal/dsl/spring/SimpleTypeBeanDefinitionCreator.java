@@ -33,11 +33,11 @@ class SimpleTypeBeanDefinitionCreator extends BeanDefinitionCreator {
 
   @Override
   boolean handleRequest(CreateBeanDefinitionRequest createBeanDefinitionRequest) {
-    ObjectTypeVisitor objectTypeVisitor = new ObjectTypeVisitor(createBeanDefinitionRequest.getComponentModel());
+    ObjectTypeVisitor objectTypeVisitor = new ObjectTypeVisitor(createBeanDefinitionRequest.getComponentAst());
     createBeanDefinitionRequest.getComponentBuildingDefinition().getTypeDefinition().visit(objectTypeVisitor);
     Class<?> type = objectTypeVisitor.getType();
     if (isSimpleType(type)) {
-      SpringComponentModel componentModel = createBeanDefinitionRequest.getComponentModel();
+      SpringComponentModel componentModel = createBeanDefinitionRequest.getComponentAst();
       componentModel.setType(type);
       Map<String, String> parameters = componentModel.getParameters();
 

@@ -14,6 +14,7 @@ import static java.util.Optional.ofNullable;
 import org.mule.runtime.api.component.ConfigurationProperties;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.i18n.I18nMessageFactory;
+import org.mule.runtime.core.api.dsl.properties.ConfigurationPropertiesResolver;
 
 import java.util.Optional;
 

@@ -16,8 +16,10 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.mule.runtime.api.artifact.ast.ArtifactAst;
+import org.mule.runtime.api.component.ConfigurationProperties;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.ConfigurationBuilder;
@@ -118,7 +120,24 @@ public final class DefaultMuleContextFactory implements MuleContextFactory {
 
         // Automatically resolve Configuration to be used and delegate configuration
         // to it.
-        new AutoConfigurationBuilder(artifactAst, emptyMap(), APP).configure(muleContext);
+        // TODO remove inner class
+        new AutoConfigurationBuilder(artifactAst, emptyMap(), APP, new ConfigurationProperties() {
+
+          @Override
+          public <T> Optional<T> resolveProperty(String propertyKey) {
+            return Optional.empty();
+          }
+
+          @Override
+          public Optional<Boolean> resolveBooleanProperty(String property) {
+            return Optional.empty();
+          }
+
+          @Override
+          public Optional<String> resolveStringProperty(String property) {
+            return Optional.empty();
+          }
+        }).configure(muleContext);
       }
     });
   }

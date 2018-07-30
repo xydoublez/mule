@@ -57,12 +57,16 @@ import org.mule.runtime.core.api.context.notification.MuleContextListener;
 import org.mule.runtime.core.api.context.notification.MuleContextNotification;
 import org.mule.runtime.core.api.context.notification.MuleContextNotificationListener;
 import org.mule.runtime.core.api.dsl.ArtifactConfigurationPropertiesProviderFactory;
+import org.mule.runtime.core.api.dsl.ComponentBuildingDefinitionRegistry;
 import org.mule.runtime.core.api.dsl.MuleDslConfigurationPropertiesProcessor;
+import org.mule.runtime.core.api.dsl.MuleExtensionModelProvider;
 import org.mule.runtime.core.api.dsl.xml.MuleArtifactXmlBasedAstBuilder;
 import org.mule.runtime.core.api.extension.ExtensionManager;
+import org.mule.runtime.core.api.registry.ServiceRegistry;
+import org.mule.runtime.core.api.registry.SpiServiceRegistry;
 import org.mule.runtime.core.internal.dsl.ClassLoaderResourceProvider;
-import org.mule.runtime.core.internal.dsl.MuleExtensionModelProvider;
-import org.mule.runtime.core.internal.dsl.properties.ConfigurationPropertiesResolver;
+import org.mule.runtime.core.api.dsl.properties.ConfigurationPropertiesResolver;
+import org.mule.runtime.core.internal.dsl.properties.PropertiesResolverConfigurationProperties;
 import org.mule.runtime.core.internal.lifecycle.phases.NotInLifecyclePhase;
 import org.mule.runtime.core.internal.logging.LogUtil;
 import org.mule.runtime.deployment.model.api.DeploymentInitException;
@@ -82,6 +86,7 @@ import org.mule.runtime.module.artifact.api.classloader.ClassLoaderRepository;
 import org.mule.runtime.module.artifact.api.classloader.DisposableClassLoader;
 import org.mule.runtime.module.artifact.api.classloader.MuleDeployableArtifactClassLoader;
 import org.mule.runtime.module.artifact.api.classloader.RegionClassLoader;
+import org.mule.runtime.module.deployment.impl.internal.MuleComponentAstTypeResolver;
 import org.mule.runtime.module.deployment.impl.internal.artifact.ArtifactContextBuilder;
 import org.mule.runtime.module.deployment.impl.internal.artifact.ExtensionModelDiscoverer;
 import org.mule.runtime.module.deployment.impl.internal.domain.DomainRepository;
@@ -252,6 +257,31 @@ public class DefaultMuleApplication implements Application {
       new MuleDslConfigurationPropertiesProcessor(artifactAst, configurationPropertiesResolver, resourceProvider)
           .resolveConfigurationPlaceholders();
 
+      // From now on we are depending on the classloader.
+
+      ServiceRegistry serviceRegistry = new SpiServiceRegistry();
+      ComponentBuildingDefinitionRegistry componentBuildingDefinitionRegistry = new ComponentBuildingDefinitionRegistry();
+      MuleComponentAstTypeResolver
+          .registerComponentBuildingDefinitions(serviceRegistry, DefaultMuleApplication.class.getClassLoader(),
+                                                componentBuildingDefinitionRegistry,
+                                                Optional.ofNullable(allExtensionModels),
+                                                (componentBuildingDefinitionProvider -> componentBuildingDefinitionProvider
+                                                    .getComponentBuildingDefinitions()));
+
+      for (ArtifactPlugin artifactPlugin : artifactPlugins) {
+        ClassLoader pluginArtifactClassLoader = artifactPlugin.getArtifactClassLoader().getClassLoader();
+        MuleComponentAstTypeResolver
+            .registerComponentBuildingDefinitions(serviceRegistry, pluginArtifactClassLoader, componentBuildingDefinitionRegistry,
+                                                  Optional.ofNullable(allExtensionModels),
+                                                  (componentBuildingDefinitionProvider -> componentBuildingDefinitionProvider
+                                                      .getComponentBuildingDefinitions()));
+      }
+
+      new MuleComponentAstTypeResolver(Optional.of(componentBuildingDefinitionRegistry)).resolveComponentTypes(artifactAst);
+
+      ConfigurationProperties configurationProperties =
+          new PropertiesResolverConfigurationProperties(configurationPropertiesResolver);
+
       ArtifactContextBuilder artifactBuilder =
           newBuilder().setArtifactProperties(merge(descriptor.getAppProperties(), getProperties())).setArtifactType(APP)
               .setDataFolderName(descriptor.getDataFolderName())
@@ -264,6 +294,7 @@ public class DefaultMuleApplication implements Application {
               .setClassLoaderRepository(classLoaderRepository)
               .setArtifactDeclaration(descriptor.getArtifactDeclaration())
               .setArtifactAst(artifactAst)
+              .setConfigurationProperties(configurationProperties)
               .setProperties(ofNullable(resolveDeploymentProperties(descriptor.getDataFolderName(),
                                                                     descriptor.getDeploymentProperties())))
               .setPolicyProvider(policyManager);

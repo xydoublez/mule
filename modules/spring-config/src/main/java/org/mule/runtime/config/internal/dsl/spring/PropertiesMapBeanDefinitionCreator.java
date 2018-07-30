@@ -29,7 +29,7 @@ class PropertiesMapBeanDefinitionCreator extends BeanDefinitionCreator {
 
   @Override
   boolean handleRequest(CreateBeanDefinitionRequest createBeanDefinitionRequest) {
-    SpringComponentModel componentModel = createBeanDefinitionRequest.getComponentModel();
+    SpringComponentModel componentModel = createBeanDefinitionRequest.getComponentAst();
     if (componentModel.getIdentifier().equals(MULE_PROPERTIES_IDENTIFIER)
         || componentModel.getIdentifier().equals(MULE_PROPERTY_IDENTIFIER)) {
       ManagedMap<Object, Object> managedMap;

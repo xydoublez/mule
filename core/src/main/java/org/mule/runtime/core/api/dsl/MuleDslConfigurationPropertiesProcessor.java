@@ -10,7 +10,7 @@ import org.mule.runtime.api.artifact.ast.ArtifactAst;
 import org.mule.runtime.api.dsl.ConfigurationPropertyResolutionException;
 import org.mule.runtime.api.dsl.ResolvedValue;
 import org.mule.runtime.api.util.Either;
-import org.mule.runtime.core.internal.dsl.properties.ConfigurationPropertiesResolver;
+import org.mule.runtime.core.api.dsl.properties.ConfigurationPropertiesResolver;
 import org.mule.runtime.dsl.api.ResourceProvider;
 
 public class MuleDslConfigurationPropertiesProcessor {

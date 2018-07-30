@@ -9,9 +9,6 @@ package org.mule.runtime.config.internal;
 import static com.google.common.graph.Traverser.forTree;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import org.mule.runtime.api.util.Pair;
-import org.mule.runtime.config.internal.dsl.model.ConfigurationDependencyResolver;
-import org.mule.runtime.core.internal.lifecycle.InjectedDependenciesProvider;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -22,6 +19,10 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+
+import org.mule.runtime.api.util.Pair;
+import org.mule.runtime.config.internal.dsl.model.ArtifactAstDependencyResolver;
+import org.mule.runtime.core.internal.lifecycle.InjectedDependenciesProvider;
 
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -35,17 +36,17 @@ import org.springframework.beans.factory.config.BeanDefinition;
 public class DefaultBeanDependencyResolver implements BeanDependencyResolver {
 
   private final SpringRegistry springRegistry;
-  private final ConfigurationDependencyResolver configurationDependencyResolver;
+  private final ArtifactAstDependencyResolver artifactAstDependencyResolver;
 
   /**
    * Creates a new instance
    *
-   * @param configurationDependencyResolver the configuration dependency resolver
-   * @param springRegistry                  the context spring registry
+   * @param artifactAstDependencyResolver the configuration dependency resolver
+   * @param springRegistry the context spring registry
    */
-  public DefaultBeanDependencyResolver(ConfigurationDependencyResolver configurationDependencyResolver,
+  public DefaultBeanDependencyResolver(ArtifactAstDependencyResolver artifactAstDependencyResolver,
                                        SpringRegistry springRegistry) {
-    this.configurationDependencyResolver = configurationDependencyResolver;
+    this.artifactAstDependencyResolver = artifactAstDependencyResolver;
     this.springRegistry = springRegistry;
   }
 
@@ -83,8 +84,7 @@ public class DefaultBeanDependencyResolver implements BeanDependencyResolver {
   }
 
   /**
-   * If the target object implements {@link InjectedDependenciesProvider}, then the custom dependencies
-   * declared by it are added.
+   * If the target object implements {@link InjectedDependenciesProvider}, then the custom dependencies declared by it are added.
    */
   private void addDeclaredDependencies(Object object, Set<String> processedKeys,
                                        DependencyNode node) {
@@ -99,11 +99,11 @@ public class DefaultBeanDependencyResolver implements BeanDependencyResolver {
   }
 
   /**
-   * These are obtained through the {@link #configurationDependencyResolver}
+   * These are obtained through the {@link #artifactAstDependencyResolver}
    */
   private void addConfigurationDependencies(String key, Set<String> processedKeys,
                                             DependencyNode node) {
-    Collection<String> dependencies = configurationDependencyResolver.resolveComponentDependencies(key);
+    Collection<String> dependencies = artifactAstDependencyResolver.resolveComponentDependencies(key);
     for (String dependency : dependencies) {
       try {
         if (springRegistry.isSingleton(dependency)) {
@@ -116,8 +116,8 @@ public class DefaultBeanDependencyResolver implements BeanDependencyResolver {
   }
 
   /**
-   * Adds the dependencies that are explicit on the {@link BeanDefinition}. These were inferred from
-   * introspecting fields annotated with {@link Inject} or were programatically added to the definition
+   * Adds the dependencies that are explicit on the {@link BeanDefinition}. These were inferred from introspecting fields
+   * annotated with {@link Inject} or were programatically added to the definition
    */
   private void addAutoDiscoveredDependencies(String key, Set<String> processedKeys,
                                              DependencyNode node) {

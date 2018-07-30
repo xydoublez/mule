@@ -18,7 +18,7 @@ import java.util.Set;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.core.api.registry.SpiServiceRegistry;
 import org.mule.runtime.core.internal.dsl.ClassLoaderResourceProvider;
-import org.mule.runtime.core.internal.dsl.MuleExtensionModelProvider;
+import org.mule.runtime.core.api.dsl.MuleExtensionModelProvider;
 import org.mule.runtime.dsl.xml.api.ArtifactXmlBasedAstBuilder;
 import org.mule.runtime.dsl.xml.internal.parser.MuleExtensionSchemaProvider;
 import org.mule.runtime.dsl.xml.internal.parser.MuleXmlNamespaceInfoProvider;

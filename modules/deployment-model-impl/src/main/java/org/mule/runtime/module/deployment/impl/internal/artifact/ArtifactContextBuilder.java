@@ -36,6 +36,7 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.mule.runtime.api.artifact.ast.ArtifactAst;
+import org.mule.runtime.api.component.ConfigurationProperties;
 import org.mule.runtime.api.component.location.Location;
 import org.mule.runtime.api.config.custom.ServiceConfigurator;
 import org.mule.runtime.api.connectivity.ConnectivityTestingService;
@@ -114,6 +115,7 @@ public class ArtifactContextBuilder {
   private Optional<Properties> properties = empty();
   private String dataFolderName;
   private ArtifactAst artifactAst;
+  private ConfigurationProperties configurationProperties;
 
   private ArtifactContextBuilder() {}
 
@@ -217,6 +219,16 @@ public class ArtifactContextBuilder {
     this.artifactName = artifactName;
     return this;
   }
+
+  /**
+   * @param configurationProperties the configuration properties resolver for use of the application components
+   * @return the builder
+   */
+  public ArtifactContextBuilder setConfigurationProperties(ConfigurationProperties configurationProperties) {
+    this.configurationProperties = configurationProperties;
+    return this;
+  }
+
 
   /**
    * Allows to set a listener that will be notified when the {@code MuleContext} is created, initialized or configured.
@@ -430,7 +442,8 @@ public class ArtifactContextBuilder {
                     .setEnableLazyInitialization(enableLazyInit)
                     .setDisableXmlValidations(disableXmlValidations)
                     .setServiceConfigurators(serviceConfigurators)
-                    .setArtifactAst(ArtifactContextBuilder.this.artifactAst);
+                    .setArtifactAst(ArtifactContextBuilder.this.artifactAst)
+                    .setConfigurationProperties(ArtifactContextBuilder.this.configurationProperties);
             if (parentArtifact != null) {
               artifactContextConfigurationBuilder
                   .setParentContext(parentArtifact.getRegistry().lookupByType(MuleContext.class).get());

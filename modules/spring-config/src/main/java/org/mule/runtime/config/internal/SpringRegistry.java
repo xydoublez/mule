@@ -14,7 +14,7 @@ import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.lifecycle.LifecycleException;
-import org.mule.runtime.config.internal.dsl.model.ConfigurationDependencyResolver;
+import org.mule.runtime.config.internal.dsl.model.ArtifactAstDependencyResolver;
 import org.mule.runtime.config.internal.factories.ConstantFactoryBean;
 import org.mule.runtime.core.api.Injector;
 import org.mule.runtime.core.api.MuleContext;
@@ -69,7 +69,7 @@ public class SpringRegistry extends AbstractRegistry implements Injector {
   private final Map<String, BeanDefinition> registeredBeanDefinitionsBeforeInitialization = new HashMap<>();
 
   public SpringRegistry(ApplicationContext applicationContext, MuleContext muleContext,
-                        ConfigurationDependencyResolver dependencyResolver,
+                        ArtifactAstDependencyResolver dependencyResolver,
                         LifecycleInterceptor lifecycleInterceptor) {
     super(REGISTRY_ID, muleContext, lifecycleInterceptor);
     setApplicationContext(applicationContext);

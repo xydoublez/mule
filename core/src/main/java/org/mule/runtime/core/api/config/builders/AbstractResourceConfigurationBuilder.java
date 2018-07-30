@@ -7,18 +7,16 @@
 package org.mule.runtime.core.api.config.builders;
 
 import static org.mule.runtime.core.api.config.i18n.CoreMessages.objectIsNull;
-import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Map;
 
 import org.mule.api.annotation.NoExtend;
 import org.mule.runtime.api.artifact.ast.ArtifactAst;
+import org.mule.runtime.api.component.ConfigurationProperties;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.ConfigResource;
 import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.api.config.ConfigurationException;
-
-import org.slf4j.Logger;
 
 /**
  * Abstract {@link ConfigurationBuilder} implementation used for ConfigurationBuider's that use one of more configuration
@@ -33,13 +31,14 @@ public abstract class AbstractResourceConfigurationBuilder extends AbstractConfi
   protected ArtifactAst artifactAst;
 
   /**
-   * @param artifactConfigResources a comma separated list of configuration files to load, this should be accessible on the
-   *        classpath or filesystem
+   * @param artifactAst the artifact AST.
    * @param artifactProperties map of properties that can be referenced from the {@code artifactConfigResources} as external
    *        configuration values
+   * @param configurationProperties
    * @throws org.mule.runtime.core.api.config.ConfigurationException usually if the config resources cannot be loaded
    */
-  public AbstractResourceConfigurationBuilder(ArtifactAst artifactAst, Map<String, String> artifactProperties) {
+  public AbstractResourceConfigurationBuilder(ArtifactAst artifactAst, Map<String, String> artifactProperties,
+                                              ConfigurationProperties configurationProperties) {
     this.artifactAst = artifactAst;
     this.artifactProperties = artifactProperties;
   }

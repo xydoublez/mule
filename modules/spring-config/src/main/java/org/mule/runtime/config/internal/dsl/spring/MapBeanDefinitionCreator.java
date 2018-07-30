@@ -39,7 +39,7 @@ class MapBeanDefinitionCreator extends BeanDefinitionCreator {
 
   @Override
   boolean handleRequest(CreateBeanDefinitionRequest createBeanDefinitionRequest) {
-    SpringComponentModel componentModel = createBeanDefinitionRequest.getComponentModel();
+    SpringComponentModel componentModel = createBeanDefinitionRequest.getComponentAst();
     ObjectTypeVisitor objectTypeVisitor = new ObjectTypeVisitor(componentModel);
     ComponentBuildingDefinition componentBuildingDefinition = createBeanDefinitionRequest.getComponentBuildingDefinition();
     componentBuildingDefinition.getTypeDefinition().visit(objectTypeVisitor);

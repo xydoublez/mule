@@ -70,7 +70,7 @@ import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.app.declaration.api.ArtifactDeclaration;
 import org.mule.runtime.app.declaration.api.ElementDeclaration;
-import org.mule.runtime.config.api.dsl.model.ComponentBuildingDefinitionRegistry;
+import org.mule.runtime.core.api.dsl.ComponentBuildingDefinitionRegistry;
 import org.mule.runtime.config.api.dsl.model.DslElementModelFactory;
 import org.mule.runtime.config.api.dsl.model.ResourceProviderAdapter;
 import org.mule.runtime.config.api.dsl.processor.ArtifactConfig;
@@ -87,7 +87,7 @@ import org.mule.runtime.core.api.dsl.ArtifactAstHelper;
 import org.mule.runtime.core.api.extension.RuntimeExtensionModelProvider;
 import org.mule.runtime.core.api.registry.SpiServiceRegistry;
 import org.mule.runtime.core.internal.dsl.properties.CompositeConfigurationPropertiesProvider;
-import org.mule.runtime.core.internal.dsl.properties.ConfigurationPropertiesResolver;
+import org.mule.runtime.core.api.dsl.properties.ConfigurationPropertiesResolver;
 import org.mule.runtime.core.internal.dsl.properties.DefaultConfigurationParameters;
 import org.mule.runtime.core.internal.dsl.properties.DefaultConfigurationPropertiesResolver;
 import org.mule.runtime.core.internal.dsl.properties.DefaultConfigurationProperty;
@@ -1164,7 +1164,7 @@ public class ApplicationModel {
     }
   }
 
-  // TODO review remove
+  //TODO review remove
   public void close() {
 
   }

@@ -93,7 +93,7 @@
           "methodName": "<init>",
           "parameterIndex": "0",
           "elementKind": "parameter",
-          "justification": "Not meant to be consumed by usesr"
+          "justification": "Not meant to be consumed by users"
         },
         {
           "code": "java.method.removed",
@@ -102,7 +102,7 @@
           "classSimpleName": "AbstractResourceConfigurationBuilder",
           "methodName": "<init>",
           "elementKind": "constructor",
-          "justification": "Not meant to be consumed by usesr"
+          "justification": "Not meant to be consumed by users"
         },
         {
           "code": "java.method.removed",
@@ -111,7 +111,7 @@
           "classSimpleName": "AbstractResourceConfigurationBuilder",
           "methodName": "<init>",
           "elementKind": "constructor",
-          "justification": "Not meant to be consumed by usesr"
+          "justification": "Not meant to be consumed by users"
         },
         {
           "code": "java.method.parameterTypeChanged",
@@ -124,7 +124,7 @@
           "methodName": "createMuleContext",
           "parameterIndex": "0",
           "elementKind": "parameter",
-          "justification": "Not meant to be consumed by usesr"
+          "justification": "Not meant to be consumed by users"
         },
         {
           "code": "java.method.parameterTypeChanged",
@@ -137,7 +137,7 @@
           "methodName": "createMuleContext",
           "parameterIndex": "0",
           "elementKind": "parameter",
-          "justification": "Not meant to be consumed by usesr"
+          "justification": "Not meant to be consumed by users"
         },
         {
           "code": "java.method.numberOfParametersChanged",
@@ -147,7 +147,7 @@
           "classSimpleName": "DefaultMuleContextFactory",
           "methodName": "createMuleContext",
           "elementKind": "method",
-          "justification": "Not meant to be consumed by usesr"
+          "justification": "Not meant to be consumed by users"
         },
         {
           "code": "java.method.numberOfParametersChanged",
@@ -157,7 +157,7 @@
           "classSimpleName": "DefaultMuleContextFactory",
           "methodName": "createMuleContext",
           "elementKind": "method",
-          "justification": "Not meant to be consumed by usesr"
+          "justification": "Not meant to be consumed by users"
         },
         {
           "code": "java.method.parameterTypeChanged",
@@ -170,7 +170,7 @@
           "methodName": "createMuleContext",
           "parameterIndex": "0",
           "elementKind": "parameter",
-          "justification": "Not meant to be consumed by usesr"
+          "justification": "Not meant to be consumed by users"
         },
         {
           "code": "java.method.parameterTypeChanged",
@@ -183,7 +183,7 @@
           "methodName": "createMuleContext",
           "parameterIndex": "1",
           "elementKind": "parameter",
-          "justification": "Not meant to be consumed by usesr"
+          "justification": "Not meant to be consumed by users"
         },
         {
           "code": "java.method.parameterTypeChanged",
@@ -196,7 +196,17 @@
           "methodName": "createMuleContext",
           "parameterIndex": "0",
           "elementKind": "parameter",
-          "justification": "Not meant to be consumed by usesr"
+          "justification": "Not meant to be consumed by users"
+        },
+        {
+          "code": "java.method.numberOfParametersChanged",
+          "old": "method void org.mule.runtime.core.api.config.builders.AbstractResourceConfigurationBuilder::<init>(org.mule.runtime.core.api.config.ConfigResource[], java.util.Map<java.lang.String, java.lang.String>)",
+          "new": "method void org.mule.runtime.core.api.config.builders.AbstractResourceConfigurationBuilder::<init>(org.mule.runtime.api.artifact.ast.ArtifactAst, java.util.Map<java.lang.String, java.lang.String>, org.mule.runtime.api.component.ConfigurationProperties)",
+          "package": "org.mule.runtime.core.api.config.builders",
+          "classSimpleName": "AbstractResourceConfigurationBuilder",
+          "methodName": "<init>",
+          "elementKind": "constructor",
+          "justification": "Not meant to be consumed by users"
         }
       ]
     }

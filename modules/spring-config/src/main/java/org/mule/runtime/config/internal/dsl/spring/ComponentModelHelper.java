@@ -17,6 +17,14 @@ import static org.mule.runtime.api.component.TypedComponentIdentifier.ComponentT
 import static org.mule.runtime.api.component.TypedComponentIdentifier.ComponentType.SOURCE;
 import static org.mule.runtime.config.api.dsl.CoreDslConstants.ON_ERROR_CONTINE_IDENTIFIER;
 import static org.mule.runtime.config.api.dsl.CoreDslConstants.ON_ERROR_PROPAGATE_IDENTIFIER;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.xml.namespace.QName;
+
+import org.mule.runtime.api.artifact.ast.ComponentAst;
 import org.mule.runtime.api.component.Component;
 import org.mule.runtime.api.component.TypedComponentIdentifier;
 import org.mule.runtime.config.internal.dsl.model.ComponentLocationVisitor;
@@ -27,15 +35,9 @@ import org.mule.runtime.core.api.processor.InterceptingMessageProcessor;
 import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.api.source.MessageSource;
 import org.mule.runtime.core.internal.exception.ErrorHandler;
-import org.mule.runtime.core.privileged.exception.TemplateOnErrorHandler;
 import org.mule.runtime.core.internal.routing.AbstractSelectiveRouter;
+import org.mule.runtime.core.privileged.exception.TemplateOnErrorHandler;
 import org.mule.runtime.core.privileged.processor.Router;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.xml.namespace.QName;
 
 import org.springframework.beans.PropertyValue;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -58,47 +60,48 @@ public class ComponentModelHelper {
     return extensionModelHelper.findComponentType(componentModel);
   }
 
-  public static boolean isAnnotatedObject(ComponentModel componentModel) {
-    return isOfType(componentModel, Component.class);
+  public static boolean isAnnotatedObject(ComponentAst componentAst) {
+    return isOfType(componentAst, Component.class);
   }
 
-  public static boolean isProcessor(ComponentModel componentModel) {
-    return isOfType(componentModel, Processor.class)
-        || isOfType(componentModel, InterceptingMessageProcessor.class)
-        || componentModel.getComponentType().map(type -> type.equals(OPERATION)).orElse(false)
-        || componentModel.getComponentType().map(type -> type.equals(ROUTER)).orElse(false)
-        || componentModel.getComponentType().map(type -> type.equals(SCOPE)).orElse(false);
+  public static boolean isProcessor(ComponentAst componentAst) {
+    return isOfType(componentAst, Processor.class)
+        || isOfType(componentAst, InterceptingMessageProcessor.class)
+        || componentAst.getComponentType().map(type -> type.equals(OPERATION)).orElse(false)
+        || componentAst.getComponentType().map(type -> type.equals(ROUTER)).orElse(false)
+        || componentAst.getComponentType().map(type -> type.equals(SCOPE)).orElse(false);
   }
 
-  public static boolean isMessageSource(ComponentModel componentModel) {
-    return isOfType(componentModel, MessageSource.class)
-        || componentModel.getComponentType().map(type -> type.equals(SOURCE)).orElse(false);
+  public static boolean isMessageSource(ComponentAst componentAst) {
+    return isOfType(componentAst, MessageSource.class)
+        || componentAst.getComponentType().map(type -> type.equals(SOURCE)).orElse(false);
   }
 
-  public static boolean isErrorHandler(ComponentModel componentModel) {
-    return isOfType(componentModel, ErrorHandler.class)
-        || componentModel.getComponentType().map(type -> type.equals(ERROR_HANDLER)).orElse(false);
+  public static boolean isErrorHandler(ComponentAst componentAst) {
+    return isOfType(componentAst, ErrorHandler.class)
+        || componentAst.getComponentType().map(type -> type.equals(ERROR_HANDLER)).orElse(false);
   }
 
-  public static boolean isTemplateOnErrorHandler(ComponentModel componentModel) {
-    return isOfType(componentModel, TemplateOnErrorHandler.class)
-        || componentModel.getComponentType().map(type -> type.equals(ON_ERROR)).orElse(false);
+  public static boolean isTemplateOnErrorHandler(ComponentAst componentAst) {
+    return isOfType(componentAst, TemplateOnErrorHandler.class)
+        || componentAst.getComponentType().map(type -> type.equals(ON_ERROR)).orElse(false);
   }
 
-  private static boolean isOfType(ComponentModel componentModel, Class type) {
-    Class<?> componentModelType = componentModel.getType();
+  private static boolean isOfType(ComponentAst componentAst, Class type) {
+    Class<?> componentModelType = componentAst.getType();
     if (componentModelType == null) {
       return false;
     }
     return CommonBeanDefinitionCreator.areMatchingTypes(type, componentModelType);
   }
 
-  public static void addAnnotation(QName annotationKey, Object annotationValue, SpringComponentModel componentModel) {
+  public static void addAnnotation(QName annotationKey, Object annotationValue, ComponentAst componentAst) {
     // TODO MULE-10970 - remove condition once everything is AnnotatedObject.
-    if (!ComponentModelHelper.isAnnotatedObject(componentModel) && !componentModel.getIdentifier().getName().equals("flow-ref")) {
+    if (!ComponentModelHelper.isAnnotatedObject(componentAst)
+        && !componentAst.getComponentIdentifier().getName().equals("flow-ref")) {
       return;
     }
-    BeanDefinition beanDefinition = componentModel.getBeanDefinition();
+    BeanDefinition beanDefinition = (BeanDefinition) componentAst.getBeanDefinition();
     if (beanDefinition == null) {
       // This is the case of components that are references
       return;
@@ -135,10 +138,10 @@ public class ComponentModelHelper {
     }
   }
 
-  public static boolean isRouter(ComponentModel componentModel) {
-    return isOfType(componentModel, Router.class) || isOfType(componentModel, AbstractSelectiveRouter.class)
-        || ComponentLocationVisitor.BATCH_JOB_COMPONENT_IDENTIFIER.equals(componentModel.getIdentifier())
-        || ComponentLocationVisitor.BATCH_PROCESSS_RECORDS_COMPONENT_IDENTIFIER.equals(componentModel.getIdentifier())
-        || componentModel.getComponentType().map(type -> type.equals(ROUTER)).orElse(false);
+  public static boolean isRouter(ComponentAst componentAst) {
+    return isOfType(componentAst, Router.class) || isOfType(componentAst, AbstractSelectiveRouter.class)
+        || ComponentLocationVisitor.BATCH_JOB_COMPONENT_IDENTIFIER.equals(componentAst.getComponentIdentifier())
+        || ComponentLocationVisitor.BATCH_PROCESSS_RECORDS_COMPONENT_IDENTIFIER.equals(componentAst.getComponentIdentifier())
+        || componentAst.getComponentType().map(type -> type.equals(ROUTER)).orElse(false);
   }
 }

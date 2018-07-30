@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 import org.mule.runtime.config.api.dsl.processor.ConfigLine;
 import org.mule.runtime.config.api.dsl.processor.SimpleConfigAttribute;
-import org.mule.runtime.core.internal.dsl.properties.ConfigurationPropertiesResolver;
+import org.mule.runtime.core.api.dsl.properties.ConfigurationPropertiesResolver;
 import org.mule.runtime.config.internal.dsl.processor.xml.XmlCustomAttributeHandler;
 import org.mule.runtime.config.internal.model.ComponentModel;
 

@@ -43,7 +43,7 @@ class EagerObjectCreator extends BeanDefinitionCreator {
 
   @Override
   boolean handleRequest(CreateBeanDefinitionRequest createBeanDefinitionRequest) {
-    SpringComponentModel componentModel = createBeanDefinitionRequest.getComponentModel();
+    SpringComponentModel componentModel = createBeanDefinitionRequest.getComponentAst();
     Class<?> type = componentModel.getType();
     if (type == null) {
       return false;
