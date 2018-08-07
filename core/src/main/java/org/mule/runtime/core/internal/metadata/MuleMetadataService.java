@@ -6,7 +6,6 @@
  */
 package org.mule.runtime.core.internal.metadata;
 
-import static com.google.common.collect.ImmutableMap.copyOf;
 import static java.lang.String.format;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.metadata.resolving.FailureCode.COMPONENT_NOT_FOUND;
@@ -14,7 +13,6 @@ import static org.mule.runtime.api.metadata.resolving.FailureCode.NO_DYNAMIC_MET
 import static org.mule.runtime.api.metadata.resolving.MetadataFailure.Builder.newFailure;
 import static org.mule.runtime.api.metadata.resolving.MetadataResult.failure;
 import static org.mule.runtime.core.internal.config.ConfigurationInstanceNotification.CONFIGURATION_STOPPED;
-
 import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
 import org.mule.runtime.api.component.location.Location;
 import org.mule.runtime.api.exception.MuleRuntimeException;
@@ -34,17 +32,14 @@ import org.mule.runtime.api.metadata.MetadataService;
 import org.mule.runtime.api.metadata.descriptor.ComponentMetadataDescriptor;
 import org.mule.runtime.api.metadata.descriptor.TypeMetadataDescriptor;
 import org.mule.runtime.api.metadata.resolving.MetadataResult;
-import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.core.internal.config.ConfigurationInstanceNotification;
 import org.mule.runtime.api.notification.CustomNotificationListener;
 import org.mule.runtime.api.notification.NotificationListenerRegistry;
+import org.mule.runtime.core.api.MuleContext;
+import org.mule.runtime.core.internal.config.ConfigurationInstanceNotification;
+import org.mule.runtime.core.internal.metadata.cache.MetadataCacheManager;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-
+import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
 
@@ -71,17 +66,18 @@ public class MuleMetadataService implements MetadataService, Initialisable {
   @Inject
   private ConfigurationComponentLocator componentLocator;
 
-  private final LoadingCache<String, MetadataCache> caches;
+  @Inject
+  private MetadataCacheManager metadataCacheManager;
 
-  public MuleMetadataService() {
-    caches = CacheBuilder.newBuilder().build(new CacheLoader<String, MetadataCache>() {
-
-      @Override
-      public MetadataCache load(String id) throws Exception {
-        return new DefaultMetadataCache();
-      }
-    });
-  }
+  // public MuleMetadataService() {
+  //   caches = CacheBuilder.newBuilder().build(new CacheLoader<String, MetadataCache>() {
+  //
+  //     @Override
+  //     public MetadataCache load(String id) throws Exception {
+  //       return new DefaultMetadataCache();
+  //     }
+  //   });
+  // }
 
   /**
    * Initialize this instance by registering a {@link CustomNotificationListener}
@@ -168,19 +164,19 @@ public class MuleMetadataService implements MetadataService, Initialisable {
    */
   @Override
   public void disposeCache(String id) {
-    caches.invalidate(id);
+    metadataCacheManager.dispose(id);
   }
 
   public MetadataCache getMetadataCache(String id) {
     try {
-      return caches.get(id);
-    } catch (ExecutionException e) {
+      return metadataCacheManager.getCache(id);
+    } catch (Exception e) {
       throw new MuleRuntimeException(createStaticMessage("Could not get the cache with id:" + id), e);
     }
   }
 
   public Map<String, ? extends MetadataCache> getMetadataCaches() {
-    return copyOf(caches.asMap());
+    return Collections.emptyMap();
   }
 
   private <T> MetadataResult<T> exceptionHandledMetadataFetch(MetadataDelegate<T> producer, String failureMessage) {

@@ -52,13 +52,15 @@ import org.apache.commons.lang3.tuple.Pair;
  *
  * @since 4.0
  */
-public final class MetadataScopeAdapter {
+public class MetadataScopeAdapter {
 
   private Supplier<NullMetadataResolver> nullMetadataResolverSupplier = new NullMetadataResolverSupplier();
   private Supplier<? extends TypeKeysResolver> keysResolver = nullMetadataResolverSupplier;
   private Supplier<? extends OutputTypeResolver> outputResolver = nullMetadataResolverSupplier;
   private Map<String, Supplier<? extends InputTypeResolver>> inputResolvers = new HashMap<>();
   private Supplier<? extends AttributesTypeResolver> attributesResolver = nullMetadataResolverSupplier;
+
+  public MetadataScopeAdapter() {}
 
   public MetadataScopeAdapter(Type extensionElement, MethodElement operation, OperationDeclaration declaration) {
     operation.getValueFromAnnotation(OutputResolver.class);

@@ -40,22 +40,6 @@ import static org.mule.runtime.extension.api.util.NameUtils.pluralize;
 import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
 import static org.mule.runtime.internal.util.NameValidationUtil.verifyStringDoesNotContainsReservedCharacters;
 import static org.slf4j.LoggerFactory.getLogger;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
-import javax.xml.namespace.QName;
-
 import org.mule.runtime.api.component.AbstractComponent;
 import org.mule.runtime.api.component.Component;
 import org.mule.runtime.api.component.ComponentIdentifier;
@@ -101,11 +85,26 @@ import org.mule.runtime.dsl.api.component.ComponentBuildingDefinition;
 import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
 import org.mule.runtime.dsl.api.component.config.DefaultComponentLocation;
 
-import org.slf4j.Logger;
-import org.w3c.dom.Node;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
+import javax.xml.namespace.QName;
+
+import org.slf4j.Logger;
+import org.w3c.dom.Node;
 
 /**
  * An {@code ApplicationModel} holds a representation of all the artifact configuration using an abstract model to represent any
@@ -165,122 +164,122 @@ public class ApplicationModel {
 
 
   public static final ComponentIdentifier EXCEPTION_STRATEGY_REFERENCE_IDENTIFIER =
-      builder().namespace(CORE_PREFIX).name(EXCEPTION_STRATEGY_REFERENCE_ELEMENT)
-          .build();
+    builder().namespace(CORE_PREFIX).name(EXCEPTION_STRATEGY_REFERENCE_ELEMENT)
+      .build();
   public static final ComponentIdentifier ERROR_MAPPING_IDENTIFIER =
-      builder().namespace(CORE_PREFIX).name(ERROR_MAPPING).build();
+    builder().namespace(CORE_PREFIX).name(ERROR_MAPPING).build();
   public static final ComponentIdentifier ON_ERROR_IDENTIFIER =
-      builder().namespace(CORE_PREFIX).name(ON_ERROR).build();
+    builder().namespace(CORE_PREFIX).name(ON_ERROR).build();
   public static final ComponentIdentifier MULE_PROPERTY_IDENTIFIER =
-      builder().namespace(CORE_PREFIX).name(PROPERTY_ELEMENT).build();
+    builder().namespace(CORE_PREFIX).name(PROPERTY_ELEMENT).build();
   public static final ComponentIdentifier MULE_PROPERTIES_IDENTIFIER =
-      builder().namespace(CORE_PREFIX).name(PROPERTIES_ELEMENT).build();
+    builder().namespace(CORE_PREFIX).name(PROPERTIES_ELEMENT).build();
   public static final ComponentIdentifier ANNOTATIONS_ELEMENT_IDENTIFIER =
-      builder().namespace(CORE_PREFIX).name(ANNOTATION_ELEMENT).build();
+    builder().namespace(CORE_PREFIX).name(ANNOTATION_ELEMENT).build();
   public static final ComponentIdentifier TRANSFORMER_IDENTIFIER =
-      builder().namespace(CORE_PREFIX).name(TRANSFORMER_REFERENCE_ELEMENT).build();
+    builder().namespace(CORE_PREFIX).name(TRANSFORMER_REFERENCE_ELEMENT).build();
   public static final ComponentIdentifier CUSTOM_TRANSFORMER_IDENTIFIER =
-      builder().namespace(CORE_PREFIX).name(CUSTOM_TRANSFORMER).build();
+    builder().namespace(CORE_PREFIX).name(CUSTOM_TRANSFORMER).build();
   public static final ComponentIdentifier DOC_DESCRIPTION_IDENTIFIER =
-      builder().namespace(DOC_NAMESPACE).name(DESCRIPTION_ELEMENT).build();
+    builder().namespace(DOC_NAMESPACE).name(DESCRIPTION_ELEMENT).build();
   public static final ComponentIdentifier DESCRIPTION_IDENTIFIER =
-      builder().namespace(CORE_PREFIX).name(DESCRIPTION_ELEMENT).build();
+    builder().namespace(CORE_PREFIX).name(DESCRIPTION_ELEMENT).build();
   public static final ComponentIdentifier OBJECT_IDENTIFIER =
-      builder().namespace(CORE_PREFIX).name(OBJECT_ELEMENT).build();
+    builder().namespace(CORE_PREFIX).name(OBJECT_ELEMENT).build();
   public static final ComponentIdentifier REDELIVERY_POLICY_IDENTIFIER =
-      builder().namespace(CORE_PREFIX).name(REDELIVERY_POLICY_ELEMENT).build();
+    builder().namespace(CORE_PREFIX).name(REDELIVERY_POLICY_ELEMENT).build();
   public static final ComponentIdentifier GLOBAL_PROPERTY_IDENTIFIER =
-      builder().namespace(CORE_PREFIX).name(GLOBAL_PROPERTY).build();
+    builder().namespace(CORE_PREFIX).name(GLOBAL_PROPERTY).build();
   public static final ComponentIdentifier SECURITY_MANAGER_IDENTIFIER =
-      builder().namespace(CORE_PREFIX).name(SECURITY_MANAGER).build();
+    builder().namespace(CORE_PREFIX).name(SECURITY_MANAGER).build();
   public static final ComponentIdentifier MODULE_OPERATION_CHAIN =
-      builder().namespace(CORE_PREFIX).name(MODULE_OPERATION_CHAIN_ELEMENT).build();
+    builder().namespace(CORE_PREFIX).name(MODULE_OPERATION_CHAIN_ELEMENT).build();
 
 
   // TODO MULE-13042 - remove this constants and their usages one this code gets migrated to use extension models.
   public static final String MUNIT_PREFIX = "munit";
   public static final ComponentIdentifier MUNIT_TEST_IDENTIFIER =
-      builder().namespace(MUNIT_PREFIX).name("test").build();
+    builder().namespace(MUNIT_PREFIX).name("test").build();
   public static final ComponentIdentifier MUNIT_BEFORE_TEST_IDENTIFIER =
-      builder().namespace(MUNIT_PREFIX).name("before-test").build();
+    builder().namespace(MUNIT_PREFIX).name("before-test").build();
   public static final ComponentIdentifier MUNIT_BEFORE_SUITE_IDENTIFIER =
-      builder().namespace(MUNIT_PREFIX).name("before-suite").build();
+    builder().namespace(MUNIT_PREFIX).name("before-suite").build();
   public static final ComponentIdentifier MUNIT_AFTER_TEST_IDENTIFIER =
-      builder().namespace(MUNIT_PREFIX).name("after-test").build();
+    builder().namespace(MUNIT_PREFIX).name("after-test").build();
   public static final ComponentIdentifier MUNIT_AFTER_SUITE_IDENTIFIER =
-      builder().namespace(MUNIT_PREFIX).name("after-suite").build();
+    builder().namespace(MUNIT_PREFIX).name("after-suite").build();
 
   public static final String HTTP_POLICY = "http-policy";
   public static final ComponentIdentifier HTTP_PROXY_SOURCE_POLICY_IDENTIFIER =
-      builder().namespace(HTTP_POLICY).name("source").build();
+    builder().namespace(HTTP_POLICY).name("source").build();
   public static final ComponentIdentifier HTTP_PROXY_OPERATION_IDENTIFIER =
-      builder().namespace(HTTP_POLICY).name("operation").build();
+    builder().namespace(HTTP_POLICY).name("operation").build();
   public static final ComponentIdentifier HTTP_PROXY_POLICY_IDENTIFIER =
-      builder().namespace(HTTP_POLICY).name("proxy").build();
+    builder().namespace(HTTP_POLICY).name("proxy").build();
 
   public static final String CLASS_ATTRIBUTE = "class";
 
   private static ImmutableSet<ComponentIdentifier> ignoredNameValidationComponentList =
-      ImmutableSet.<ComponentIdentifier>builder()
-          .add(builder().namespace(MULE_ROOT_ELEMENT).name("flow-ref").build())
-          .add(builder().namespace(MULE_ROOT_ELEMENT).name("alias").build())
-          .add(builder().namespace(MULE_ROOT_ELEMENT).name("password-encryption-strategy")
-              .build())
-          .add(builder().namespace(MULE_ROOT_ELEMENT).name("custom-security-provider")
-              .build())
-          .add(builder().namespace(MULE_ROOT_ELEMENT).name("custom-encryption-strategy")
-              .build())
-          .add(builder().namespace(MULE_ROOT_ELEMENT)
-              .name("secret-key-encryption-strategy")
-              .build())
-          .add(builder().namespace(MULE_ROOT_ELEMENT).name("import").build())
-          .add(builder().namespace(MULE_ROOT_ELEMENT)
-              .name("string-to-byte-array-transformer")
-              .build())
-          .add(builder().namespace(MULE_ROOT_ELEMENT).name("append-string-transformer")
-              .build())
-          .add(builder().namespace(MULE_ROOT_ELEMENT).name("security-manager").build())
-          .add(builder().namespace(TEST_NAMESPACE).name("queue").build())
-          .add(builder().namespace(TEST_NAMESPACE).name("invocation-counter").build())
-          .add(builder().namespace(SPRING_SECURITY_NAMESPACE).name("user").build())
-          .add(builder().namespace(MULE_SECURITY_NAMESPACE)
-              .name("delegate-security-provider")
-              .build())
-          .add(builder().namespace(MULE_SECURITY_NAMESPACE).name("security-manager")
-              .build())
-          .add(builder().namespace(MULE_XML_NAMESPACE).name("xslt-transformer").build())
-          .add(builder().namespace(MULE_XML_NAMESPACE).name("alias").build())
-          .add(builder().namespace(PGP_NAMESPACE).name("security-provider").build())
-          .add(builder().namespace(PGP_NAMESPACE).name("keybased-encryption-strategy")
-              .build())
-          .add(builder().namespace(XSL_NAMESPACE).name("param").build())
-          .add(builder().namespace(XSL_NAMESPACE).name("attribute").build())
-          .add(builder().namespace(XSL_NAMESPACE).name("element").build())
-          .add(builder().namespace(TRANSPORT_NAMESPACE).name("inbound-endpoint").build())
-          .add(builder().namespace(TRANSPORT_NAMESPACE).name("outbound-endpoint").build())
-          .add(builder().namespace(JMS_NAMESPACE).name("inbound-endpoint").build())
-          .add(builder().namespace(VM_NAMESPACE).name("inbound-endpoint").build())
-          .add(builder().namespace(HTTP_TRANSPORT_NAMESPACE).name("inbound-endpoint").build())
-          .add(builder().namespace(HTTP_TRANSPORT_NAMESPACE).name("set-cookie").build())
-          .add(builder().namespace(HTTP_TRANSPORT_NAMESPACE).name("header").build())
-          .add(builder().namespace(HTTP_TRANSPORT_NAMESPACE)
-              .name("http-response-to-object-transformer")
-              .build())
-          .add(builder().namespace(HTTP_TRANSPORT_NAMESPACE)
-              .name("http-response-to-string-transformer")
-              .build())
-          .add(builder().namespace(HTTP_TRANSPORT_NAMESPACE)
-              .name("message-to-http-response-transformer")
-              .build())
-          .add(builder().namespace(HTTP_TRANSPORT_NAMESPACE)
-              .name("object-to-http-request-transformer")
-              .build())
-          .add(builder().namespace(BATCH_NAMESPACE).name("step").build())
-          .add(builder().namespace(BATCH_NAMESPACE).name("execute").build())
-          .add(builder().namespace(PARSER_TEST_NAMESPACE).name("child").build())
-          .add(builder().namespace(PARSER_TEST_NAMESPACE).name("kid").build())
-          .add(builder().namespace(DATA_WEAVE).name("reader-property").build())
-          .build();
+    ImmutableSet.<ComponentIdentifier>builder()
+      .add(builder().namespace(MULE_ROOT_ELEMENT).name("flow-ref").build())
+      .add(builder().namespace(MULE_ROOT_ELEMENT).name("alias").build())
+      .add(builder().namespace(MULE_ROOT_ELEMENT).name("password-encryption-strategy")
+             .build())
+      .add(builder().namespace(MULE_ROOT_ELEMENT).name("custom-security-provider")
+             .build())
+      .add(builder().namespace(MULE_ROOT_ELEMENT).name("custom-encryption-strategy")
+             .build())
+      .add(builder().namespace(MULE_ROOT_ELEMENT)
+             .name("secret-key-encryption-strategy")
+             .build())
+      .add(builder().namespace(MULE_ROOT_ELEMENT).name("import").build())
+      .add(builder().namespace(MULE_ROOT_ELEMENT)
+             .name("string-to-byte-array-transformer")
+             .build())
+      .add(builder().namespace(MULE_ROOT_ELEMENT).name("append-string-transformer")
+             .build())
+      .add(builder().namespace(MULE_ROOT_ELEMENT).name("security-manager").build())
+      .add(builder().namespace(TEST_NAMESPACE).name("queue").build())
+      .add(builder().namespace(TEST_NAMESPACE).name("invocation-counter").build())
+      .add(builder().namespace(SPRING_SECURITY_NAMESPACE).name("user").build())
+      .add(builder().namespace(MULE_SECURITY_NAMESPACE)
+             .name("delegate-security-provider")
+             .build())
+      .add(builder().namespace(MULE_SECURITY_NAMESPACE).name("security-manager")
+             .build())
+      .add(builder().namespace(MULE_XML_NAMESPACE).name("xslt-transformer").build())
+      .add(builder().namespace(MULE_XML_NAMESPACE).name("alias").build())
+      .add(builder().namespace(PGP_NAMESPACE).name("security-provider").build())
+      .add(builder().namespace(PGP_NAMESPACE).name("keybased-encryption-strategy")
+             .build())
+      .add(builder().namespace(XSL_NAMESPACE).name("param").build())
+      .add(builder().namespace(XSL_NAMESPACE).name("attribute").build())
+      .add(builder().namespace(XSL_NAMESPACE).name("element").build())
+      .add(builder().namespace(TRANSPORT_NAMESPACE).name("inbound-endpoint").build())
+      .add(builder().namespace(TRANSPORT_NAMESPACE).name("outbound-endpoint").build())
+      .add(builder().namespace(JMS_NAMESPACE).name("inbound-endpoint").build())
+      .add(builder().namespace(VM_NAMESPACE).name("inbound-endpoint").build())
+      .add(builder().namespace(HTTP_TRANSPORT_NAMESPACE).name("inbound-endpoint").build())
+      .add(builder().namespace(HTTP_TRANSPORT_NAMESPACE).name("set-cookie").build())
+      .add(builder().namespace(HTTP_TRANSPORT_NAMESPACE).name("header").build())
+      .add(builder().namespace(HTTP_TRANSPORT_NAMESPACE)
+             .name("http-response-to-object-transformer")
+             .build())
+      .add(builder().namespace(HTTP_TRANSPORT_NAMESPACE)
+             .name("http-response-to-string-transformer")
+             .build())
+      .add(builder().namespace(HTTP_TRANSPORT_NAMESPACE)
+             .name("message-to-http-response-transformer")
+             .build())
+      .add(builder().namespace(HTTP_TRANSPORT_NAMESPACE)
+             .name("object-to-http-request-transformer")
+             .build())
+      .add(builder().namespace(BATCH_NAMESPACE).name("step").build())
+      .add(builder().namespace(BATCH_NAMESPACE).name("execute").build())
+      .add(builder().namespace(PARSER_TEST_NAMESPACE).name("child").build())
+      .add(builder().namespace(PARSER_TEST_NAMESPACE).name("kid").build())
+      .add(builder().namespace(DATA_WEAVE).name("reader-property").build())
+      .build();
 
   private final Optional<ComponentBuildingDefinitionRegistry> componentBuildingDefinitionRegistry;
   private List<ComponentModel> muleComponentModels = new LinkedList<>();
@@ -294,13 +293,13 @@ public class ApplicationModel {
    * <p/>
    * A set of validations are applied that may make creation fail.
    *
-   * @param artifactConfig the mule artifact configuration content.
+   * @param artifactConfig      the mule artifact configuration content.
    * @param artifactDeclaration an {@link ArtifactDeclaration}
    * @throws Exception when the application configuration has semantic errors.
    */
   public ApplicationModel(ArtifactConfig artifactConfig, ArtifactDeclaration artifactDeclaration,
                           ResourceProvider externalResourceProvider)
-      throws Exception {
+    throws Exception {
     this(artifactConfig, artifactDeclaration, emptySet(), emptyMap(), empty(), of(new ComponentBuildingDefinitionRegistry()),
          true, externalResourceProvider);
   }
@@ -310,16 +309,16 @@ public class ApplicationModel {
    * <p/>
    * A set of validations are applied that may make creation fail.
    *
-   * @param artifactConfig the mule artifact configuration content.
-   * @param artifactDeclaration an {@link ArtifactDeclaration}
-   * @param extensionModels Set of {@link ExtensionModel extensionModels} that will be used to type componentModels
-   * @param parentConfigurationProperties the {@link ConfigurationProperties} of the parent artifact. For instance, application
-   *        will receive the domain resolver.
+   * @param artifactConfig                      the mule artifact configuration content.
+   * @param artifactDeclaration                 an {@link ArtifactDeclaration}
+   * @param extensionModels                     Set of {@link ExtensionModel extensionModels} that will be used to type componentModels
+   * @param parentConfigurationProperties       the {@link ConfigurationProperties} of the parent artifact. For instance, application
+   *                                            will receive the domain resolver.
    * @param componentBuildingDefinitionRegistry an optional {@link ComponentBuildingDefinitionRegistry} used to correlate items in
-   *        this model to their definitions
-   * @param runtimeMode true implies the mule application should behave as a runtime app (e.g.: smart connectors will be macro
-   *        expanded) false implies the mule is being created from a tooling perspective.
-   * @param externalResourceProvider the provider for configuration properties files and ${file::name.txt} placeholders
+   *                                            this model to their definitions
+   * @param runtimeMode                         true implies the mule application should behave as a runtime app (e.g.: smart connectors will be macro
+   *                                            expanded) false implies the mule is being created from a tooling perspective.
+   * @param externalResourceProvider            the provider for configuration properties files and ${file::name.txt} placeholders
    * @throws Exception when the application configuration has semantic errors.
    */
   // TODO: MULE-9638 remove this optional
@@ -329,7 +328,7 @@ public class ApplicationModel {
                           Optional<ConfigurationProperties> parentConfigurationProperties,
                           Optional<ComponentBuildingDefinitionRegistry> componentBuildingDefinitionRegistry,
                           boolean runtimeMode, ResourceProvider externalResourceProvider)
-      throws Exception {
+    throws Exception {
 
     this.componentBuildingDefinitionRegistry = componentBuildingDefinitionRegistry;
     this.externalResourceProvider = externalResourceProvider;
@@ -370,11 +369,11 @@ public class ApplicationModel {
   private void resolveTypedComponentIdentifier(ExtensionModelHelper extensionModelHelper) {
     executeOnEveryComponentTree(componentModel -> {
       Optional<TypedComponentIdentifier> typedComponentIdentifier =
-          of(TypedComponentIdentifier.builder().identifier(componentModel.getIdentifier())
-              .type(resolveComponentType(componentModel, extensionModelHelper))
-              .build());
+        of(TypedComponentIdentifier.builder().identifier(componentModel.getIdentifier())
+             .type(resolveComponentType(componentModel, extensionModelHelper))
+             .build());
       componentModel.setComponentType(typedComponentIdentifier.map(typedIdentifier -> typedIdentifier.getType())
-          .orElse(TypedComponentIdentifier.ComponentType.UNKNOWN));
+                                        .orElse(TypedComponentIdentifier.ComponentType.UNKNOWN));
     });
   }
 
@@ -385,92 +384,92 @@ public class ApplicationModel {
     ConfigurationPropertiesProvider deploymentPropertiesConfigurationProperties = null;
     if (!deploymentProperties.isEmpty()) {
       deploymentPropertiesConfigurationProperties =
-          new MapConfigurationPropertiesProvider(deploymentProperties,
-                                                 "Deployment properties");
+        new MapConfigurationPropertiesProvider(deploymentProperties,
+                                               "Deployment properties");
     }
 
     EnvironmentPropertiesConfigurationProvider environmentPropertiesConfigurationProvider =
-        new EnvironmentPropertiesConfigurationProvider();
+      new EnvironmentPropertiesConfigurationProvider();
     ConfigurationPropertiesProvider globalPropertiesConfigurationAttributeProvider =
-        createProviderFromGlobalProperties(artifactConfig);
+      createProviderFromGlobalProperties(artifactConfig);
 
     DefaultConfigurationPropertiesResolver environmentPropertiesConfigurationPropertiesResolver =
-        new DefaultConfigurationPropertiesResolver(empty(), environmentPropertiesConfigurationProvider);
+      new DefaultConfigurationPropertiesResolver(empty(), environmentPropertiesConfigurationProvider);
     DefaultConfigurationPropertiesResolver localResolver =
-        new DefaultConfigurationPropertiesResolver(of(new DefaultConfigurationPropertiesResolver(
-                                                                                                 deploymentPropertiesConfigurationProperties != null
-                                                                                                     ? of(new DefaultConfigurationPropertiesResolver(of(environmentPropertiesConfigurationPropertiesResolver),
-                                                                                                                                                     deploymentPropertiesConfigurationProperties))
-                                                                                                     : of(environmentPropertiesConfigurationPropertiesResolver),
-                                                                                                 globalPropertiesConfigurationAttributeProvider)),
-                                                   environmentPropertiesConfigurationProvider);
+      new DefaultConfigurationPropertiesResolver(of(new DefaultConfigurationPropertiesResolver(
+        deploymentPropertiesConfigurationProperties != null
+          ? of(new DefaultConfigurationPropertiesResolver(of(environmentPropertiesConfigurationPropertiesResolver),
+                                                          deploymentPropertiesConfigurationProperties))
+          : of(environmentPropertiesConfigurationPropertiesResolver),
+        globalPropertiesConfigurationAttributeProvider)),
+                                                 environmentPropertiesConfigurationProvider);
     List<ConfigurationPropertiesProvider> configConfigurationPropertiesProviders =
-        getConfigurationPropertiesProvidersFromComponents(artifactConfig, localResolver);
+      getConfigurationPropertiesProvidersFromComponents(artifactConfig, localResolver);
     FileConfigurationPropertiesProvider externalPropertiesConfigurationProvider =
-        new FileConfigurationPropertiesProvider(externalResourceProvider, "External files");
+      new FileConfigurationPropertiesProvider(externalResourceProvider, "External files");
 
     Optional<ConfigurationPropertiesResolver> parentConfigurationPropertiesResolver = of(localResolver);
     if (parentConfigurationProperties.isPresent()) {
       parentConfigurationPropertiesResolver =
-          of(new DefaultConfigurationPropertiesResolver(empty(), new ConfigurationPropertiesProvider() {
+        of(new DefaultConfigurationPropertiesResolver(empty(), new ConfigurationPropertiesProvider() {
 
-            @Override
-            public Optional<ConfigurationProperty> getConfigurationProperty(String configurationAttributeKey) {
-              return parentConfigurationProperties.get().resolveProperty(configurationAttributeKey)
-                  .map(value -> new DefaultConfigurationProperty(parentConfigurationProperties, configurationAttributeKey,
-                                                                 value));
-            }
+          @Override
+          public Optional<ConfigurationProperty> getConfigurationProperty(String configurationAttributeKey) {
+            return parentConfigurationProperties.get().resolveProperty(configurationAttributeKey)
+              .map(value -> new DefaultConfigurationProperty(parentConfigurationProperties, configurationAttributeKey,
+                                                             value));
+          }
 
-            @Override
-            public String getDescription() {
-              return "Domain properties";
-            }
-          }));
+          @Override
+          public String getDescription() {
+            return "Domain properties";
+          }
+        }));
     }
 
     if (!configConfigurationPropertiesProviders.isEmpty()) {
       CompositeConfigurationPropertiesProvider configurationAttributesProvider =
-          new CompositeConfigurationPropertiesProvider(configConfigurationPropertiesProviders);
+        new CompositeConfigurationPropertiesProvider(configConfigurationPropertiesProviders);
       parentConfigurationPropertiesResolver = of(new DefaultConfigurationPropertiesResolver(
-                                                                                            deploymentPropertiesConfigurationProperties != null
-                                                                                                ?
-                                                                                                // deployment properties provider
-                                                                                                // has to go as parent here so we
-                                                                                                // can reference them from
-                                                                                                // configuration properties files
-                                                                                                of(new DefaultConfigurationPropertiesResolver(parentConfigurationPropertiesResolver,
-                                                                                                                                              deploymentPropertiesConfigurationProperties))
-                                                                                                : parentConfigurationPropertiesResolver,
-                                                                                            configurationAttributesProvider));
+        deploymentPropertiesConfigurationProperties != null
+          ?
+          // deployment properties provider
+          // has to go as parent here so we
+          // can reference them from
+          // configuration properties files
+          of(new DefaultConfigurationPropertiesResolver(parentConfigurationPropertiesResolver,
+                                                        deploymentPropertiesConfigurationProperties))
+          : parentConfigurationPropertiesResolver,
+        configurationAttributesProvider));
     } else if (deploymentPropertiesConfigurationProperties != null) {
       parentConfigurationPropertiesResolver =
-          of(new DefaultConfigurationPropertiesResolver(parentConfigurationPropertiesResolver,
-                                                        deploymentPropertiesConfigurationProperties));
+        of(new DefaultConfigurationPropertiesResolver(parentConfigurationPropertiesResolver,
+                                                      deploymentPropertiesConfigurationProperties));
     }
 
     DefaultConfigurationPropertiesResolver globalPropertiesConfigurationPropertiesResolver =
-        new DefaultConfigurationPropertiesResolver(parentConfigurationPropertiesResolver,
-                                                   globalPropertiesConfigurationAttributeProvider);
+      new DefaultConfigurationPropertiesResolver(parentConfigurationPropertiesResolver,
+                                                 globalPropertiesConfigurationAttributeProvider);
     DefaultConfigurationPropertiesResolver systemPropertiesResolver =
-        new DefaultConfigurationPropertiesResolver(of(globalPropertiesConfigurationPropertiesResolver),
-                                                   environmentPropertiesConfigurationProvider);
+      new DefaultConfigurationPropertiesResolver(of(globalPropertiesConfigurationPropertiesResolver),
+                                                 environmentPropertiesConfigurationProvider);
 
     DefaultConfigurationPropertiesResolver externalPropertiesResolver =
-        new DefaultConfigurationPropertiesResolver(
-                                                   deploymentPropertiesConfigurationProperties != null ?
-                                                   // deployment properties provider has to go as parent here so we can reference
-                                                   // them from external files
-                                                       of(new DefaultConfigurationPropertiesResolver(of(systemPropertiesResolver),
-                                                                                                     deploymentPropertiesConfigurationProperties))
-                                                       : of(systemPropertiesResolver),
-                                                   externalPropertiesConfigurationProvider);
+      new DefaultConfigurationPropertiesResolver(
+        deploymentPropertiesConfigurationProperties != null ?
+          // deployment properties provider has to go as parent here so we can reference
+          // them from external files
+          of(new DefaultConfigurationPropertiesResolver(of(systemPropertiesResolver),
+                                                        deploymentPropertiesConfigurationProperties))
+          : of(systemPropertiesResolver),
+        externalPropertiesConfigurationProvider);
     if (deploymentPropertiesConfigurationProperties == null) {
       this.configurationProperties = new PropertiesResolverConfigurationProperties(externalPropertiesResolver);
     } else {
       // finally the first configuration properties resolver should be deployment properties as they have precedence over the rest
       this.configurationProperties =
-          new PropertiesResolverConfigurationProperties(new DefaultConfigurationPropertiesResolver(of(externalPropertiesResolver),
-                                                                                                   deploymentPropertiesConfigurationProperties));
+        new PropertiesResolverConfigurationProperties(new DefaultConfigurationPropertiesResolver(of(externalPropertiesResolver),
+                                                                                                 deploymentPropertiesConfigurationProperties));
     }
 
     try {
@@ -485,56 +484,56 @@ public class ApplicationModel {
 
     Map<ComponentIdentifier, ConfigurationPropertiesProviderFactory> providerFactoriesMap = new HashMap<>();
     ServiceLoader<ConfigurationPropertiesProviderFactory> providerFactories =
-        java.util.ServiceLoader.load(ConfigurationPropertiesProviderFactory.class);
+      java.util.ServiceLoader.load(ConfigurationPropertiesProviderFactory.class);
     providerFactories.forEach(service -> {
       ComponentIdentifier componentIdentifier = service.getSupportedComponentIdentifier();
       if (providerFactoriesMap.containsKey(componentIdentifier)) {
         throw new MuleRuntimeException(createStaticMessage("Multiple configuration providers for component: "
-            + componentIdentifier));
+                                                             + componentIdentifier));
       }
       providerFactoriesMap.put(componentIdentifier, service);
     });
 
     List<ConfigurationPropertiesProvider> configConfigurationPropertiesProviders = new ArrayList<>();
     artifactConfig.getConfigFiles().stream()
-        .forEach(configFile -> configFile.getConfigLines().stream()
-            .forEach(configLine -> {
-              for (ConfigLine componentConfigLine : configLine.getChildren()) {
-                if (componentConfigLine.getNamespace() == null) {
-                  continue;
-                }
+      .forEach(configFile -> configFile.getConfigLines().stream()
+        .forEach(configLine -> {
+          for (ConfigLine componentConfigLine : configLine.getChildren()) {
+            if (componentConfigLine.getNamespace() == null) {
+              continue;
+            }
 
-                ComponentIdentifier componentIdentifier = ComponentIdentifier.builder()
-                    .namespace(componentConfigLine.getNamespace()).name(componentConfigLine.getIdentifier()).build();
-                if (!providerFactoriesMap.containsKey(componentIdentifier)) {
-                  continue;
-                }
+            ComponentIdentifier componentIdentifier = ComponentIdentifier.builder()
+              .namespace(componentConfigLine.getNamespace()).name(componentConfigLine.getIdentifier()).build();
+            if (!providerFactoriesMap.containsKey(componentIdentifier)) {
+              continue;
+            }
 
-                DefaultConfigurationParameters.Builder configurationParametersBuilder =
-                    DefaultConfigurationParameters.builder();
-                ConfigurationParameters configurationParameters =
-                    resolveConfigurationParameters(configurationParametersBuilder, componentConfigLine, localResolver);
-                ConfigurationPropertiesProvider provider = providerFactoriesMap.get(componentIdentifier)
-                    .createProvider(configurationParameters, externalResourceProvider);
-                if (provider instanceof Component) {
-                  Component providerComponent = (Component) provider;
-                  TypedComponentIdentifier typedComponentIdentifier = TypedComponentIdentifier.builder()
-                      .type(UNKNOWN).identifier(componentIdentifier).build();
-                  DefaultComponentLocation.DefaultLocationPart locationPart =
-                      new DefaultComponentLocation.DefaultLocationPart(componentIdentifier.getName(),
-                                                                       of(typedComponentIdentifier),
-                                                                       of(configFile.getFilename()),
-                                                                       of(configLine.getLineNumber()));
-                  providerComponent.setAnnotations(ImmutableMap.<QName, Object>builder()
-                      .put(AbstractComponent.LOCATION_KEY,
-                           new DefaultComponentLocation(of(componentIdentifier.getName()),
-                                                        singletonList(locationPart)))
-                      .build());
-                }
-                configConfigurationPropertiesProviders.add(provider);
+            DefaultConfigurationParameters.Builder configurationParametersBuilder =
+              DefaultConfigurationParameters.builder();
+            ConfigurationParameters configurationParameters =
+              resolveConfigurationParameters(configurationParametersBuilder, componentConfigLine, localResolver);
+            ConfigurationPropertiesProvider provider = providerFactoriesMap.get(componentIdentifier)
+              .createProvider(configurationParameters, externalResourceProvider);
+            if (provider instanceof Component) {
+              Component providerComponent = (Component) provider;
+              TypedComponentIdentifier typedComponentIdentifier = TypedComponentIdentifier.builder()
+                .type(UNKNOWN).identifier(componentIdentifier).build();
+              DefaultComponentLocation.DefaultLocationPart locationPart =
+                new DefaultComponentLocation.DefaultLocationPart(componentIdentifier.getName(),
+                                                                 of(typedComponentIdentifier),
+                                                                 of(configFile.getFilename()),
+                                                                 of(configLine.getLineNumber()));
+              providerComponent.setAnnotations(ImmutableMap.<QName, Object>builder()
+                                                 .put(AbstractComponent.LOCATION_KEY,
+                                                      new DefaultComponentLocation(of(componentIdentifier.getName()),
+                                                                                   singletonList(locationPart)))
+                                                 .build());
+            }
+            configConfigurationPropertiesProviders.add(provider);
 
-              }
-            }));
+          }
+        }));
     return configConfigurationPropertiesProviders;
   }
 
@@ -542,15 +541,16 @@ public class ApplicationModel {
     disposeIfNeeded(configurationProperties.getConfigurationPropertiesResolver(), LOGGER);
   }
 
-  private ConfigurationParameters resolveConfigurationParameters(DefaultConfigurationParameters.Builder configurationParametersBuilder,
-                                                                 ConfigLine componentConfigLine,
-                                                                 ConfigurationPropertiesResolver localResolver) {
+  private ConfigurationParameters resolveConfigurationParameters(
+    DefaultConfigurationParameters.Builder configurationParametersBuilder,
+    ConfigLine componentConfigLine,
+    ConfigurationPropertiesResolver localResolver) {
     componentConfigLine.getConfigAttributes().forEach((key, value) -> configurationParametersBuilder
-        .withSimpleParameter(key, localResolver.resolveValue(value.getValue())));
+      .withSimpleParameter(key, localResolver.resolveValue(value.getValue())));
     for (ConfigLine childConfigLine : componentConfigLine.getChildren()) {
       DefaultConfigurationParameters.Builder childParametersBuilder = DefaultConfigurationParameters.builder();
       configurationParametersBuilder.withComplexParameter(ComponentIdentifier.builder().name(childConfigLine.getIdentifier())
-          .namespace(childConfigLine.getNamespace()).build(),
+                                                            .namespace(childConfigLine.getNamespace()).build(),
                                                           resolveConfigurationParameters(childParametersBuilder, childConfigLine,
                                                                                          localResolver));
     }
@@ -567,7 +567,7 @@ public class ApplicationModel {
     componentBuildingDefinitionRegistry.ifPresent(buildingDefinitionRegistry -> {
       executeOnEveryComponentTree(componentModel -> {
         Optional<ComponentBuildingDefinition<?>> buildingDefinition =
-            buildingDefinitionRegistry.getBuildingDefinition(componentModel.getIdentifier());
+          buildingDefinitionRegistry.getBuildingDefinition(componentModel.getIdentifier());
         buildingDefinition.map(definition -> {
           ObjectTypeVisitor typeDefinitionVisitor = new ObjectTypeVisitor(componentModel);
           definition.getTypeDefinition().visit(typeDefinitionVisitor);
@@ -603,12 +603,12 @@ public class ApplicationModel {
       if (!flowComponentModel.getInnerComponents().isEmpty()) {
         ComponentModel possibleSourceComponent = flowComponentModel.getInnerComponents().get(0);
         possibleSourceComponent.getInnerComponents().stream()
-            .filter(childComponent -> childComponent.getIdentifier().equals(REDELIVERY_POLICY_IDENTIFIER))
-            .findAny()
-            .ifPresent(redeliveryPolicyComponentModel -> {
-              possibleSourceComponent.getInnerComponents().remove(redeliveryPolicyComponentModel);
-              flowComponentModel.getInnerComponents().add(1, redeliveryPolicyComponentModel);
-            });
+          .filter(childComponent -> childComponent.getIdentifier().equals(REDELIVERY_POLICY_IDENTIFIER))
+          .findAny()
+          .ifPresent(redeliveryPolicyComponentModel -> {
+            possibleSourceComponent.getInnerComponents().remove(redeliveryPolicyComponentModel);
+            flowComponentModel.getInnerComponents().add(1, redeliveryPolicyComponentModel);
+          });
       }
     });
   }
@@ -625,25 +625,25 @@ public class ApplicationModel {
       DslElementModelFactory elementFactory = DslElementModelFactory.getDefault(DslResolvingContext.getDefault(extensionModels));
 
       ComponentModel rootComponent = new ComponentModel.Builder()
-          .setIdentifier(ComponentIdentifier.builder()
-              .namespace(CORE_PREFIX)
-              .name(CORE_PREFIX)
-              .build())
-          .build();
+        .setIdentifier(ComponentIdentifier.builder()
+                         .namespace(CORE_PREFIX)
+                         .name(CORE_PREFIX)
+                         .build())
+        .build();
 
       AtomicBoolean atLeastOneComponentAdded = new AtomicBoolean(false);
 
       artifactDeclaration.getGlobalElements().stream()
-          .map(e -> elementFactory.create((ElementDeclaration) e))
-          .filter(Optional::isPresent)
-          .map(e -> e.get().getConfiguration())
-          .forEach(config -> config
-              .ifPresent(c -> {
-                atLeastOneComponentAdded.set(true);
-                ComponentModel componentModel = convertComponentConfiguration(c, true);
-                componentModel.setParent(rootComponent);
-                rootComponent.getInnerComponents().add(componentModel);
-              }));
+        .map(e -> elementFactory.create((ElementDeclaration) e))
+        .filter(Optional::isPresent)
+        .map(e -> e.get().getConfiguration())
+        .forEach(config -> config
+          .ifPresent(c -> {
+            atLeastOneComponentAdded.set(true);
+            ComponentModel componentModel = convertComponentConfiguration(c, true);
+            componentModel.setParent(rootComponent);
+            rootComponent.getInnerComponents().add(componentModel);
+          }));
 
       if (atLeastOneComponentAdded.get()) {
         this.muleComponentModels.add(rootComponent);
@@ -653,7 +653,7 @@ public class ApplicationModel {
 
   private ComponentModel convertComponentConfiguration(ComponentConfiguration componentConfiguration, boolean isRoot) {
     ComponentModel.Builder builder = new ComponentModel.Builder()
-        .setIdentifier(componentConfiguration.getIdentifier());
+      .setIdentifier(componentConfiguration.getIdentifier());
     if (isRoot) {
       builder.markAsRootComponent();
     }
@@ -706,16 +706,16 @@ public class ApplicationModel {
       return empty();
     }
     return muleComponentModels.get(0).getInnerComponents().stream().filter(ComponentModel::isRoot)
-        .filter(componentModel -> componentModel.getIdentifier().equals(componentIdentifier)).findFirst();
+      .filter(componentModel -> componentModel.getIdentifier().equals(componentIdentifier)).findFirst();
   }
 
   private void convertConfigFileToComponentModel(ArtifactConfig artifactConfig) {
     List<ConfigFile> configFiles = artifactConfig.getConfigFiles();
     ComponentModelReader componentModelReader =
-        new ComponentModelReader(configurationProperties.getConfigurationPropertiesResolver());
+      new ComponentModelReader(configurationProperties.getConfigurationPropertiesResolver());
     configFiles.stream().forEach(configFile -> {
       ComponentModel componentModel =
-          componentModelReader.extractComponentDefinitionModel(configFile.getConfigLines().get(0), configFile.getFilename());
+        componentModelReader.extractComponentDefinitionModel(configFile.getConfigLines().get(0), configFile.getFilename());
       if (muleComponentModels.isEmpty()) {
         muleComponentModels.add(componentModel);
       } else {
@@ -728,7 +728,7 @@ public class ApplicationModel {
   }
 
   private void validateModel(Optional<ComponentBuildingDefinitionRegistry> componentBuildingDefinitionRegistry)
-      throws ConfigurationException {
+    throws ConfigurationException {
     if (muleComponentModels.isEmpty() || !isMuleConfigurationFile()) {
       return;
     }
@@ -755,11 +755,12 @@ public class ApplicationModel {
         if (nameAttribute != null && !nameAttribute.startsWith(DEFAULT_EXPRESSION_PREFIX)) {
           Optional<ComponentModel> referencedFlow = findTopLevelNamedComponent(nameAttribute);
           referencedFlow
-              .orElseThrow(() -> new MuleRuntimeException(createStaticMessage("flow-ref at %s:%s is pointing to %s which does not exist",
-                                                                              componentModel.getConfigFileName()
-                                                                                  .orElse("unknown"),
-                                                                              componentModel.getLineNumber().orElse(-1),
-                                                                              nameAttribute)));
+            .orElseThrow(
+              () -> new MuleRuntimeException(createStaticMessage("flow-ref at %s:%s is pointing to %s which does not exist",
+                                                                 componentModel.getConfigFileName()
+                                                                   .orElse("unknown"),
+                                                                 componentModel.getLineNumber().orElse(-1),
+                                                                 nameAttribute)));
         }
       }
     });
@@ -772,13 +773,13 @@ public class ApplicationModel {
           String mapChildName = hyphenize(pluralize(parameterName));
           String listOrPojoChildName = hyphenize(parameterName);
           Optional<ComponentModel> childOptional =
-              findRelatedChildForParameter(componentModel.getInnerComponents(), mapChildName, listOrPojoChildName);
+            findRelatedChildForParameter(componentModel.getInnerComponents(), mapChildName, listOrPojoChildName);
           if (childOptional.isPresent()) {
             throw new MuleRuntimeException(createStaticMessage(
-                                                               format("Component %s has a child element %s which is used for the same purpose of the configuration parameter %s. "
-                                                                   + "Only one must be used.", componentModel.getIdentifier(),
-                                                                      childOptional.get().getIdentifier(),
-                                                                      parameterName)));
+              format("Component %s has a child element %s which is used for the same purpose of the configuration parameter %s. "
+                       + "Only one must be used.", componentModel.getIdentifier(),
+                     childOptional.get().getIdentifier(),
+                     parameterName)));
           }
         }
       }
@@ -804,18 +805,18 @@ public class ApplicationModel {
         if (existingObjectsWithName.containsKey(nameAttributeValue)) {
           ComponentModel otherComponentModel = existingObjectsWithName.get(nameAttributeValue);
           if (componentModel.getConfigFileName().isPresent() && componentModel.getLineNumber().isPresent() &&
-              otherComponentModel.getConfigFileName().isPresent() && otherComponentModel.getLineNumber().isPresent()) {
+            otherComponentModel.getConfigFileName().isPresent() && otherComponentModel.getLineNumber().isPresent()) {
             throw new MuleRuntimeException(createStaticMessage(
-                                                               "The configuration element [%s] can only appear once, but was present in both [%s:%d] and [%s:%d]",
-                                                               componentModel.getIdentifier(),
-                                                               otherComponentModel.getConfigFileName().get(),
-                                                               otherComponentModel.getLineNumber().get(),
-                                                               componentModel.getConfigFileName().get(),
-                                                               componentModel.getLineNumber().get()));
+              "The configuration element [%s] can only appear once, but was present in both [%s:%d] and [%s:%d]",
+              componentModel.getIdentifier(),
+              otherComponentModel.getConfigFileName().get(),
+              otherComponentModel.getLineNumber().get(),
+              componentModel.getConfigFileName().get(),
+              componentModel.getLineNumber().get()));
           } else {
             throw new MuleRuntimeException(createStaticMessage(
-                                                               "The configuration element [%s] can only appear once, but was present multiple times",
-                                                               componentModel.getIdentifier()));
+              "The configuration element [%s] can only appear once, but was present multiple times",
+              componentModel.getIdentifier()));
           }
         }
         existingObjectsWithName.put(nameAttributeValue, componentModel);
@@ -831,10 +832,10 @@ public class ApplicationModel {
       if (nameAttributeValue != null && !ignoredNameValidationComponentList.contains(componentModel.getIdentifier())) {
         if (existingObjectsWithName.containsKey(nameAttributeValue)) {
           throw new MuleRuntimeException(createStaticMessage(
-                                                             "Two configuration elements have been defined with the same global name. Global name [%s] must be unique. Clashing components are %s and %s",
-                                                             nameAttributeValue,
-                                                             existingObjectsWithName.get(nameAttributeValue).getIdentifier(),
-                                                             componentModel.getIdentifier()));
+            "Two configuration elements have been defined with the same global name. Global name [%s] must be unique. Clashing components are %s and %s",
+            nameAttributeValue,
+            existingObjectsWithName.get(nameAttributeValue).getIdentifier(),
+            componentModel.getIdentifier()));
         }
         existingObjectsWithName.put(nameAttributeValue, componentModel);
       }
@@ -853,26 +854,28 @@ public class ApplicationModel {
   private boolean isMuleConfigurationFile() {
     final ComponentIdentifier rootIdentifier = muleComponentModels.get(0).getIdentifier();
     return rootIdentifier.equals(MULE_IDENTIFIER)
-        || rootIdentifier.equals(MULE_DOMAIN_IDENTIFIER)
-        || rootIdentifier.equals(MULE_EE_DOMAIN_IDENTIFIER);
+      || rootIdentifier.equals(MULE_DOMAIN_IDENTIFIER)
+      || rootIdentifier.equals(MULE_EE_DOMAIN_IDENTIFIER);
   }
 
   private void validateErrorMappings() {
     executeOnEveryComponentTree(componentModel -> {
       List<ComponentModel> errorMappings = componentModel.getInnerComponents().stream()
-          .filter(c -> c.getIdentifier().equals(ERROR_MAPPING_IDENTIFIER)).collect(toList());
+        .filter(c -> c.getIdentifier().equals(ERROR_MAPPING_IDENTIFIER)).collect(toList());
       if (!errorMappings.isEmpty()) {
         List<ComponentModel> anyMappings = errorMappings.stream().filter(this::isErrorMappingWithSourceAny).collect(toList());
         if (anyMappings.size() > 1) {
           throw new MuleRuntimeException(createStaticMessage("Only one mapping for 'ANY' or an empty source type is allowed."));
         } else if (anyMappings.size() == 1 && !isErrorMappingWithSourceAny(errorMappings.get(errorMappings.size() - 1))) {
-          throw new MuleRuntimeException(createStaticMessage("Only the last error mapping can have 'ANY' or an empty source type."));
+          throw new MuleRuntimeException(
+            createStaticMessage("Only the last error mapping can have 'ANY' or an empty source type."));
         }
         List<String> sources = errorMappings.stream().map(model -> model.getParameters().get(SOURCE_TYPE)).collect(toList());
         List<String> distinctSources = sources.stream().distinct().collect(toList());
         if (sources.size() != distinctSources.size()) {
-          throw new MuleRuntimeException(createStaticMessage(format("Repeated source types are not allowed. Offending types are '%s'.",
-                                                                    on("', '").join(disjunction(sources, distinctSources)))));
+          throw new MuleRuntimeException(
+            createStaticMessage(format("Repeated source types are not allowed. Offending types are '%s'.",
+                                       on("', '").join(disjunction(sources, distinctSources)))));
         }
       }
     });
@@ -901,9 +904,9 @@ public class ApplicationModel {
 
   private void validateNoMoreThanOneOnErrorPropagateWithRedelivery(ComponentModel component) {
     if (component.getInnerComponents().stream().filter(exceptionStrategyComponent -> exceptionStrategyComponent.getParameters()
-        .get(MAX_REDELIVERY_ATTEMPTS_ROLLBACK_ES_ATTRIBUTE) != null).count() > 1) {
+      .get(MAX_REDELIVERY_ATTEMPTS_ROLLBACK_ES_ATTRIBUTE) != null).count() > 1) {
       throw new MuleRuntimeException(createStaticMessage(
-                                                         "Only one on-error-propagate within a error-handler can handle message redelivery. Remove one of the maxRedeliveryAttempts attributes"));
+        "Only one on-error-propagate within a error-handler can handle message redelivery. Remove one of the maxRedeliveryAttempts attributes"));
     }
   }
 
@@ -914,7 +917,7 @@ public class ApplicationModel {
       Map<String, String> parameters = componentModel.getParameters();
       if (parameters.get(WHEN_CHOICE_ES_ATTRIBUTE) == null && parameters.get(TYPE_ES_ATTRIBUTE) == null) {
         throw new MuleRuntimeException(createStaticMessage(
-                                                           "Every handler (except for the last one) within an 'error-handler' must specify a 'when' or 'type' attribute."));
+          "Every handler (except for the last one) within an 'error-handler' must specify a 'when' or 'type' attribute."));
       }
     }
   }
@@ -923,8 +926,8 @@ public class ApplicationModel {
     if (ON_ERROR_IDENTIFIER.equals(onErrorModel.getIdentifier())) {
       String sharedOnErrorName = onErrorModel.getParameters().get(REFERENCE_ATTRIBUTE);
       return findTopLevelNamedComponent(sharedOnErrorName).orElseThrow(
-                                                                       () -> new MuleRuntimeException(createStaticMessage(format("Could not find on-error reference named '%s'",
-                                                                                                                                 sharedOnErrorName))));
+        () -> new MuleRuntimeException(createStaticMessage(format("Could not find on-error reference named '%s'",
+                                                                  sharedOnErrorName))));
     } else {
       return onErrorModel;
     }
@@ -935,28 +938,28 @@ public class ApplicationModel {
       if (component.getIdentifier().getName().endsWith(EXCEPTION_STRATEGY_REFERENCE_ELEMENT)) {
         Node componentNode = XmlCustomAttributeHandler.from(component).getNode();
         if (component.getParameters().get(WHEN_CHOICE_ES_ATTRIBUTE) != null
-            && !componentNode.getParentNode().getLocalName().equals(ERROR_HANDLER)
-            && !componentNode.getParentNode().getLocalName().equals(MULE_ROOT_ELEMENT)) {
+          && !componentNode.getParentNode().getLocalName().equals(ERROR_HANDLER)
+          && !componentNode.getParentNode().getLocalName().equals(MULE_ROOT_ELEMENT)) {
           throw new MuleRuntimeException(
-                                         createStaticMessage("Only handlers within an error-handler can have when attribute specified"));
+            createStaticMessage("Only handlers within an error-handler can have when attribute specified"));
         }
       }
     });
   }
 
   private void validateNamedTopLevelElementsHaveName(ComponentBuildingDefinitionRegistry componentBuildingDefinitionRegistry)
-      throws ConfigurationException {
+    throws ConfigurationException {
     try {
       List<ComponentModel> topLevelComponents = muleComponentModels.get(0).getInnerComponents();
       topLevelComponents.stream().forEach(topLevelComponent -> {
         final ComponentIdentifier identifier = topLevelComponent.getIdentifier();
         componentBuildingDefinitionRegistry.getBuildingDefinition(identifier).filter(ComponentBuildingDefinition::isNamed)
-            .ifPresent(buildingDefinition -> {
-              if (isBlank(topLevelComponent.getNameAttribute())) {
-                throw new MuleRuntimeException(createStaticMessage(format("Global element %s:%s does not provide a name attribute.",
-                                                                          identifier.getNamespace(), identifier.getName())));
-              }
-            });
+          .ifPresent(buildingDefinition -> {
+            if (isBlank(topLevelComponent.getNameAttribute())) {
+              throw new MuleRuntimeException(createStaticMessage(format("Global element %s:%s does not provide a name attribute.",
+                                                                        identifier.getNamespace(), identifier.getName())));
+            }
+          });
       });
     } catch (Exception e) {
       throw new ConfigurationException(e);
@@ -999,7 +1002,7 @@ public class ApplicationModel {
   }
 
   private void executeOnComponentTree(final ComponentModel component, final Consumer<ComponentModel> task)
-      throws MuleRuntimeException {
+    throws MuleRuntimeException {
     task.accept(component);
     component.getInnerComponents().forEach((innerComponent) -> {
       executeOnComponentTree(innerComponent, task);
@@ -1029,29 +1032,28 @@ public class ApplicationModel {
   private void validateSingleElementExistence(ComponentIdentifier componentIdentifier) {
     Map<String, Map<ComponentIdentifier, ComponentModel>> existingComponentsPerFile = new HashMap<>();
 
-    executeOnEveryMuleComponentTree(componentModel -> {
-      String configFileName = componentModel.getConfigFileName().get();
-      ComponentIdentifier identifier = componentModel.getIdentifier();
+    executeOnEveryMuleComponentTree(componentModel -> componentModel
+      .getConfigFileName().ifPresent(configFileName -> {
+        ComponentIdentifier identifier = componentModel.getIdentifier();
 
-      if (componentIdentifier.getNamespace().equals(identifier.getNamespace())
+        if (componentIdentifier.getNamespace().equals(identifier.getNamespace())
           && componentIdentifier.getName().equals(identifier.getName())) {
 
-        if (existingComponentsPerFile.containsKey(configFileName)
+          if (existingComponentsPerFile.containsKey(configFileName)
             && existingComponentsPerFile.get(configFileName).containsKey(identifier)) {
-          throw new MuleRuntimeException(createStaticMessage(
-                                                             "Two configuration elements %s have been defined. Element [%s] must be unique. Clashing components are %s and %s",
-                                                             identifier.getNamespace() + ":" + identifier.getName(),
-                                                             identifier.getNamespace() + ":" + identifier.getName(),
-                                                             componentModel.getNameAttribute(),
-                                                             existingComponentsPerFile.get(configFileName).get(identifier)
-                                                                 .getNameAttribute()));
+            throw new MuleRuntimeException(createStaticMessage(
+              "Two configuration elements %s have been defined. Element [%s] must be unique. Clashing components are %s and %s",
+              identifier.getNamespace() + ":" + identifier.getName(),
+              identifier.getNamespace() + ":" + identifier.getName(),
+              componentModel.getNameAttribute(),
+              existingComponentsPerFile.get(configFileName).get(identifier)
+                .getNameAttribute()));
+          }
+          Map<ComponentIdentifier, ComponentModel> existingComponentWithName = new HashMap<>();
+          existingComponentWithName.put(identifier, componentModel);
+          existingComponentsPerFile.put(configFileName, existingComponentWithName);
         }
-        Map<ComponentIdentifier, ComponentModel> existingComponentWithName = new HashMap<>();
-        existingComponentWithName.put(identifier, componentModel);
-        existingComponentsPerFile.put(configFileName, existingComponentWithName);
-      }
-
-    });
+      }));
   }
 
   /**
@@ -1094,7 +1096,7 @@ public class ApplicationModel {
    * message processors
    *
    * @param extensionModels Set of {@link ExtensionModel extensionModels} that will be used to check if the element has to be
-   *        expanded.
+   *                        expanded.
    */
   private void expandModules(Set<ExtensionModel> extensionModels) {
     new MacroExpansionModulesModel(this, extensionModels).expand();
@@ -1121,7 +1123,7 @@ public class ApplicationModel {
 
       this.executeOnEveryRootElement(componentModel -> {
         Optional<ComponentBuildingDefinition<?>> buildingDefinition =
-            definitionRegistry.getBuildingDefinition(componentModel.getIdentifier());
+          definitionRegistry.getBuildingDefinition(componentModel.getIdentifier());
         buildingDefinition.ifPresent(componentBuildingDefinition -> {
           action.accept(componentModel, componentBuildingDefinition);
         });
