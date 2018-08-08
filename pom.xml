@@ -103,7 +103,7 @@
         <module>tools</module>
         <module>transports</module>
         <module>tests</module>
-        <module>extensions</module>
+        <!--<module>extensions</module>-->
     </modules>
 
     <properties>
@@ -126,7 +126,7 @@
         <eclipsePluginVersion>2.5.1</eclipsePluginVersion>
         <groovyVersion>2.4.4</groovyVersion>
         <gmavenPluginVersion>1.4</gmavenPluginVersion>
-        <javadocPluginVersion>2.9.1</javadocPluginVersion>
+        <javadocPluginVersion>3.0.1</javadocPluginVersion>
         <vmtype>org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType</vmtype>
         <mavenCompilerVersion>3.7.0</mavenCompilerVersion>
 
@@ -1448,6 +1448,13 @@
                         <artifactId>c3p0</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.sun</groupId>
+                <artifactId>tools</artifactId>
+                <version>${java.version}</version>
+                <scope>system</scope>
+                <systemPath>${project.basedir}/pom.xml</systemPath>
             </dependency>
         </dependencies>
 

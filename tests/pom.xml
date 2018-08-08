@@ -14,7 +14,7 @@
     <modules>
         <module>functional</module>
         <module>infrastructure</module>
-        <module>performance</module>
+        <!--<module>performance</module>-->
         <module>archetypes</module>
         <module>integration</module>
         <module>integration-axis</module>
