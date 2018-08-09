@@ -23,10 +23,10 @@ import static org.mule.runtime.extension.api.values.ValueResolvingException.UNKN
 import static org.mule.runtime.module.extension.api.util.MuleExtensionUtils.getInitialiserEvent;
 import static org.mule.runtime.module.extension.internal.util.MuleExtensionUtils.getClassLoader;
 import static org.mule.runtime.module.extension.internal.value.ValueProviderUtils.getValueProviderModels;
-
 import org.mule.metadata.api.ClassTypeLoader;
 import org.mule.runtime.api.component.AbstractComponent;
 import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
+import org.mule.runtime.api.component.location.Location;
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.exception.DefaultMuleException;
 import org.mule.runtime.api.exception.MuleException;
@@ -53,13 +53,16 @@ import org.mule.runtime.core.api.extension.ExtensionManager;
 import org.mule.runtime.core.api.streaming.CursorProviderFactory;
 import org.mule.runtime.core.api.streaming.StreamingManager;
 import org.mule.runtime.core.api.util.func.CheckedSupplier;
+import org.mule.runtime.core.internal.component.ComponentAnnotations;
 import org.mule.runtime.core.internal.connection.ConnectionManagerAdapter;
 import org.mule.runtime.core.internal.metadata.MuleMetadataService;
 import org.mule.runtime.core.internal.transaction.TransactionFactoryLocator;
 import org.mule.runtime.core.privileged.event.BaseEventContext;
 import org.mule.runtime.core.privileged.util.TemplateParser;
+import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
 import org.mule.runtime.extension.api.declaration.type.ExtensionsTypeLoaderFactory;
 import org.mule.runtime.extension.api.exception.IllegalModelDefinitionException;
+import org.mule.runtime.extension.api.property.MetadataKeyIdModelProperty;
 import org.mule.runtime.extension.api.runtime.config.ConfigurationInstance;
 import org.mule.runtime.extension.api.runtime.config.ConfigurationProvider;
 import org.mule.runtime.extension.api.values.ComponentValueProvider;
@@ -381,10 +384,24 @@ public abstract class ExtensionComponent<T extends ComponentModel> extends Abstr
         }
       }
 
-      String cacheId = configuration.map(ConfigurationInstance::getName)
+      // String cacheId = configuration
+      //     .map(ConfigurationInstance::getName)
+      //     .orElseGet(() -> extensionModel.getName() + "|" + componentModel.getName());
+      String category = componentModel.getModelProperty(MetadataKeyIdModelProperty.class)
+          .map(mp -> mp.getCategoryName().orElse(null))
+          .orElse(componentModel.getName());
+
+      String configHash = configuration
+          .map(c -> componentLocator.find(Location.builder().globalName(c.getName()).build()).orElse(null))
+          .map(component -> component.getAnnotation(ComponentAnnotations.ANNOTATION_COMPONENT_CONFIG))
+          .map(value -> (ComponentConfiguration) value)
+          .map(config -> String.valueOf(config.hashCode()))
           .orElseGet(() -> extensionModel.getName() + "|" + componentModel.getName());
 
-      return new DefaultMetadataContext(() -> configuration, connectionManager, metadataService.getMetadataCache(cacheId),
+      String cacheId = category + "_" + configHash;
+
+      return new DefaultMetadataContext(() -> configuration, connectionManager,
+                                        metadataService.getMetadataCache(cacheId),
                                         typeLoader);
     } finally {
       if (fakeEvent != null) {

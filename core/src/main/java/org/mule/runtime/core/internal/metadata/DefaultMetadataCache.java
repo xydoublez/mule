@@ -9,6 +9,7 @@ package org.mule.runtime.core.internal.metadata;
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.metadata.MetadataCache;
 import org.mule.runtime.api.metadata.MetadataResolvingException;
+import org.mule.runtime.core.internal.metadata.cache.MetadataCacheManager;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -22,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @since 4.0
  */
-public final class DefaultMetadataCache implements MetadataCache {
+public final class DefaultMetadataCache implements MetadataCacheManager.MetadataCache {
 
   private final Map<Serializable, Serializable> cache = new ConcurrentHashMap<>();
 

@@ -156,7 +156,7 @@ public class PartitionedPersistentObjectStore<T extends Serializable> extends Ab
 
   private void initObjectStoreDirectory() {
     if (storeDirectory == null) {
-      String workingDirectory = muleContext.getConfiguration().getWorkingDirectory();
+      String workingDirectory = "/Users/alejandro/mule-dev/mule-uber/mule/os";//muleContext.getConfiguration().getWorkingDirectory();
       String path = workingDirectory + File.separator + OBJECT_STORE_DIR;
       storeDirectory = FileUtils.newFile(path);
       if (!storeDirectory.exists()) {

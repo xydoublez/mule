@@ -294,7 +294,7 @@ public class ApplicationModel {
    * <p/>
    * A set of validations are applied that may make creation fail.
    *
-   * @param artifactConfig the mule artifact configuration content.
+   * @param artifactConfig      the mule artifact configuration content.
    * @param artifactDeclaration an {@link ArtifactDeclaration}
    * @throws Exception when the application configuration has semantic errors.
    */
@@ -310,16 +310,16 @@ public class ApplicationModel {
    * <p/>
    * A set of validations are applied that may make creation fail.
    *
-   * @param artifactConfig the mule artifact configuration content.
-   * @param artifactDeclaration an {@link ArtifactDeclaration}
-   * @param extensionModels Set of {@link ExtensionModel extensionModels} that will be used to type componentModels
-   * @param parentConfigurationProperties the {@link ConfigurationProperties} of the parent artifact. For instance, application
-   *        will receive the domain resolver.
+   * @param artifactConfig                      the mule artifact configuration content.
+   * @param artifactDeclaration                 an {@link ArtifactDeclaration}
+   * @param extensionModels                     Set of {@link ExtensionModel extensionModels} that will be used to type componentModels
+   * @param parentConfigurationProperties       the {@link ConfigurationProperties} of the parent artifact. For instance, application
+   *                                            will receive the domain resolver.
    * @param componentBuildingDefinitionRegistry an optional {@link ComponentBuildingDefinitionRegistry} used to correlate items in
-   *        this model to their definitions
-   * @param runtimeMode true implies the mule application should behave as a runtime app (e.g.: smart connectors will be macro
-   *        expanded) false implies the mule is being created from a tooling perspective.
-   * @param externalResourceProvider the provider for configuration properties files and ${file::name.txt} placeholders
+   *                                            this model to their definitions
+   * @param runtimeMode                         true implies the mule application should behave as a runtime app (e.g.: smart connectors will be macro
+   *                                            expanded) false implies the mule is being created from a tooling perspective.
+   * @param externalResourceProvider            the provider for configuration properties files and ${file::name.txt} placeholders
    * @throws Exception when the application configuration has semantic errors.
    */
   // TODO: MULE-9638 remove this optional
@@ -434,7 +434,10 @@ public class ApplicationModel {
       parentConfigurationPropertiesResolver = of(new DefaultConfigurationPropertiesResolver(
                                                                                             deploymentPropertiesConfigurationProperties != null
                                                                                                 ?
-                                                                                                // deployment properties provider has to go as parent here so we can reference them from configuration properties files
+                                                                                                // deployment properties provider
+                                                                                                // has to go as parent here so we
+                                                                                                // can reference them from
+                                                                                                // configuration properties files
                                                                                                 of(new DefaultConfigurationPropertiesResolver(parentConfigurationPropertiesResolver,
                                                                                                                                               deploymentPropertiesConfigurationProperties))
                                                                                                 : parentConfigurationPropertiesResolver,
@@ -455,7 +458,8 @@ public class ApplicationModel {
     DefaultConfigurationPropertiesResolver externalPropertiesResolver =
         new DefaultConfigurationPropertiesResolver(
                                                    deploymentPropertiesConfigurationProperties != null ?
-                                                   // deployment properties provider has to go as parent here so we can reference them from external files
+                                                   // deployment properties provider has to go as parent here so we can reference
+                                                   // them from external files
                                                        of(new DefaultConfigurationPropertiesResolver(of(systemPropertiesResolver),
                                                                                                      deploymentPropertiesConfigurationProperties))
                                                        : of(systemPropertiesResolver),
@@ -538,7 +542,8 @@ public class ApplicationModel {
     disposeIfNeeded(configurationProperties.getConfigurationPropertiesResolver(), LOGGER);
   }
 
-  private ConfigurationParameters resolveConfigurationParameters(DefaultConfigurationParameters.Builder configurationParametersBuilder,
+  private ConfigurationParameters resolveConfigurationParameters(
+                                                                 DefaultConfigurationParameters.Builder configurationParametersBuilder,
                                                                  ConfigLine componentConfigLine,
                                                                  ConfigurationPropertiesResolver localResolver) {
     componentConfigLine.getConfigAttributes().forEach((key, value) -> configurationParametersBuilder
@@ -753,7 +758,8 @@ public class ApplicationModel {
         if (nameAttribute != null && !nameAttribute.startsWith(DEFAULT_EXPRESSION_PREFIX)) {
           Optional<ComponentModel> referencedFlow = findTopLevelNamedComponent(nameAttribute);
           referencedFlow
-              .orElseThrow(() -> new MuleRuntimeException(createStaticMessage("flow-ref at %s:%s is pointing to %s which does not exist",
+              .orElseThrow(
+                           () -> new MuleRuntimeException(createStaticMessage("flow-ref at %s:%s is pointing to %s which does not exist",
                                                                               componentModel.getConfigFileName()
                                                                                   .orElse("unknown"),
                                                                               componentModel.getLineNumber().orElse(-1),
@@ -864,12 +870,14 @@ public class ApplicationModel {
         if (anyMappings.size() > 1) {
           throw new MuleRuntimeException(createStaticMessage("Only one mapping for 'ANY' or an empty source type is allowed."));
         } else if (anyMappings.size() == 1 && !isErrorMappingWithSourceAny(errorMappings.get(errorMappings.size() - 1))) {
-          throw new MuleRuntimeException(createStaticMessage("Only the last error mapping can have 'ANY' or an empty source type."));
+          throw new MuleRuntimeException(
+                                         createStaticMessage("Only the last error mapping can have 'ANY' or an empty source type."));
         }
         List<String> sources = errorMappings.stream().map(model -> model.getParameters().get(SOURCE_TYPE)).collect(toList());
         List<String> distinctSources = sources.stream().distinct().collect(toList());
         if (sources.size() != distinctSources.size()) {
-          throw new MuleRuntimeException(createStaticMessage(format("Repeated source types are not allowed. Offending types are '%s'.",
+          throw new MuleRuntimeException(
+                                         createStaticMessage(format("Repeated source types are not allowed. Offending types are '%s'.",
                                                                     on("', '").join(disjunction(sources, distinctSources)))));
         }
       }
@@ -1021,29 +1029,28 @@ public class ApplicationModel {
   private void validateSingleElementExistence(ComponentIdentifier componentIdentifier) {
     Map<String, Map<ComponentIdentifier, ComponentModel>> existingComponentsPerFile = new HashMap<>();
 
-    executeOnEveryMuleComponentTree(componentModel -> {
-      String configFileName = componentModel.getConfigFileName().get();
-      ComponentIdentifier identifier = componentModel.getIdentifier();
+    executeOnEveryMuleComponentTree(componentModel -> componentModel
+        .getConfigFileName().ifPresent(configFileName -> {
+          ComponentIdentifier identifier = componentModel.getIdentifier();
 
-      if (componentIdentifier.getNamespace().equals(identifier.getNamespace())
-          && componentIdentifier.getName().equals(identifier.getName())) {
+          if (componentIdentifier.getNamespace().equals(identifier.getNamespace())
+              && componentIdentifier.getName().equals(identifier.getName())) {
 
-        if (existingComponentsPerFile.containsKey(configFileName)
-            && existingComponentsPerFile.get(configFileName).containsKey(identifier)) {
-          throw new MuleRuntimeException(createStaticMessage(
-                                                             "Two configuration elements %s have been defined. Element [%s] must be unique. Clashing components are %s and %s",
-                                                             identifier.getNamespace() + ":" + identifier.getName(),
-                                                             identifier.getNamespace() + ":" + identifier.getName(),
-                                                             componentModel.getNameAttribute(),
-                                                             existingComponentsPerFile.get(configFileName).get(identifier)
-                                                                 .getNameAttribute()));
-        }
-        Map<ComponentIdentifier, ComponentModel> existingComponentWithName = new HashMap<>();
-        existingComponentWithName.put(identifier, componentModel);
-        existingComponentsPerFile.put(configFileName, existingComponentWithName);
-      }
-
-    });
+            if (existingComponentsPerFile.containsKey(configFileName)
+                && existingComponentsPerFile.get(configFileName).containsKey(identifier)) {
+              throw new MuleRuntimeException(createStaticMessage(
+                                                                 "Two configuration elements %s have been defined. Element [%s] must be unique. Clashing components are %s and %s",
+                                                                 identifier.getNamespace() + ":" + identifier.getName(),
+                                                                 identifier.getNamespace() + ":" + identifier.getName(),
+                                                                 componentModel.getNameAttribute(),
+                                                                 existingComponentsPerFile.get(configFileName).get(identifier)
+                                                                     .getNameAttribute()));
+            }
+            Map<ComponentIdentifier, ComponentModel> existingComponentWithName = new HashMap<>();
+            existingComponentWithName.put(identifier, componentModel);
+            existingComponentsPerFile.put(configFileName, existingComponentWithName);
+          }
+        }));
   }
 
   /**
@@ -1086,7 +1093,7 @@ public class ApplicationModel {
    * message processors
    *
    * @param extensionModels Set of {@link ExtensionModel extensionModels} that will be used to check if the element has to be
-   *        expanded.
+   *                        expanded.
    */
   private void expandModules(Set<ExtensionModel> extensionModels) {
     new MacroExpansionModulesModel(this, extensionModels).expand();
