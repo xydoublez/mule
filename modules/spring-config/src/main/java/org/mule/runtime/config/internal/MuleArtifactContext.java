@@ -212,21 +212,24 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
     this.resourceLocator = new DefaultResourceLocator();
     originalRegistry = ((MuleRegistryHelper) this.muleContext.getRegistry()).getDelegate();
 
+    Lapse lapse = new Lapse();
     runtimeComponentBuildingDefinitionProvider.getComponentBuildingDefinitions()
         .forEach(componentBuildingDefinitionRegistry::register);
 
     getExtensionModelsComponentBuildingDefinitions(serviceRegistry,
                                                    getExtensionModels(muleContext.getExtensionManager()).orElse(emptySet()))
-                                                       .forEach(componentBuildingDefinitionRegistry::register);
+        .forEach(componentBuildingDefinitionRegistry::register);
 
     for (ClassLoader pluginArtifactClassLoader : pluginsClassLoaders) {
       ComponentBuildingDefinitionUtils.getArtifactComponentBuildingDefinitions(serviceRegistry, pluginArtifactClassLoader)
           .forEach(componentBuildingDefinitionRegistry::register);
     }
 
+    lapse.mark("register component definitions");
     this.beanDefinitionFactory =
         new BeanDefinitionFactory(componentBuildingDefinitionRegistry, muleContext.getErrorTypeRepository());
 
+    lapse.mark("create bean definition factory");
     createApplicationModel();
     validateAllConfigElementHaveParsers();
 
@@ -237,7 +240,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
 
   private static Optional<Set<ExtensionModel>> getExtensionModels(ExtensionManager extensionManager) {
     return ofNullable(extensionManager == null ? null
-        : extensionManager.getExtensions());
+                          : extensionManager.getExtensions());
   }
 
   private void validateAllConfigElementHaveParsers() {
@@ -253,6 +256,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
   }
 
   private void createApplicationModel() {
+    Lapse lapse = new Lapse();
     try {
       DefaultConfigurationPropertiesResolver propertyResolver =
           new DefaultConfigurationPropertiesResolver(empty(), new EnvironmentPropertiesConfigurationProvider());
@@ -311,6 +315,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
     } catch (Exception e) {
       throw new MuleRuntimeException(e);
     }
+    lapse.mark("create application model");
   }
 
   @Override
@@ -476,7 +481,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
                                                } else if (nameAttribute == null) {
                                                  // This may be a configuration that does not requires a name.
                                                  nameAttribute = uniqueValue(resolvedSpringComponentModel.getBeanDefinition()
-                                                     .getBeanClassName());
+                                                                                 .getBeanClassName());
 
                                                  if (alwaysEnabledUnnamedTopLevelComponents
                                                      .contains(resolvedSpringComponentModel.getIdentifier())) {
@@ -500,7 +505,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
 
     this.objectProviders
         .addAll(objectProvidersByName.stream().map(pair -> (ConfigurableObjectProvider) pair.getFirst().getObjectInstance())
-            .collect(toList()));
+                    .collect(toList()));
     registerObjectFromObjectProviders(beanFactory);
 
     Set<String> objectProviderNames = objectProvidersByName.stream().map(Pair::getSecond).filter(Optional::isPresent)

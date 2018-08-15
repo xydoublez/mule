@@ -21,6 +21,7 @@ import org.mule.runtime.api.lifecycle.Stoppable;
 import org.mule.runtime.api.meta.NamedObject;
 import org.mule.runtime.api.service.Service;
 import org.mule.runtime.api.service.ServiceProvider;
+import org.mule.runtime.api.util.Lapse;
 import org.mule.runtime.api.util.LazyValue;
 import org.mule.runtime.core.api.util.func.CheckedRunnable;
 import org.mule.runtime.core.api.util.func.CheckedSupplier;
@@ -126,11 +127,13 @@ public class LazyServiceProxy implements InvocationHandler {
 
   private CheckedSupplier<Service> createService() {
     return () -> {
+      Lapse lapse = new Lapse();
       Service service = withServiceClassLoader(() -> instantiateService());
       if (started.compareAndSet(false, true)) {
         doStart(service);
         stopped.set(false);
       }
+      lapse.mark("Started service " + assembly.getServiceContract().getSimpleName());
       return service;
     };
   }

@@ -14,6 +14,7 @@ import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.lifecycle.LifecycleException;
+import org.mule.runtime.api.util.Lapse;
 import org.mule.runtime.config.internal.dsl.model.ConfigurationDependencyResolver;
 import org.mule.runtime.config.internal.factories.ConstantFactoryBean;
 import org.mule.runtime.core.api.Injector;
@@ -97,7 +98,10 @@ public class SpringRegistry extends AbstractRegistry implements Injector {
     springContextInitialised.set(true);
 
     if (!readOnly) {
+      System.out.println("<<< ABOUT TO REFRESH APP CONTEXT >>> ");
+      Lapse lapse = new Lapse();
       ((ConfigurableApplicationContext) applicationContext).refresh();
+      lapse.mark("app context refresh");
     }
 
   }

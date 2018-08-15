@@ -9,10 +9,10 @@ package org.mule.runtime.module.launcher.coreextension;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.APP;
 import static org.mule.runtime.core.api.config.bootstrap.ArtifactType.DOMAIN;
 import static org.slf4j.LoggerFactory.getLogger;
-
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.service.ServiceRepository;
+import org.mule.runtime.api.util.Lapse;
 import org.mule.runtime.container.api.ArtifactClassLoaderManagerAware;
 import org.mule.runtime.container.api.CoreExtensionsAware;
 import org.mule.runtime.container.api.MuleCoreExtension;
@@ -30,11 +30,11 @@ import org.mule.runtime.module.repository.api.RepositoryServiceAware;
 import org.mule.runtime.module.tooling.api.ToolingService;
 import org.mule.runtime.module.tooling.api.ToolingServiceAware;
 
-import org.slf4j.Logger;
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.slf4j.Logger;
 
 public class DefaultMuleCoreExtensionManagerServer implements MuleCoreExtensionManagerServer {
 
@@ -84,12 +84,13 @@ public class DefaultMuleCoreExtensionManagerServer implements MuleCoreExtensionM
   @Override
   public void initialise() throws InitialisationException {
     try {
+      Lapse lapse = new Lapse();
       coreExtensions = coreExtensionDiscoverer.discover();
-
+      lapse.mark("discover core extension dependencies");
       orderedCoreExtensions = coreExtensionDependencyResolver.resolveDependencies(coreExtensions);
-
+      lapse.mark("resolver Core extension dependencies");
       initializeCoreExtensions();
-
+      lapse.mark("initialize core extensions");
     } catch (Exception e) {
       throw new InitialisationException(e, this);
     }
@@ -101,7 +102,9 @@ public class DefaultMuleCoreExtensionManagerServer implements MuleCoreExtensionM
       LOGGER.debug("Starting core extensions");
     }
     for (MuleCoreExtension extension : orderedCoreExtensions) {
+      Lapse lapse = new Lapse();
       extension.start();
+      lapse.mark("start core extension " + extension.getName());
       startedCoreExtensions.add(extension);
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Core extension '{}' started", extension.toString());
@@ -139,9 +142,9 @@ public class DefaultMuleCoreExtensionManagerServer implements MuleCoreExtensionM
     if (LOGGER.isDebugEnabled()) {
       LOGGER.debug("Initializing core extensions");
     }
-
+    Lapse lapse = new Lapse();
     Injector simpleRegistry = createContainerInjector();
-
+    lapse.mark("create core extension injector");
     for (MuleCoreExtension extension : orderedCoreExtensions) {
       if (extension instanceof DeploymentServiceAware) {
         ((DeploymentServiceAware) extension).setDeploymentService(deploymentService);
@@ -173,9 +176,12 @@ public class DefaultMuleCoreExtensionManagerServer implements MuleCoreExtensionM
         ((ArtifactClassLoaderManagerAware) extension).setArtifactClassLoaderManager(artifactClassLoaderManager);
       }
 
+      lapse.mark("configure core extension " + extension.getName());
       simpleRegistry.inject(extension);
+      lapse.mark("inject extension " + extension.getName());
 
       extension.initialise();
+      lapse.mark("initialised extension " + extension.getName());
       initializedCoreExtensions.add(extension);
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Core extension '{}' initialized", extension.toString());

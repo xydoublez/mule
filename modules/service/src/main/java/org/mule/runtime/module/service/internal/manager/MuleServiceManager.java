@@ -15,6 +15,7 @@ import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.startIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.service.Service;
+import org.mule.runtime.api.util.Lapse;
 import org.mule.runtime.core.api.lifecycle.StartException;
 import org.mule.runtime.module.service.api.discoverer.ServiceDiscoverer;
 import org.mule.runtime.module.service.api.manager.ServiceManager;
@@ -53,9 +54,12 @@ public class MuleServiceManager implements ServiceManager {
       servicesFolder.mkdir();
     }
 
+    Lapse lapse = new Lapse();
     try {
       services = serviceDiscoverer.discoverServices();
+      lapse.mark("discover services");
       startServices();
+      lapse.mark("start services");
     } catch (Exception e) {
       throw new StartException(e, this);
     }

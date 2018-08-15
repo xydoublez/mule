@@ -70,6 +70,7 @@ import org.mule.runtime.api.serialization.ObjectSerializer;
 import org.mule.runtime.api.store.ObjectStore;
 import org.mule.runtime.api.store.ObjectStoreManager;
 import org.mule.runtime.api.transformation.TransformationService;
+import org.mule.runtime.api.util.Lapse;
 import org.mule.runtime.api.util.concurrent.Latch;
 import org.mule.runtime.core.api.Injector;
 import org.mule.runtime.core.api.MuleContext;
@@ -291,7 +292,9 @@ public class DefaultMuleContext implements MuleContextWithRegistry, PrivilegedMu
         getRegistry().initialise();
 
         fireNotification(new MuleContextNotification(this, CONTEXT_INITIALISING));
+        Lapse lapse = new Lapse();
         getLifecycleManager().fireLifecycle(Initialisable.PHASE_NAME);
+        lapse.mark("Initialise");
         fireNotification(new MuleContextNotification(this, CONTEXT_INITIALISED));
         final org.mule.runtime.api.artifact.Registry apiRegistry = getApiRegistry();
         listeners.forEach(l -> {
@@ -344,10 +347,12 @@ public class DefaultMuleContext implements MuleContextWithRegistry, PrivilegedMu
       startDate = System.currentTimeMillis();
 
       fireNotification(new MuleContextNotification(this, CONTEXT_STARTING));
+      Lapse lapse = new Lapse();
       getLifecycleManager().fireLifecycle(Startable.PHASE_NAME);
 
       lifecycleStrategy.start(this);
 
+      lapse.mark("start");
       fireNotification(new MuleContextNotification(this, CONTEXT_STARTED));
       final org.mule.runtime.api.artifact.Registry apiRegistry = getApiRegistry();
       listeners.forEach(l -> l.onStart(this, apiRegistry));
@@ -362,7 +367,9 @@ public class DefaultMuleContext implements MuleContextWithRegistry, PrivilegedMu
   }
 
   private void startMessageSources() throws LifecycleException {
+    Lapse lapse = new Lapse();
     startPipelineMessageSources();
+    lapse.mark("start message sources");
   }
 
   private void startPipelineMessageSources() throws LifecycleException {

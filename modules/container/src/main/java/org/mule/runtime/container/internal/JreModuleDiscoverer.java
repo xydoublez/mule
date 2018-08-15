@@ -10,6 +10,7 @@ package org.mule.runtime.container.internal;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static org.mule.runtime.container.internal.JreExplorer.exploreJdk;
+import org.mule.runtime.api.util.Lapse;
 import org.mule.runtime.container.api.MuleModule;
 import org.mule.runtime.module.artifact.api.classloader.ExportedService;
 
@@ -40,7 +41,9 @@ public class JreModuleDiscoverer implements ModuleDiscoverer {
     Set<String> resources = new HashSet<>(1024);
     List<ExportedService> services = new ArrayList<>(128);
 
+    Lapse lapse = new Lapse();
     exploreJdk(packages, resources, services);
+    lapse.mark("exploreJDK");;
 
     if (logger.isDebugEnabled()) {
       logger.debug("Discovered JRE:\npackages: {}\nresources: {}\nservices: {}", packages, resources,
