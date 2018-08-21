@@ -29,7 +29,7 @@ public final class SpringArtifactConfigurationProcessor implements ArtifactConfi
       throws ConfigurationException {
     final String[] configResources = artifactContextConfiguration.getConfigResources();
 
-    if (isEmpty(configResources)) {
+    if (isEmpty(configResources) && artifactContextConfiguration.getArtifactDeclaration() == null) {
       ((DefaultMuleContext) artifactContextConfiguration.getMuleContext())
           .setLifecycleStrategy(new NullDomainMuleContextLifecycleStrategy());
       return new ImmutableArtifactContext(artifactContextConfiguration.getMuleContext());

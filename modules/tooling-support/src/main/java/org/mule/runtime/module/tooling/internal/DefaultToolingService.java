@@ -8,6 +8,7 @@ package org.mule.runtime.module.tooling.internal;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -24,12 +25,14 @@ import org.mule.runtime.api.deployment.meta.MuleApplicationModel;
 import org.mule.runtime.api.deployment.meta.MuleArtifactLoaderDescriptor;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
+import org.mule.runtime.app.declaration.api.ArtifactDeclaration;
 import org.mule.runtime.core.api.util.UUID;
 import org.mule.runtime.deployment.model.api.application.Application;
 import org.mule.runtime.deployment.model.api.application.ApplicationDescriptor;
 import org.mule.runtime.deployment.model.api.domain.Domain;
 import org.mule.runtime.deployment.model.api.domain.DomainDescriptor;
 import org.mule.runtime.module.artifact.api.descriptor.BundleDescriptor;
+import org.mule.runtime.module.artifact.api.descriptor.ClassLoaderModel;
 import org.mule.runtime.module.deployment.impl.internal.application.ApplicationWrapper;
 import org.mule.runtime.module.deployment.impl.internal.application.DefaultApplicationFactory;
 import org.mule.runtime.module.deployment.impl.internal.application.ToolingApplicationDescriptorFactory;
@@ -133,16 +136,18 @@ public class DefaultToolingService implements ToolingService {
     Optional<Properties> mergedDeploymentProperties = of(createDeploymentProperties(deploymentProperties));
     MuleApplicationModel.MuleApplicationModelBuilder applicationArtifactModelBuilder =
         applicationDescriptorFactory.createArtifactModelBuilder(toolingApplicationContent);
+
+    MuleArtifactLoaderDescriptor classLoaderModelDescriptorLoader =
+        applicationArtifactModelBuilder.getClassLoaderModelDescriptorLoader();
+    Map<String, Object> extendedAttributes = new HashMap<>(classLoaderModelDescriptorLoader.getAttributes());
+
     String domainName = mergedDeploymentProperties.get().getProperty(DEPLOYMENT_DOMAIN_NAME_REF);
     if (domainName != null) {
       Domain domain = domainRepository.getDomain(domainName);
       if (domain == null) {
         throw new IllegalArgumentException(format("Domain '%s' is expected to be deployed", domainName));
       }
-
-      MuleArtifactLoaderDescriptor classLoaderModelDescriptorLoader =
-          applicationArtifactModelBuilder.getClassLoaderModelDescriptorLoader();
-      Map<String, Object> extendedAttributes = new HashMap<>(classLoaderModelDescriptorLoader.getAttributes());
+      domainName = domain.getArtifactName();
       extendedAttributes.put(CLASSLOADER_MODEL_MAVEN_REACTOR_RESOLVER,
                              new DomainMavenReactorResolver(
                                                             domain
@@ -150,17 +155,31 @@ public class DefaultToolingService implements ToolingService {
                                                             domain
                                                                 .getDescriptor()
                                                                 .getBundleDescriptor()));
-      applicationArtifactModelBuilder
-          .withClassLoaderModelDescriptorLoader(new MuleArtifactLoaderDescriptor(classLoaderModelDescriptorLoader.getId(),
-                                                                                 extendedAttributes));
-      ApplicationDescriptor applicationDescriptor =
-          applicationDescriptorFactory.createArtifact(toolingApplicationContent, mergedDeploymentProperties,
-                                                      applicationArtifactModelBuilder.build());
-      applicationDescriptor.setDomainName(domain.getArtifactName());
-      return new ToolingApplicationWrapper(doCreateApplication(applicationDescriptor));
     }
-    return new ToolingApplicationWrapper(doCreateApplication(applicationDescriptorFactory.create(toolingApplicationContent,
-                                                                                                 mergedDeploymentProperties)));
+
+    applicationArtifactModelBuilder
+        .withClassLoaderModelDescriptorLoader(new MuleArtifactLoaderDescriptor(classLoaderModelDescriptorLoader.getId(),
+                                                                               extendedAttributes));
+    ApplicationDescriptor applicationDescriptor =
+        applicationDescriptorFactory.createArtifact(toolingApplicationContent, mergedDeploymentProperties,
+                                                    applicationArtifactModelBuilder.build());
+
+    // TODO improve this!
+    if (domainName != null) {
+      applicationDescriptor.setDomainName(domainName);
+    }
+
+    // TODO hardcoded
+    applicationDescriptor.getClassLoaderModel();
+    ClassLoaderModel.ClassLoaderModelBuilder classLoaderModelBuilder = new ClassLoaderModel.ClassLoaderModelBuilder();
+    classLoaderModelBuilder.dependingOn(applicationDescriptor.getClassLoaderModel().getDependencies());
+    // TODO test dependencies?
+    applicationDescriptor.setClassLoaderModel(classLoaderModelBuilder.build());
+    applicationDescriptor.setConfigResources(emptySet());
+    applicationDescriptor.setArtifactDeclaration(new ArtifactDeclaration());
+
+    return new ToolingApplicationWrapper(doCreateApplication(applicationDescriptor));
+    //return new ToolingApplicationWrapper(doCreateApplication(applicationDescriptorFactory.create(toolingApplicationContent,
   }
 
   /**
@@ -189,6 +208,24 @@ public class DefaultToolingService implements ToolingService {
       deleteQuietly(toolingApplicationContent);
       throw t;
     }
+  }
+
+  @Override
+  public void loadApplicationContent(Application application, File applicationLocation) throws IOException {
+    // TODO review domain ref!
+    MuleApplicationModel.MuleApplicationModelBuilder applicationArtifactModelBuilder =
+        applicationDescriptorFactory.createArtifactModelBuilder(applicationLocation);
+
+    ApplicationDescriptor applicationDescriptor =
+        applicationDescriptorFactory.createArtifact(applicationLocation, of(createDeploymentProperties()),
+                                                    applicationArtifactModelBuilder.build());
+    // Just force to reference domain default and no plugins
+    applicationDescriptor.setDomainName(null);
+    applicationDescriptor.setPlugins(emptySet());
+
+    // TODO copy file, etc... do I have to do that?
+    Application reloadedApplication = applicationFactory.createArtifact(applicationDescriptor);
+    reloadedApplication.getArtifactClassLoader();
   }
 
   private Application doCreateApplication(ApplicationDescriptor applicationDescriptor) throws IOException {

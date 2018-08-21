@@ -25,15 +25,6 @@ import static org.mule.runtime.core.internal.logging.LogUtil.log;
 import static org.mule.runtime.core.internal.util.splash.SplashScreen.miniSplash;
 import static org.mule.runtime.module.deployment.impl.internal.artifact.ArtifactContextBuilder.newBuilder;
 import static org.mule.runtime.module.deployment.impl.internal.util.DeploymentPropertiesUtils.resolveDeploymentProperties;
-
-import java.io.File;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.stream.Collectors;
-
 import org.mule.runtime.api.artifact.Registry;
 import org.mule.runtime.api.connectivity.ConnectivityTestingService;
 import org.mule.runtime.api.exception.MuleException;
@@ -69,6 +60,15 @@ import org.mule.runtime.module.artifact.api.classloader.RegionClassLoader;
 import org.mule.runtime.module.deployment.impl.internal.artifact.ArtifactContextBuilder;
 import org.mule.runtime.module.deployment.impl.internal.domain.DomainRepository;
 import org.mule.runtime.module.extension.internal.loader.ExtensionModelLoaderRepository;
+
+import java.io.File;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -282,8 +282,12 @@ public class DefaultMuleApplication implements Application {
       }
     };
 
-    notificationRegistrer = registry.lookupByType(NotificationListenerRegistry.class).get();
-    notificationRegistrer.registerListener(statusListener);
+    Optional<NotificationListenerRegistry> notificationListenerRegistryOptional =
+        registry.lookupByType(NotificationListenerRegistry.class);
+    if (notificationListenerRegistryOptional.isPresent()) {
+      notificationRegistrer = notificationListenerRegistryOptional.get();
+      notificationRegistrer.registerListener(statusListener);
+    }
   }
 
   private void updateStatusFor(String phase) {
@@ -291,7 +295,7 @@ public class DefaultMuleApplication implements Application {
   }
 
   private void setStatusToFailed() {
-    if (artifactContext != null) {
+    if (artifactContext != null && notificationRegistrer != null) {
       notificationRegistrer.unregisterListener(statusListener);
     }
 

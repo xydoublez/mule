@@ -114,6 +114,8 @@ public interface ToolingService extends Initialisable, Stoppable {
     throw new UnsupportedOperationException("Method not support for Mule Runtime version: " + getProductVersion());
   }
 
+  default void loadApplicationContent(Application application, File applicationLocation) throws IOException {}
+
   /**
    * Creates a {@link org.mule.runtime.deployment.model.api.domain.Domain} from a set of resources.
    * <p/>

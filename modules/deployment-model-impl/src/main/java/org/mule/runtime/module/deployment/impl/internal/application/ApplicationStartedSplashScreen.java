@@ -48,8 +48,10 @@ public class ApplicationStartedSplashScreen extends ArtifactStartedSplashScreen<
   protected void listLibraries(ApplicationDescriptor descriptor) {
     // Excludes the application URL 
     URL[] urls = descriptor.getClassLoaderModel().getUrls();
-    urls = Arrays.copyOfRange(urls, 1, urls.length);
+    if (urls.length > 0) {
+      urls = Arrays.copyOfRange(urls, 1, urls.length);
 
-    listItems(stream(urls).map(url -> toFile(url).getName()).collect(toList()), "Application libraries:");
+      listItems(stream(urls).map(url -> toFile(url).getName()).collect(toList()), "Application libraries:");
+    }
   }
 }
