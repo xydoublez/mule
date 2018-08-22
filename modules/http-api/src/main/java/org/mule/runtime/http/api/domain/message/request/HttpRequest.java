@@ -55,4 +55,10 @@ public interface HttpRequest extends HttpMessage {
    */
   MultiMap<String, String> getQueryParams();
 
+  /**
+   * close request resources
+   */
+  default void closeResources() {
+
+  }
 }

@@ -8,18 +8,23 @@ package org.mule.runtime.http.api.domain.message.request;
 
 import static java.lang.System.lineSeparator;
 
+import java.io.IOException;
+import java.net.URI;
+import java.util.Collection;
+
 import org.mule.runtime.api.util.MultiMap;
 import org.mule.runtime.http.api.domain.HttpProtocol;
 import org.mule.runtime.http.api.domain.entity.HttpEntity;
 import org.mule.runtime.http.api.domain.message.BaseHttpMessage;
-
-import java.net.URI;
-import java.util.Collection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Basic implementation of {@link HttpRequest}. Instances can only be obtained through an {@link HttpRequestBuilder}.
  */
 class DefaultHttpRequest extends BaseHttpMessage implements HttpRequest {
+
+  private static final Logger logger = LoggerFactory.getLogger(DefaultHttpRequest.class);
 
   private final URI uri;
   private final String path;
@@ -99,6 +104,17 @@ class DefaultHttpRequest extends BaseHttpMessage implements HttpRequest {
         + "  headers: " + headers.toString() + "," + lineSeparator()
         + "  queryParams: " + queryParams.toString() + lineSeparator()
         + "}";
+  }
+
+  @Override
+  public void closeResources() {
+    if (entity != null && entity.getContent() != null) {
+      try {
+        entity.getContent().close();
+      } catch (IOException e) {
+        logger.warn("Error on closing the stream");
+      }
+    }
   }
 
 }
