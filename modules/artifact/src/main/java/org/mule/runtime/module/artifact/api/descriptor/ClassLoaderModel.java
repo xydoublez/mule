@@ -14,8 +14,10 @@ import static org.mule.runtime.api.util.Preconditions.checkArgument;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -27,27 +29,38 @@ public final class ClassLoaderModel {
    * Defines a {@link ClassLoaderModel} with empty configuration
    */
   public static final ClassLoaderModel NULL_CLASSLOADER_MODEL =
-      new ClassLoaderModel(new URL[0], new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(),
+      new ClassLoaderModel(new URL[0], new HashSet<>(), new HashMap<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(),
+                           new HashSet<>(),
                            false);
 
   private final URL[] urls;
   private final Set<String> exportedPackages;
+  private final Map<BundleDependency, Set<String>> pluginExclusiveExportedPackages;
   private final Set<String> exportedResources;
   private final Set<BundleDependency> dependencies;
   private final Set<String> privilegedExportedPackages;
   private final Set<String> privilegedArtifacts;
   private final boolean includeTestDependencies;
 
-  private ClassLoaderModel(URL[] urls, Set<String> exportedPackages, Set<String> exportedResources,
+  private ClassLoaderModel(URL[] urls, Set<String> exportedPackages,
+                           Map<BundleDependency, Set<String>> pluginExclusiveExportedPackages, Set<String> exportedResources,
                            Set<BundleDependency> dependencies, Set<String> privilegedExportedPackages,
                            Set<String> privilegedArtifacts, boolean includeTestDependencies) {
     this.urls = urls;
     this.exportedPackages = exportedPackages;
+    this.pluginExclusiveExportedPackages = removeExportedPackagesDuplicates(pluginExclusiveExportedPackages, exportedPackages);
     this.exportedResources = exportedResources;
     this.dependencies = dependencies;
     this.privilegedExportedPackages = privilegedExportedPackages;
     this.privilegedArtifacts = privilegedArtifacts;
     this.includeTestDependencies = includeTestDependencies;
+  }
+
+  //If a package is exported globally, then there is no use in declaring it for an specific plugin.
+  private Map<BundleDependency, Set<String>> removeExportedPackagesDuplicates(Map<BundleDependency, Set<String>> pluginExclusiveExportedPackages,
+                                                                              Set<String> exportedPackages) {
+    pluginExclusiveExportedPackages.forEach((plugin, packages) -> packages.removeAll(exportedPackages));
+    return pluginExclusiveExportedPackages;
   }
 
   /**
@@ -62,6 +75,15 @@ public final class ClassLoaderModel {
    */
   public Set<String> getExportedPackages() {
     return exportedPackages;
+  }
+
+  /**
+   * @return the class packages to be exported on the {@link ClassLoader} for every specific plugin. Non null
+   *
+   * @since 4.2.0
+   */
+  public Map<BundleDependency, Set<String>> getPluginExclusiveExportedPackages() {
+    return pluginExclusiveExportedPackages;
   }
 
   /**
@@ -105,6 +127,7 @@ public final class ClassLoaderModel {
   public static class ClassLoaderModelBuilder {
 
     private Set<String> packages = new HashSet<>();
+    private Map<BundleDependency, Set<String>> pluginExclusivePackages = new HashMap<>();
     private Set<String> resources = new HashSet<>();
     private List<URL> urls = new ArrayList<>();
     private Set<BundleDependency> dependencies = new HashSet<>();
@@ -126,6 +149,7 @@ public final class ClassLoaderModel {
       checkArgument(source != null, "source cannot be null");
 
       this.packages.addAll(source.exportedPackages);
+      this.pluginExclusivePackages.putAll(source.getPluginExclusiveExportedPackages());
       this.resources.addAll(source.exportedResources);
       this.urls = new ArrayList<>(asList(source.urls));
       this.dependencies.addAll(source.dependencies);
@@ -142,6 +166,22 @@ public final class ClassLoaderModel {
     public ClassLoaderModelBuilder exportingPackages(Set<String> packages) {
       checkArgument(packages != null, "packages cannot be null");
       this.packages.addAll(packages);
+      return this;
+    }
+
+    /**
+     * Indicates the packages that will be exported for an specific plugin
+     * @param pluginDependency
+     * @param packages
+     * @return same builder instance.
+     */
+    public ClassLoaderModelBuilder exportingPackagesForPlugin(BundleDependency pluginDependency, Set<String> packages) {
+      checkArgument(pluginDependency != null, "plugin dependency cannot be null");
+      checkArgument(packages != null, "packages cannot be null");
+      if (!this.pluginExclusivePackages.containsKey(pluginDependency)) {
+        this.pluginExclusivePackages.put(pluginDependency, new HashSet<>());
+      }
+      this.pluginExclusivePackages.get(pluginDependency).addAll(packages);
       return this;
     }
 
@@ -216,7 +256,8 @@ public final class ClassLoaderModel {
      * @return a non null {@link ClassLoaderModel}
      */
     public ClassLoaderModel build() {
-      return new ClassLoaderModel(urls.toArray(new URL[0]), packages, resources, dependencies, privilegedExportedPackages,
+      return new ClassLoaderModel(urls.toArray(new URL[0]), packages, pluginExclusivePackages, resources, dependencies,
+                                  privilegedExportedPackages,
                                   privilegedArtifacts, includeTestDependencies);
     }
   }
