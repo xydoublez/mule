@@ -47,8 +47,7 @@ public final class DefaultConfigurationProviderFactory implements ConfigurationP
                                                                   ConnectionProviderValueResolver connectionProviderResolver,
                                                                   ExpirationPolicy expirationPolicy,
                                                                   ReflectionCache reflectionCache,
-                                                                  MuleContext muleContext)
-      throws Exception {
+                                                                  MuleContext muleContext) {
     configureConnectionProviderResolver(name, connectionProviderResolver);
     return new DynamicConfigurationProvider(name, extensionModel, configurationModel, resolverSet, connectionProviderResolver,
                                             expirationPolicy, reflectionCache, muleContext);

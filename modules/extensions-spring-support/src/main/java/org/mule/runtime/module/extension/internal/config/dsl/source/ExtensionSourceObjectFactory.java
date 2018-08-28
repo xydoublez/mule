@@ -52,7 +52,6 @@ public class ExtensionSourceObjectFactory extends AbstractExtensionObjectFactory
   private final ExtensionModel extensionModel;
   private final SourceModel sourceModel;
 
-  private ConfigurationProvider configurationProvider;
   private RetryPolicyTemplate retryPolicyTemplate;
   private CursorProviderFactory cursorProviderFactory;
   private Boolean primaryNodeOnly = null;
@@ -65,7 +64,7 @@ public class ExtensionSourceObjectFactory extends AbstractExtensionObjectFactory
   }
 
   @Override
-  public ExtensionMessageSource doGetObject() throws ConfigurationException, InitialisationException {
+  public ExtensionMessageSource doGetObject() {
     return withContextClassLoader(getClassLoader(extensionModel), () -> {
       getParametersResolver().checkParameterGroupExclusiveness(Optional.of(sourceModel),
                                                                sourceModel.getParameterGroupModels(),
@@ -91,7 +90,7 @@ public class ExtensionSourceObjectFactory extends AbstractExtensionObjectFactory
                                                                 responseCallbackParameters,
                                                                 errorCallbackParameters,
                                                                 backPressureStrategy),
-                                        configurationProvider,
+                                        getConfigurationProvider(),
                                         primaryNodeOnly != null ? primaryNodeOnly : sourceModel.runsOnPrimaryNodeOnly(),
                                         getRetryPolicyTemplate(),
                                         cursorProviderFactory,
@@ -138,8 +137,15 @@ public class ExtensionSourceObjectFactory extends AbstractExtensionObjectFactory
                                     muleContext);
   }
 
-  private RetryPolicyTemplate getRetryPolicyTemplate() throws ConfigurationException {
+  private RetryPolicyTemplate getRetryPolicyTemplate() {
     return retryPolicyTemplate;
+  }
+
+  private ConfigurationProvider getConfigurationProvider() {
+    return parameters.values().stream()
+        .filter(v -> v instanceof ConfigurationProvider)
+        .map(v -> ((ConfigurationProvider) v)).findAny()
+        .orElse(null);
   }
 
   public void setRetryPolicyTemplate(RetryPolicyTemplate retryPolicyTemplate) {
@@ -154,10 +160,6 @@ public class ExtensionSourceObjectFactory extends AbstractExtensionObjectFactory
                                       createStaticMessage(format("The '%s' message source is using expressions, which are not allowed on message sources. "
                                           + "Offending parameters are: [%s]", model.getName(),
                                                                  Joiner.on(',').join(dynamicParams))));
-  }
-
-  public void setConfigurationProvider(ConfigurationProvider configurationProvider) {
-    this.configurationProvider = configurationProvider;
   }
 
   public void setCursorProviderFactory(CursorProviderFactory cursorProviderFactory) {
