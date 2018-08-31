@@ -82,7 +82,7 @@ public final class DefaultExtensionManager implements ExtensionManager, MuleCont
   private ExtensionActivator extensionActivator;
 
   @Override
-  public void initialise() {
+  public void initialise() throws InitialisationException {
     extensionRegistry = new ExtensionRegistry(new DefaultRegistry(muleContext));
     extensionErrorsRegistrant =
         new ExtensionErrorsRegistrant(muleContext.getErrorTypeRepository(),
