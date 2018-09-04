@@ -12,11 +12,6 @@ import org.mule.util.CaseInsensitiveMapWrapper;
 import org.mule.util.FileUtils;
 import org.mule.util.IOUtils;
 
-import com.google.common.base.Supplier;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Sets;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -27,6 +22,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.base.Supplier;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
 import org.apache.commons.collections.EnumerationUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
@@ -141,7 +140,7 @@ public class AbstractHttpRequestTestCase extends FunctionalTestCase
     protected void extractBaseRequestParts(Request baseRequest) throws IOException
     {
         method = baseRequest.getMethod();
-        uri = baseRequest.getUri().getCompletePath();
+        uri = baseRequest.getRequestURI();
 
         extractHeadersFromBaseRequest(baseRequest);
 

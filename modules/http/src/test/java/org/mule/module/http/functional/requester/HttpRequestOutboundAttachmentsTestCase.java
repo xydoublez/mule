@@ -19,6 +19,7 @@ import static org.mule.module.http.api.HttpHeaders.Names.CONTENT_TRANSFER_ENCODI
 import static org.mule.module.http.api.HttpHeaders.Names.CONTENT_TYPE;
 import static org.mule.transformer.types.MimeTypes.HTML;
 import static org.mule.transformer.types.MimeTypes.TEXT;
+
 import org.mule.api.MuleEvent;
 import org.mule.api.MuleMessage;
 import org.mule.message.ds.ByteArrayDataSource;
@@ -35,7 +36,6 @@ import java.util.Collection;
 
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
@@ -240,15 +240,7 @@ public class HttpRequestOutboundAttachmentsTestCase extends AbstractHttpRequestT
 
         MultiPartInputStreamParser inputStreamParser = new MultiPartInputStreamParser(request.getInputStream(), request.getContentType(), null, null);
 
-        try
-        {
-            parts = inputStreamParser.getParts();
-        }
-        catch (ServletException e)
-        {
-            throw new IOException(e);
-        }
-
+        parts = inputStreamParser.getParts();
 
         response.setContentType(HTML);
         response.setStatus(HttpServletResponse.SC_OK);
