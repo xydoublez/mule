@@ -6,8 +6,6 @@
  */
 package org.mule.module.http.internal.multipart;
 
-import com.google.common.collect.Lists;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,6 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.Part;
+
+import com.google.common.collect.Lists;
 
 public class HttpPart implements Part
 {
@@ -116,6 +116,11 @@ public class HttpPart implements Part
     public String getName()
     {
         return partName;
+    }
+
+    public String getSubmittedFileName()
+    {
+        return fileName;
     }
 
     @Override

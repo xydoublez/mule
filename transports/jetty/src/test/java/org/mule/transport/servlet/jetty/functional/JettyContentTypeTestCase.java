@@ -8,9 +8,9 @@
 package org.mule.transport.servlet.jetty.functional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
 import static org.hamcrest.Matchers.hasItem;
+
 import org.mule.api.MuleMessage;
 import org.mule.api.client.LocalMuleClient;
 import org.mule.api.config.MuleProperties;
@@ -23,7 +23,7 @@ import org.junit.Test;
 public class JettyContentTypeTestCase extends FunctionalTestCase
 {
 
-    private static final String EXPECTED_CONTENT_TYPE = "application/json; charset=UTF-8";
+    private static final String EXPECTED_CONTENT_TYPE = "application/json;charset=utf-8";
 
     @Rule
     public DynamicPort httpPort = new DynamicPort("httpPort");
@@ -43,6 +43,6 @@ public class JettyContentTypeTestCase extends FunctionalTestCase
         MuleMessage response = client.send(url, TEST_MESSAGE, null);
 
         assertThat(response.getInboundPropertyNames(), hasItem(equalToIgnoringCase(MuleProperties.CONTENT_TYPE_PROPERTY)));
-        assertThat((String) response.getInboundProperty(MuleProperties.CONTENT_TYPE_PROPERTY), equalTo(EXPECTED_CONTENT_TYPE));
+        assertThat((String) response.getInboundProperty(MuleProperties.CONTENT_TYPE_PROPERTY), equalToIgnoringCase(EXPECTED_CONTENT_TYPE));
     }
 }

@@ -41,8 +41,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
 import org.apache.commons.codec.binary.Base64;
+import org.eclipse.jetty.http.MultiPartFormInputStream;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.util.MultiPartInputStreamParser;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -238,7 +238,11 @@ public class HttpRequestOutboundAttachmentsTestCase extends AbstractHttpRequestT
     {
         requestContentType = request.getHeader(CONTENT_TYPE);
 
-        MultiPartInputStreamParser inputStreamParser = new MultiPartInputStreamParser(request.getInputStream(), request.getContentType(), null, null);
+//        MultiPartInputStreamParser
+//            inputStreamParser = new MultiPartInputStreamParser(request.getInputStream(), request.getContentType(), null, null);
+//
+
+        MultiPartFormInputStream inputStreamParser = new MultiPartFormInputStream(request.getInputStream(), request.getContentType(), null, null);
 
         parts = inputStreamParser.getParts();
 
