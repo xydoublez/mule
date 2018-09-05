@@ -31,7 +31,6 @@ import static org.mule.runtime.core.internal.el.mvel.MVELExpressionLanguageTestC
 import static org.mule.runtime.core.internal.el.mvel.MVELExpressionLanguageTestCase.Variant.EXPRESSION_WITH_DELIMITER;
 import static org.mule.runtime.dsl.api.component.config.DefaultComponentLocation.fromSingleComponent;
 import static org.mule.tck.junit4.matcher.DataTypeMatcher.like;
-
 import org.mule.mvel2.CompileException;
 import org.mule.mvel2.ParserContext;
 import org.mule.mvel2.PropertyAccessException;
@@ -59,14 +58,6 @@ import org.mule.runtime.core.privileged.registry.RegistrationException;
 import org.mule.runtime.dsl.api.component.config.DefaultComponentLocation;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -88,6 +79,14 @@ import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
 import javax.activation.MimeType;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class MVELExpressionLanguageTestCase extends AbstractMuleContextTestCase {
@@ -414,6 +413,15 @@ public class MVELExpressionLanguageTestCase extends AbstractMuleContextTestCase 
     assertThat(typedValue.getDataType(), like(String.class, JSON, UTF_16));
   }
 
+  @Test
+  public void testEvaluatePayloadStringWithNullBindingContextValues() {
+    CoreEvent event = createEvent(TEST_MESSAGE, STRING);
+    BindingContext bindingContext = BindingContext.builder().addBinding("aBindingIdentifierWithNullValue", TypedValue.of(null)).build();
+    TypedValue typedValue = evaluateTyped("payload", event, bindingContext);
+    assertThat(typedValue.getValue(), equalTo(TEST_MESSAGE));
+  }
+
+
   protected Object evaluate(String expression) {
     if (variant.equals(Variant.EXPRESSION_WITH_DELIMITER)) {
       return mvel.evaluateUntyped("#[mel:" + expression + "]", null, null, null, null);
@@ -422,14 +430,18 @@ public class MVELExpressionLanguageTestCase extends AbstractMuleContextTestCase 
     }
   }
 
-  protected TypedValue evaluateTyped(String expression, CoreEvent event) throws Exception {
+  protected TypedValue evaluateTyped(String expression, CoreEvent event) {
+    return evaluateTyped(expression, event, BindingContext.builder().build());
+  }
+
+  private TypedValue evaluateTyped(String expression, CoreEvent event, BindingContext build) {
     if (variant.equals(Variant.EXPRESSION_WITH_DELIMITER)) {
       return mvel.evaluate("#[mel:" + expression + "]", event, CoreEvent.builder(event),
-                           ((Component) flowConstruct).getLocation(),
-                           BindingContext.builder().build());
+                           flowConstruct.getLocation(),
+                           build);
     } else {
-      return mvel.evaluate(expression, event, CoreEvent.builder(event), ((Component) flowConstruct).getLocation(),
-                           BindingContext.builder().build());
+      return mvel.evaluate(expression, event, CoreEvent.builder(event), flowConstruct.getLocation(),
+                           build);
     }
   }
 
