@@ -11,6 +11,7 @@ import org.mule.util.IOUtils;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
@@ -69,6 +70,17 @@ public class CachedHttpServletRequest extends HttpServletRequestWrapper
         }
 
         @Override
+        public boolean isFinished()
+        {
+            return this.cachedStream.available() == 0;
+        }
+
+        @Override
+        public boolean isReady() {
+            return true;
+        }
+
+        @Override
         public synchronized void mark(int readlimit)
         {
             this.cachedStream.mark(readlimit);
@@ -96,6 +108,12 @@ public class CachedHttpServletRequest extends HttpServletRequestWrapper
         public int read(byte[] b) throws IOException
         {
             return this.cachedStream.read(b);
+        }
+
+        @Override
+        public void setReadListener(ReadListener readListener)
+        {
+            throw new RuntimeException("Not implemented");
         }
 
         @Override
