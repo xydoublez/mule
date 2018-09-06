@@ -221,7 +221,7 @@ public class MVELExpressionLanguage extends AbstractComponent implements Extende
   @Override
   public TypedValue evaluate(String expression, CoreEvent event, ComponentLocation componentLocation,
                              BindingContext bindingContext) {
-    return evaluate(expression, event, CoreEvent.builder(event), componentLocation, bindingContext);
+    return evaluate(expression, event, event == null ? null : CoreEvent.builder(event), componentLocation, bindingContext);
   }
 
   @Override
@@ -229,9 +229,14 @@ public class MVELExpressionLanguage extends AbstractComponent implements Extende
                              ComponentLocation componentLocation,
                              BindingContext bindingContext) {
     expression = removeExpressionMarker(expression);
-    Map<String, Object> bindingMap = bindingContext.identifiers().stream().collect(toMap(id -> id,
-                                                                                         id -> bindingContext.lookup(id).get()
-                                                                                             .getValue()));
+
+    Map<String, Object> bindingMap = new HashMap<>();
+    for (String bindingKey : bindingContext.identifiers()) {
+      final Object bindingValue = bindingContext.lookup(bindingKey).get().getValue();
+      if (bindingValue != null) {
+        bindingMap.put(bindingKey, bindingValue);
+      }
+    }
 
     final Object value = evaluateUntyped(expression, (PrivilegedEvent) event, (PrivilegedEvent.Builder) eventBuilder,
                                          componentLocation, bindingMap);
