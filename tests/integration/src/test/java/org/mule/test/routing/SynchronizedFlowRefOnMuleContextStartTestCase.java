@@ -7,11 +7,13 @@
 
 package org.mule.test.routing;
 
+import org.junit.Ignore;
 import org.mule.api.MuleException;
 import org.mule.api.lifecycle.Startable;
 import org.mule.api.processor.MessageProcessor;
 import org.mule.api.source.MessageSource;
 
+@Ignore("MULE-7211")
 public class SynchronizedFlowRefOnMuleContextStartTestCase extends AbstractSynchronizedMuleContextStartTestCase {
 
   @Override
