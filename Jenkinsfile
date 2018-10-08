@@ -1,8 +1,7 @@
-def UPSTREAM_PROJECTS_LIST = [ "DataWeave-4.x-Trigger",
-                               "Metadata-API",
-                               "Mule Runtime Event Model-1.x",
-                               "Mule-API",
-                               "Mule-Extensionsg-API" ]
+def UPSTREAM_PROJECTS_LIST = [ "Mule-runtime/metadata-model-api/master",
+                               "Mule-runtime/mule-runtime-event-model/master",
+                               "Mule-runtime/mule-api/master",
+                               "Mule-runtime/mule-extensions-api/master" ]
 
 Map pipelineParams = [ "UPSTREAM_PROJECTS" : UPSTREAM_PROJECTS_LIST.join(',') ]
 
