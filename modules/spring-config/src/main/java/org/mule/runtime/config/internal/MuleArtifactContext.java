@@ -42,6 +42,7 @@ import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.ioc.ConfigurableObjectProvider;
 import org.mule.runtime.api.ioc.ObjectProvider;
 import org.mule.runtime.api.meta.model.ExtensionModel;
+import org.mule.runtime.api.util.Lapse;
 import org.mule.runtime.api.util.Pair;
 import org.mule.runtime.api.util.ResourceLocator;
 import org.mule.runtime.app.declaration.api.ArtifactDeclaration;
@@ -218,7 +219,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
 
     getExtensionModelsComponentBuildingDefinitions(serviceRegistry,
                                                    getExtensionModels(muleContext.getExtensionManager()).orElse(emptySet()))
-        .forEach(componentBuildingDefinitionRegistry::register);
+                                                       .forEach(componentBuildingDefinitionRegistry::register);
 
     for (ClassLoader pluginArtifactClassLoader : pluginsClassLoaders) {
       ComponentBuildingDefinitionUtils.getArtifactComponentBuildingDefinitions(serviceRegistry, pluginArtifactClassLoader)
@@ -240,7 +241,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
 
   private static Optional<Set<ExtensionModel>> getExtensionModels(ExtensionManager extensionManager) {
     return ofNullable(extensionManager == null ? null
-                          : extensionManager.getExtensions());
+        : extensionManager.getExtensions());
   }
 
   private void validateAllConfigElementHaveParsers() {
@@ -481,7 +482,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
                                                } else if (nameAttribute == null) {
                                                  // This may be a configuration that does not requires a name.
                                                  nameAttribute = uniqueValue(resolvedSpringComponentModel.getBeanDefinition()
-                                                                                 .getBeanClassName());
+                                                     .getBeanClassName());
 
                                                  if (alwaysEnabledUnnamedTopLevelComponents
                                                      .contains(resolvedSpringComponentModel.getIdentifier())) {
@@ -505,7 +506,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
 
     this.objectProviders
         .addAll(objectProvidersByName.stream().map(pair -> (ConfigurableObjectProvider) pair.getFirst().getObjectInstance())
-                    .collect(toList()));
+            .collect(toList()));
     registerObjectFromObjectProviders(beanFactory);
 
     Set<String> objectProviderNames = objectProvidersByName.stream().map(Pair::getSecond).filter(Optional::isPresent)
