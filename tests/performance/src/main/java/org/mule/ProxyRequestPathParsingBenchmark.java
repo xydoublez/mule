@@ -8,6 +8,7 @@ package org.mule;
 
 import static java.util.Arrays.copyOfRange;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static org.mule.runtime.core.privileged.registry.LegacyRegistryUtils.lookupObject;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.scheduler.SchedulerService;
@@ -86,101 +87,101 @@ public class ProxyRequestPathParsingBenchmark extends AbstractBenchmark {
     muleContext.dispose();
   }
 
-  @Method
-  public String withOldDwExpression(CoreEvent event) {
-    return (String) muleContext.getExpressionManager().evaluate(oldDwExpression, event).getValue();
-  }
-
-  @Benchmark
-  public String oldDwExpressionWithEvent0() {
-    return withOldDwExpression(simplePathEvent);
-  }
-
-  @Benchmark
-  public String oldDwExpressionWithEvent1() {
-    return withOldDwExpression(pathEndingWithSlashEvent);
-  }
-
-  @Benchmark
-  public String oldDwExpressionWithEvent2() {
-    return withOldDwExpression(wildcardResolvesToMultipleParamsEvent);
-  }
-
-  @Benchmark
-  public String oldDwExpressionWithEvent3() {
-    return withOldDwExpression(paramsBeforeWildcardEvent);
-  }
-
-  @Benchmark
-  public String oldDwExpressionWithEvent4() {
-    return withOldDwExpression(uriParamsEvent);
-  }
-
-  @Method
-  public String withNewDwExpression(CoreEvent event) {
-    return (String) muleContext.getExpressionManager().evaluate(newDwExpression, event).getValue();
-  }
-
-  @Benchmark
-  public String newDwExpressionWithEvent0() {
-    return withNewDwExpression(simplePathEvent);
-  }
-
-  @Benchmark
-  public String newDwExpressionWithEvent1() {
-    return withNewDwExpression(pathEndingWithSlashEvent);
-  }
-
-  @Benchmark
-  public String newDwExpressionWithEvent2() {
-    return withNewDwExpression(wildcardResolvesToMultipleParamsEvent);
-  }
-
-  @Benchmark
-  public String newDwExpressionWithEvent3() {
-    return withNewDwExpression(paramsBeforeWildcardEvent);
-  }
-
-  @Benchmark
-  public String newDwExpressionWithEvent4() {
-    return withNewDwExpression(uriParamsEvent);
-  }
-
-  @Method
-  public String withSplitBy(CoreEvent event) {
-    String listenerPath = (String) event.getVariables().get(LISTENER_PATH_KEY).getValue();
-    String requestPath = (String) event.getVariables().get(REQUEST_PATH_KEY).getValue();
-    String postChar = requestPath.getBytes()[requestPath.length() - 1] == '/' ? "/" : "";
-    String[] splittedListener = listenerPath.split("/");
-    String[] splittedRequest = requestPath.split("/");
-    String[] slicedSplittedRequest = copyOfRange(splittedRequest, splittedListener.length - 1, splittedRequest.length);
-    return "/" + String.join("/", slicedSplittedRequest) + postChar;
-  }
-
-  @Benchmark
-  public String splitByWithEvent0() {
-    return withSplitBy(simplePathEvent);
-  }
-
-  @Benchmark
-  public String splitByWithEvent1() {
-    return withSplitBy(pathEndingWithSlashEvent);
-  }
-
-  @Benchmark
-  public String splitByWithEvent2() {
-    return withSplitBy(wildcardResolvesToMultipleParamsEvent);
-  }
-
-  @Benchmark
-  public String splitByWithEvent3() {
-    return withSplitBy(paramsBeforeWildcardEvent);
-  }
-
-  @Benchmark
-  public String splitByWithEvent4() {
-    return withSplitBy(uriParamsEvent);
-  }
+  //@Method
+  //public String withOldDwExpression(CoreEvent event) {
+  //  return (String) muleContext.getExpressionManager().evaluate(oldDwExpression, event).getValue();
+  //}
+  //
+  //@Benchmark
+  //public String oldDwExpressionWithEvent0() {
+  //  return withOldDwExpression(simplePathEvent);
+  //}
+  //
+  //@Benchmark
+  //public String oldDwExpressionWithEvent1() {
+  //  return withOldDwExpression(pathEndingWithSlashEvent);
+  //}
+  //
+  //@Benchmark
+  //public String oldDwExpressionWithEvent2() {
+  //  return withOldDwExpression(wildcardResolvesToMultipleParamsEvent);
+  //}
+  //
+  //@Benchmark
+  //public String oldDwExpressionWithEvent3() {
+  //  return withOldDwExpression(paramsBeforeWildcardEvent);
+  //}
+  //
+  //@Benchmark
+  //public String oldDwExpressionWithEvent4() {
+  //  return withOldDwExpression(uriParamsEvent);
+  //}
+  //
+  //@Method
+  //public String withNewDwExpression(CoreEvent event) {
+  //  return (String) muleContext.getExpressionManager().evaluate(newDwExpression, event).getValue();
+  //}
+  //
+  //@Benchmark
+  //public String newDwExpressionWithEvent0() {
+  //  return withNewDwExpression(simplePathEvent);
+  //}
+  //
+  //@Benchmark
+  //public String newDwExpressionWithEvent1() {
+  //  return withNewDwExpression(pathEndingWithSlashEvent);
+  //}
+  //
+  //@Benchmark
+  //public String newDwExpressionWithEvent2() {
+  //  return withNewDwExpression(wildcardResolvesToMultipleParamsEvent);
+  //}
+  //
+  //@Benchmark
+  //public String newDwExpressionWithEvent3() {
+  //  return withNewDwExpression(paramsBeforeWildcardEvent);
+  //}
+  //
+  //@Benchmark
+  //public String newDwExpressionWithEvent4() {
+  //  return withNewDwExpression(uriParamsEvent);
+  //}
+  //
+  //@Method
+  //public String withSplitBy(CoreEvent event) {
+  //  String listenerPath = (String) event.getVariables().get(LISTENER_PATH_KEY).getValue();
+  //  String requestPath = (String) event.getVariables().get(REQUEST_PATH_KEY).getValue();
+  //  String postChar = requestPath.getBytes()[requestPath.length() - 1] == '/' ? "/" : "";
+  //  String[] splittedListener = listenerPath.split("/");
+  //  String[] splittedRequest = requestPath.split("/");
+  //  String[] slicedSplittedRequest = copyOfRange(splittedRequest, splittedListener.length - 1, splittedRequest.length);
+  //  return "/" + String.join("/", slicedSplittedRequest) + postChar;
+  //}
+  //
+  //@Benchmark
+  //public String splitByWithEvent0() {
+  //  return withSplitBy(simplePathEvent);
+  //}
+  //
+  //@Benchmark
+  //public String splitByWithEvent1() {
+  //  return withSplitBy(pathEndingWithSlashEvent);
+  //}
+  //
+  //@Benchmark
+  //public String splitByWithEvent2() {
+  //  return withSplitBy(wildcardResolvesToMultipleParamsEvent);
+  //}
+  //
+  //@Benchmark
+  //public String splitByWithEvent3() {
+  //  return withSplitBy(paramsBeforeWildcardEvent);
+  //}
+  //
+  //@Benchmark
+  //public String splitByWithEvent4() {
+  //  return withSplitBy(uriParamsEvent);
+  //}
 
   @Method
   public String iterating(CoreEvent event) {
@@ -229,6 +230,96 @@ public class ProxyRequestPathParsingBenchmark extends AbstractBenchmark {
   public String iteratingWithEvent4() {
     return iterating(uriParamsEvent);
   }
+
+
+  @Method
+  public String iteratingWithASCII(CoreEvent event) {
+    String listenerPath = (String) event.getVariables().get(LISTENER_PATH_KEY).getValue();
+    String requestPath = (String) event.getVariables().get(REQUEST_PATH_KEY).getValue();
+    byte[] listenerPathBytes = listenerPath.getBytes(US_ASCII);
+    byte[] requestPathBytes = requestPath.getBytes(US_ASCII);
+    int listenerPathIndex = 0;
+    int requestPathIndex = 0;
+    while (listenerPathIndex < listenerPathBytes.length - 1) {
+      listenerPathIndex = iterateUriParameter(listenerPathBytes, listenerPathIndex);
+      requestPathIndex = iterateUriParameter(requestPathBytes, requestPathIndex);
+    }
+    return requestPath.substring(requestPathIndex - 1);
+  }
+
+  @Benchmark
+  public String iteratingASCIIWithEvent0() {
+    return iteratingWithASCII(simplePathEvent);
+  }
+
+  @Benchmark
+  public String iteratingASCIIWithEvent1() {
+    return iteratingWithASCII(pathEndingWithSlashEvent);
+  }
+
+  @Benchmark
+  public String iteratingASCIIWithEvent2() {
+    return iteratingWithASCII(wildcardResolvesToMultipleParamsEvent);
+  }
+
+  @Benchmark
+  public String iteratingASCIIWithEvent3() {
+    return iteratingWithASCII(paramsBeforeWildcardEvent);
+  }
+
+  @Benchmark
+  public String iteratingASCIIWithEvent4() {
+    return iteratingWithASCII(uriParamsEvent);
+  }
+
+
+  @Method
+  public String iteratingString(CoreEvent event) {
+    String listenerPath = (String) event.getVariables().get(LISTENER_PATH_KEY).getValue();
+    String requestPath = (String) event.getVariables().get(REQUEST_PATH_KEY).getValue();
+    int listenerPathIndex = 0;
+    int requestPathIndex = 0;
+    while (listenerPathIndex < listenerPath.length() - 1) {
+      listenerPathIndex = iterateUriParameterString(listenerPath, listenerPathIndex);
+      requestPathIndex = iterateUriParameterString(requestPath, requestPathIndex);
+    }
+    return requestPath.substring(requestPathIndex - 1);
+  }
+
+  private int iterateUriParameterString(String string, int position) {
+    while (string.charAt(position) != '/') {
+      position++;
+    }
+    position++;
+    return position;
+  }
+
+  @Benchmark
+  public String iteratingStringWithEvent0() {
+    return iteratingString(simplePathEvent);
+  }
+
+  @Benchmark
+  public String iteratingStringWithEvent1() {
+    return iteratingString(pathEndingWithSlashEvent);
+  }
+
+  @Benchmark
+  public String iteratingStringWithEvent2() {
+    return iteratingString(wildcardResolvesToMultipleParamsEvent);
+  }
+
+  @Benchmark
+  public String iteratingStringWithEvent3() {
+    return iteratingString(paramsBeforeWildcardEvent);
+  }
+
+  @Benchmark
+  public String iteratingStringWithEvent4() {
+    return iteratingString(uriParamsEvent);
+  }
+
+
 
   public static class PathGroup {
 
